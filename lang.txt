@@ -1,0 +1,22 @@
+
+
+fn println(a) async {
+    print ">>", a;
+}
+
+fn add(a, b) async {
+    print "waiting...", await println(a + b + 10);
+    println("Hola!")
+    return 1
+}
+
+fn callback(data) {
+    print "cb >>", data;
+    return data + 1
+}
+
+add(323, 413)
+    .then(callback)
+    .then(callback)
+    
+add(100, 53)

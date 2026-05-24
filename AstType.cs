@@ -1,0 +1,36 @@
+namespace zscript;
+
+public enum AstType
+{
+    AstName,
+    AstInt,
+    AstNumber,
+    AstBool,
+    AstString,
+    AstNull,
+    AstMemberAccess,
+    AstFunctionCall,
+    AstAwait,
+    AstBinMul,
+    AstBinDiv,
+    AstBinMod,
+    AstBinAdd,
+    AstBinSub,
+    AstBinLShift,
+    AstBinRShift,
+    AstBinLt,
+    AstBinLe,
+    AstBinGt,
+    AstBinGe,
+    AstBinEq,
+    AstBinNe,
+    AstBinAnd,
+    AstBinOr,
+    AstBinXor,
+    AstAnd,
+    AstOr,
+    AstFunction,
+    AstPrint,
+    AstReturn,
+    AstProgram
+}
