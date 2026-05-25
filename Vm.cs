@@ -219,19 +219,19 @@ public class Vm
     
     public string BuildTracebackFromFrame()
     {
-        Queue<string> file = [];
-        
+        var sites = new Queue<string>();
+    
         var currentFrame = _currentFrame;
         while (currentFrame != null)
         {
             var code = currentFrame.FunctionValue.Code();
             var tracebackLine = GetLine(code.DebugLines, currentFrame.Pc);
             var moduleName = _state.ModuleNames[tracebackLine.ModuleId];
-            file.Enqueue($"at [{moduleName}:{code.Name}:{tracebackLine.Line}]");
+            sites.Enqueue($"    at [{moduleName}:{code.Name}:{tracebackLine.Line}]");
             currentFrame = currentFrame.CallerFrame;
         }
         
-        return string.Join(Environment.NewLine, file);
+        return string.Join(Environment.NewLine, sites);
     }
 
     public ZsValue Run(Frame frame)
@@ -446,7 +446,6 @@ public class Vm
             } 
             else if (futureInstance.State == FutureState.Rejected)
             {
-                Console.WriteLine("HEHE!!!");
                 // Wakeup listeners
                 futureInstance.Reject(futureInstance.Result!, PendingTasks);
             }

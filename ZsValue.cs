@@ -269,7 +269,7 @@ public class ZsValue(ValueType type, object value)
         var props = (Dictionary<string, ZsValue>)Value;
         var message = props.GetValueOrDefault("message")?.Value as string ?? "unknown error";
         var traceback = props.GetValueOrDefault("traceback")?.Value as string ?? "";
-        return $"{GetZsType()}: {message}\n{traceback}";
+        return $"{GetZsType()}: {message}{Environment.NewLine}{traceback}";
     }
 
     private string FormatValue(ZsValue value, int depth = 0)

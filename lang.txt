@@ -4,7 +4,9 @@ fn println(a) async {
     print ">>", a;
 }
 
-fn abb() {}
+fn sub(a, b) {
+    println(a - b);
+}
 
 fn add(a, b) async {
     print "waiting...", await println(a + b + 10);
@@ -32,4 +34,7 @@ fn callbackForError(data) {
 
 add(1, "world")
     ->catch(callbackForError);
+
+
+sub(5, 2);
     
