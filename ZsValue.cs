@@ -19,7 +19,7 @@ public enum ValueType
 
 public class ZsValue(ValueType type, object value)
 {
-    private ValueType Type { get; } = type;
+    public ValueType Type { get; } = type;
     public object Value { get; } = value;
 
     // ── Factories ────────────────────────────────────────────────────────────
@@ -78,11 +78,12 @@ public class ZsValue(ValueType type, object value)
         ]));
     }
 
-    public static ZsValue FromErrorMessage(ZsValue zsErrorClass, string errorMessage)
+    public static ZsValue FromErrorMessage(ZsValue zsErrorClass, string errorMessage, string traceback)
     {
         Debug.Assert(IsExtensionOf(zsErrorClass, "Error"), "Value is not error class.");
         return CreateZsObject(zsErrorClass, new Dictionary<string, ZsValue>([
-            new KeyValuePair<string, ZsValue>("message", FromString(errorMessage))
+            new KeyValuePair<string, ZsValue>("message", FromString(errorMessage)),
+            new KeyValuePair<string, ZsValue>("traceback", FromString(traceback)),
         ]));
     }
 
@@ -267,7 +268,8 @@ public class ZsValue(ValueType type, object value)
         Debug.Assert(IsInstanceOf(this, "Error"), "Object is not an error");
         var props = (Dictionary<string, ZsValue>)Value;
         var message = props.GetValueOrDefault("message")?.Value as string ?? "unknown error";
-        return $"{GetZsType()}: {message}";
+        var traceback = props.GetValueOrDefault("traceback")?.Value as string ?? "";
+        return $"{GetZsType()}: {message}\n{traceback}";
     }
 
     private string FormatValue(ZsValue value, int depth = 0)

@@ -12,6 +12,7 @@ public class Vm
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
     public readonly ZsValue TypeError;
+    private Frame? _currentFrame;
 
     public Vm(State state)
     {
@@ -64,7 +65,7 @@ public class Vm
             (double or int, double or int) => ZsValue.FromNumber(a.Number() + b.Number()),
             (string, string) => ZsValue.FromString(a.String() + b.String()),
             _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)")
+                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)", BuildTracebackFromFrame())
         };
 
         // Console.WriteLine($"{a} + {b} = {res}");
@@ -78,7 +79,7 @@ public class Vm
             (int, int) => ZsValue.FromInt(a.Int() - b.Int()),
             (double or int, double or int) => ZsValue.FromNumber(a.Number() - b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)")
+                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)", BuildTracebackFromFrame())
         };
 
         // Console.WriteLine($"{a} - {b} = {res}");
@@ -123,7 +124,6 @@ public class Vm
     private static void DoStoreName(Frame frame, int address)
     {
         var val = frame.PopOperand();
-        // Console.WriteLine($"{address} = {val.GetZsType()}");
         frame.SetEnvVar(address, val);
     }
 
@@ -140,7 +140,7 @@ public class Vm
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
         return callableCode.ArgCount != arg
-            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}")
+            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}",  BuildTracebackFromFrame())
             : Run(newCallFrame);
     }
 
@@ -162,18 +162,81 @@ public class Vm
                     return zscript.Future.FutureCatchMethod(this, arguments);
             }
 
-        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}");
+        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}", BuildTracebackFromFrame());
     }
 
-    private static void RaiseOrHandleException(Frame frame, ZsValue errorValue)
+    private void RaiseOrHandleException(Frame frame, ZsValue errorValue)
     {
         frame.Suspend();
+
+        if (frame.Asynchronous || frame.Future != null)
+        {
+            var fut =  frame.Future != null
+                    ? frame.Future
+                    : ZsValue.FromFuture(new Future(FutureState.Rejected, frame));
+            
+            frame.SetFutureOrSkip(fut);
+            
+            fut.Future().Reject(errorValue, PendingTasks);
+            frame.PushOperand(errorValue);
+            PendingTasks.Enqueue(fut);
+            return;
+        }
+        
         var error = ZsValue.GetProperty(errorValue, "message");
-        if (error != null) throw new Exception(error.String());
+        if (error != null) throw new Exception(error.String() + "\n" + BuildTracebackFromFrame());
+    }
+
+    private OpCodeDebug GetLine(List<OpCodeDebug> debugLines, long pc)
+    {
+        var low = 0;
+        var high = debugLines.Count - 1;
+        var bestMatchIndex = -1;
+
+        while (low <= high)
+        {
+            var mid = low + ((high - low) >> 1);
+            var midIndex = debugLines[mid].Index;
+
+            if (midIndex == pc)
+            {
+                return debugLines[mid];
+            }
+            else if (midIndex < pc)
+            {
+                bestMatchIndex = mid;
+                
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid - 1;
+            }
+        }
+        
+        return bestMatchIndex != -1 ? debugLines[bestMatchIndex] : debugLines[0];
+    }
+    
+    public string BuildTracebackFromFrame()
+    {
+        Queue<string> file = [];
+        
+        var currentFrame = _currentFrame;
+        while (currentFrame != null)
+        {
+            var code = currentFrame.FunctionValue.Code();
+            var tracebackLine = GetLine(code.DebugLines, currentFrame.Pc);
+            var moduleName = _state.ModuleNames[tracebackLine.ModuleId];
+            file.Enqueue($"at [{moduleName}:{code.Name}:{tracebackLine.Line}]");
+            currentFrame = currentFrame.CallerFrame;
+        }
+        
+        return string.Join(Environment.NewLine, file);
     }
 
     public ZsValue Run(Frame frame)
     {
+        _currentFrame = frame;
         var code = frame.FunctionValue.Code();
         while (frame.Pc < frame.CodeLen && !frame.Suspended)
         {
@@ -189,7 +252,7 @@ public class Vm
                     var val = frame.GetEnvVar(off);
                     if (val == null)
                     {
-                        RaiseOrHandleException(frame, ZsValue.FromErrorMessage(Error, "referenced before assignment"));
+                        RaiseOrHandleException(frame, ZsValue.FromErrorMessage(Error, "referenced before assignment", BuildTracebackFromFrame()));
                         break;
                     }
 
@@ -345,7 +408,9 @@ public class Vm
                     {
                         var zsFuture = frame.Future != null
                             ? frame.Future
-                            : frame.Future = ZsValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
+                            : ZsValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
+                        
+                        frame.SetFutureOrSkip(zsFuture);
 
                         zsFuture.Future()
                             .FullFill(frame.PopOperand(), PendingTasks);
@@ -362,7 +427,7 @@ public class Vm
             }
         }
 
-        return ZsValue.FromInt(0);
+        return frame.Future ?? ZsValue.FromInt(0);
     }
 
     public void MainLoop(ZsValue globalCodeObject)
@@ -374,8 +439,22 @@ public class Vm
             // Console.WriteLine("Continuing...");
             var nextTask = PendingTasks.Dequeue();
             var futureInstance = nextTask.Future();
-            futureInstance.SuspendedFrame.Wake();
-            Run(futureInstance.SuspendedFrame);
+            if (futureInstance.State == FutureState.Fulfill)
+            {
+                // Wakeup listeners
+                futureInstance.FullFill(futureInstance.Result!, PendingTasks);
+            } 
+            else if (futureInstance.State == FutureState.Rejected)
+            {
+                Console.WriteLine("HEHE!!!");
+                // Wakeup listeners
+                futureInstance.Reject(futureInstance.Result!, PendingTasks);
+            }
+            else
+            {
+                futureInstance.SuspendedFrame.Wake();
+                Run(futureInstance.SuspendedFrame);
+            }
         }
     }
 }

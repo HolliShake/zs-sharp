@@ -2,8 +2,17 @@ using System.Diagnostics;
 
 namespace zscript;
 
-public class Compiler(State state, string path, string source) : Parser(path, source)
+public class Compiler : Parser
 {
+    private State State { get; set; }
+    private int ModuleId { get; set; }
+
+    public Compiler(State state, string path, string source) : base(path, source)
+    {
+        State = state;
+        ModuleId = State.RegisterModuleName(path);
+    }
+    
     private void Expr(Code code, SymbolTable table, Ast node)
     {
         switch (node.Type)
@@ -26,25 +35,29 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                     code.Emit(OpCode.LoadCapture, address);
                     break;
                 }
-
+                
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
                 break;
             }
             case AstType.AstInt:
             {
-                var index = state.SaveInt(int.Parse(node.Value));
+                var index = State.SaveInt(int.Parse(node.Value));
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
             case AstType.AstNumber:
             {
-                var index = state.SaveNum(double.Parse(node.Value));
+                var index = State.SaveNum(double.Parse(node.Value));
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
             case AstType.AstString:
             {
-                var index = state.SaveStr(node.Value);
+                var index = State.SaveStr(node.Value);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
@@ -52,6 +65,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             {
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.GetAttr, node.B.Value);
                 break;
             }
@@ -74,12 +88,15 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 var isMethodCall = callable.Type == AstType.AstMemberAccess;
                 if (isMethodCall)
                 {
+                    code.EmitLine(ModuleId, callable.B!.Position.Line);
                     code.Emit(OpCode.LoadString, callable.B!.Value);
+                    code.EmitLine(ModuleId, callable.B!.Position.Line);
                     code.Emit(OpCode.CallMethod, argc);
                 }
                 else
                 {
                     Expr(code, table, callable);
+                    code.EmitLine(ModuleId, node.Position.Line);
                     code.Emit(OpCode.Call, argc);
                 }
 
@@ -89,6 +106,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             {
                 Debug.Assert(node is { A: not null }, "node.A is null");
                 Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.Await);
                 break;
             }
@@ -97,6 +115,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.BinMul);
                 break;
             }
@@ -105,6 +124,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.BinDiv);
                 break;
             }
@@ -113,6 +133,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.BinMod);
                 break;
             }
@@ -121,6 +142,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.BinAdd);
                 break;
             }
@@ -129,6 +151,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.BinSub);
                 break;
             }
@@ -184,7 +207,8 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             parameterHead = parameterHead.Next;
             count++;
         }
-
+        
+        code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.Print, count);
     }
 
@@ -192,7 +216,10 @@ public class Compiler(State state, string path, string source) : Parser(path, so
     {
         var expression = node.A;
         if (expression == null)
+        {
+            code.EmitLine(ModuleId, node.Position.Line);
             code.Emit(OpCode.LoadNull);
+        }
         else
             Expr(code, table, expression);
 
@@ -201,12 +228,14 @@ public class Compiler(State state, string path, string source) : Parser(path, so
 
     private void Function(Code code, SymbolTable table, Ast node)
     {
-        var fnCode = new Code(node.IntArg0, node.Flag0);
+        Debug.Assert(node is { A: not null }, "node.A is null");
+        var fnCode = new Code(node.A.Value, node.IntArg0, node.Flag0);
         var locals = new SymbolTable(ScopeType.Function, table);
-        Debug.Assert(node is { A: not null, B: not null, C: not null }, "node.A or node.B or node.C is null");
 
         var functionAddress = code.AllocateLocal();
         table.Add(node.A.Value, functionAddress, false, node.Position);
+        
+        var position = node.Position;
 
         var paramHead = node.B;
         while (paramHead != null)
@@ -216,9 +245,10 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 ErrorHandler.CompileError(Path, Source, "Parameter already exists", paramHead.Position);
 
             var paramAddress = fnCode.AllocateLocal();
-            locals.Add(name, paramAddress, false, node.Position);
+            locals.Add(name, paramAddress, false, paramHead.Position);
+            fnCode.EmitLine(ModuleId, paramHead.Position.Line);
             fnCode.Emit(OpCode.StoreLocal, paramAddress);
-
+            position = paramHead.Position;
             paramHead = paramHead.Next;
         }
 
@@ -226,30 +256,42 @@ public class Compiler(State state, string path, string source) : Parser(path, so
         while (bodyHead != null)
         {
             Stmt(fnCode, locals, bodyHead);
+            position = bodyHead.Position;
             bodyHead = bodyHead.Next;
         }
-
+        
+        fnCode.EmitLine(ModuleId, position.Line);
         fnCode.Emit(OpCode.LoadNull);
+        fnCode.EmitLine(ModuleId, position.Line);
         fnCode.Emit(OpCode.Return);
 
-        var addressOfCode = state.SaveCodeTemplate(fnCode);
+        var addressOfCode = State.SaveCodeTemplate(fnCode);
+        code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.LoadFunction, addressOfCode);
+        code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.StoreName, functionAddress);
     }
 
     private ZsValue Program(Ast node)
     {
-        var code = new Code(0, false);
+        var code = new Code("main", 0, false);
         var globalTable = new SymbolTable(ScopeType.Global, null);
+
+        var position = node.Position;
+        
         var bodyHead = node.A;
         while (bodyHead != null)
         {
             Stmt(code, globalTable, bodyHead);
+            position = bodyHead.Position;
             bodyHead = bodyHead.Next;
         }
 
+        code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.LoadNull);
+        code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.Return);
+
         return ZsValue.FromCodeToScript(code);
     }
 

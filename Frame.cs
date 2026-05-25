@@ -1,86 +1,48 @@
 namespace zscript;
 
-public class Frame
+public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
 {
-    private readonly Stack<ZsValue> _operands;
-    public readonly bool Asynchronous;
-    public readonly Frame? CallerFrame;
-    public readonly int CodeLen;
-    public readonly Cell[] Environment;
-    public readonly ZsValue FunctionValue;
-    public readonly bool IsCallback;
+    private readonly Stack<ZsValue> _operands = [];
+
+    public readonly bool Asynchronous = asynchronous;
+    public readonly Frame? CallerFrame = callerFrame;
+    public readonly int CodeLen = functionValue.Code().Bytecode.Count;
+    public readonly Cell[] Environment = BuildEnvironment(functionValue.Code());
+    public readonly ZsValue FunctionValue = functionValue;
+    public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
     public ZsValue? Future;
     public bool IsFaulted;
     public int Pc;
 
-    public Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
-    {
-        var code = functionValue.Code();
-        CallerFrame = callerFrame;
-        _operands = [];
-        FunctionValue = functionValue;
-        Asynchronous = asynchronous;
-        Pc = 0;
-        Future = null;
-        CodeLen = code.Bytecode.Count;
-        IsCallback = callback;
-        Suspended = false;
-        Environment = new Cell[code.LocalCount];
-        IsFaulted = false;
-        IsCallback = false;
-        for (var i = 0; i < code.LocalCount; i++) Environment[i] = new Cell();
-    }
-
     public bool Suspended { get; private set; }
 
-    public void SetFutureOrSkip(ZsValue future)
+    private static Cell[] BuildEnvironment(Code code)
     {
-        Future ??= future;
+        var env = new Cell[code.LocalCount];
+        for (var i = 0; i < code.LocalCount; i++) env[i] = new Cell();
+        return env;
     }
 
-    public void Suspend()
-    {
-        Suspended = true;
-    }
+    public void SetFutureOrSkip(ZsValue future) => Future ??= future;
 
-    public void Wake()
-    {
-        Suspended = false;
-    }
+    public void Suspend() => Suspended = true;
 
-    public void Forward(int pc)
-    {
-        Pc += pc;
-    }
+    public void Wake() => Suspended = false;
 
-    public void PushOperand(ZsValue value)
-    {
-        _operands.Push(value);
-    }
+    public void Forward(int pc) => Pc += pc;
 
-    public ZsValue PopOperand()
-    {
-        return _operands.Pop();
-    }
+    public void PushOperand(ZsValue value) => _operands.Push(value);
+
+    public ZsValue PopOperand() => _operands.Pop();
 
     public void PopOperand(int size)
     {
-        if (size <= 0) return;
         for (var i = 0; i < size; i++) _operands.Pop();
     }
 
-    public ZsValue PeekOperandAt(int address)
-    {
-        return _operands.ElementAt(address);
-    }
+    public ZsValue PeekOperandAt(int address) => _operands.ElementAt(address);
 
-    public ZsValue? GetEnvVar(int address)
-    {
-        return Environment[address].Value;
-    }
+    public ZsValue? GetEnvVar(int address) => Environment[address].Value;
 
-    public void SetEnvVar(int address, ZsValue value)
-    {
-        Environment[address].Value = value;
-    }
+    public void SetEnvVar(int address, ZsValue value) => Environment[address].Value = value;
 }

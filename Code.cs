@@ -4,12 +4,14 @@ using System.Text;
 
 namespace zscript;
 
-public class Code(int argCount, bool isAsync)
+public class Code(string name, int argCount, bool isAsync)
 {
+    public string Name { get; } = name;
     public int ArgCount { get; } = argCount;
     public bool IsAsync { get; } = isAsync;
 
     public List<byte> Bytecode { get; } = [];
+    public List<OpCodeDebug> DebugLines = [];
     public Dictionary<int, Cell> CapturedCells { get; } = [];
 
     public List<(int Depth, int Address, int Destination)> Captures { get; } = [];
@@ -19,6 +21,12 @@ public class Code(int argCount, bool isAsync)
     public int AllocateLocal()
     {
         return LocalCount++;
+    }
+
+    public void EmitLine(int moduleId, int line)
+    {
+        var index = Bytecode.Count;
+        DebugLines.Add(new OpCodeDebug(moduleId, index, line));
     }
 
     public void Emit(OpCode opcode)
