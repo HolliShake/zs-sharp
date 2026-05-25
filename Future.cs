@@ -57,18 +57,11 @@ public class Future
 
         foreach (var reaction in _rejectReactions)
         {
-            var frame = reaction.Future().SuspendedFrame;
-            if (frame.IsCallback)
-            {
-                frame.PushOperand(Result);
-                queue.Enqueue(reaction);
-            }
-            else
-            {
-                // Propagate
-                reaction.Future()
-                    .Reject(Result, queue);
-            }
+            var childFut = reaction.Future();
+            var frame = childFut.SuspendedFrame;
+
+            frame.PushOperand(Result);
+            queue.Enqueue(reaction);
         }
 
         _fullFillReactions.Clear();

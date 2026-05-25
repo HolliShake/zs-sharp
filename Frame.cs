@@ -62,6 +62,12 @@ public class Frame
         return _operands.Pop();
     }
 
+    public void PopOperand(int size)
+    {
+        if (size <= 0) return;
+        for (var i = 0; i < size; i++) _operands.Pop();
+    }
+
     public ZsValue PeekOperandAt(int address)
     {
         return _operands.ElementAt(address);

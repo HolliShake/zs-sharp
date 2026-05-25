@@ -130,7 +130,6 @@ public class Vm
     private ZsValue DoCall(Frame frame, int arg)
     {
         var callable = frame.PopOperand();
-
         var callableCode = callable.Code();
         var arguments = new ZsValue[arg];
         for (var i = 0; i < arg; i++) arguments[i] = frame.PopOperand();
@@ -140,6 +139,11 @@ public class Vm
 
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
+        if (callableCode.ArgCount != arg)
+        {
+            return ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}");
+        }
+
         return Run(newCallFrame);
     }
 
@@ -147,12 +151,18 @@ public class Vm
     {
         var zsObject = frame.PeekOperandAt(arg + 1);
         var memberName = frame.PopOperand();
+        
+        var arguments = new ZsValue[arg + 1];
+        for (var i = 1; i < arg + 1; i++) arguments[i] = frame.PopOperand();
+        arguments[0] = zsObject;
 
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future))
             switch (memberName.String())
             {
                 case "then":
-                    return zscript.Future.FutureThenMethod(this, [zsObject, frame.PopOperand()]);
+                    return zscript.Future.FutureThenMethod(this, arguments);
+                case "catch":
+                    return zscript.Future.FutureCatchMethod(this, arguments);
             }
 
         throw new Exception($"method not found {zsObject.GetZsType()}.{memberName}");
