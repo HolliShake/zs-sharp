@@ -1,7 +1,6 @@
 using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Unicode;
 
 namespace zscript;
 
@@ -42,7 +41,7 @@ public class Code(int argCount, bool isAsync)
         BinaryPrimitives.WriteDoubleBigEndian(buffer, value);
         Bytecode.AddRange(buffer);
     }
-    
+
     public void Emit(OpCode opcode, string value)
     {
         Bytecode.Add((byte)opcode);

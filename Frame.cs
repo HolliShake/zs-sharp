@@ -2,22 +2,22 @@ namespace zscript;
 
 public class Frame
 {
+    private readonly Stack<ZsValue> _operands;
     public readonly bool Asynchronous;
     public readonly Frame? CallerFrame;
     public readonly int CodeLen;
     public readonly Cell[] Environment;
     public readonly ZsValue FunctionValue;
-    public readonly Stack<ZsValue> Operands;
+    public readonly bool IsCallback;
     public ZsValue? Future;
     public bool IsFaulted;
-    public readonly bool IsCallback;
     public int Pc;
 
     public Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
     {
         var code = functionValue.Code();
         CallerFrame = callerFrame;
-        Operands = [];
+        _operands = [];
         FunctionValue = functionValue;
         Asynchronous = asynchronous;
         Pc = 0;
@@ -54,17 +54,17 @@ public class Frame
 
     public void PushOperand(ZsValue value)
     {
-        Operands.Push(value);
+        _operands.Push(value);
     }
 
     public ZsValue PopOperand()
     {
-        return Operands.Pop();
+        return _operands.Pop();
     }
 
     public ZsValue PeekOperandAt(int address)
     {
-        return Operands.ElementAt(address);
+        return _operands.ElementAt(address);
     }
 
     public ZsValue? GetEnvVar(int address)

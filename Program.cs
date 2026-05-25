@@ -6,7 +6,7 @@ Func<string, string> ReadFile = File.ReadAllText;
 
 Console.WriteLine("Hello, World!");
 
-var path = "/home/andydevs69420/Documents/zscript/lang.txt";
+var path = "D:\\zs-sharp\\lang.txt";
 var source = ReadFile(path);
 
 var state = new State();

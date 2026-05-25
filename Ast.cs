@@ -44,7 +44,7 @@ public class Ast
         return new Ast(AstType.AstMemberAccess, position)
         {
             A = indexable,
-            B = member,
+            B = member
         };
     }
 
@@ -94,10 +94,18 @@ public class Ast
             A = parameterHead
         };
     }
-    
+
     public static Ast CreateReturnNode(Ast? expression, Position position)
     {
         return new Ast(AstType.AstReturn, position)
+        {
+            A = expression
+        };
+    }
+    
+    public static Ast CreateExpressionStatementNode(Ast expression, Position position)
+    {
+        return new Ast(AstType.AstExpressionStatement, position)
         {
             A = expression
         };

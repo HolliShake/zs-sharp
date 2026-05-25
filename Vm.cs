@@ -40,20 +40,17 @@ public class Vm
         var endMatch = frame.Pc;
 
         // Scan until we find the null terminator
-        while (endMatch < code.Bytecode.Count && code.Bytecode[endMatch] != 0)
-        {
-            endMatch++;
-        }
+        while (endMatch < code.Bytecode.Count && code.Bytecode[endMatch] != 0) endMatch++;
 
         // Calculate the actual number of string bytes relative to Pc
         var stringLength = endMatch - frame.Pc;
 
         if (stringLength <= 0) return string.Empty;
-    
+
         // Slice exactly from the current Pc for 'stringLength' bytes
         ReadOnlySpan<byte> stringBytes = CollectionsMarshal.AsSpan(code.Bytecode)
             .Slice(frame.Pc, stringLength);
-    
+
         var result = Encoding.UTF8.GetString(stringBytes);
 
         return result;
@@ -145,22 +142,20 @@ public class Vm
 
         return Run(newCallFrame);
     }
-    
+
     private ZsValue DoCallMethod(Frame frame, int arg)
     {
-        var zsObject = frame.PeekOperandAt(arg+1);
+        var zsObject = frame.PeekOperandAt(arg + 1);
         var memberName = frame.PopOperand();
-        
+
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future))
-        {
             switch (memberName.String())
             {
                 case "then":
-                    return zscript.Future.FutureThenMethod(this, [ zsObject, frame.PopOperand() ]);
+                    return zscript.Future.FutureThenMethod(this, [zsObject, frame.PopOperand()]);
             }
-        }
 
-        throw new Exception("ERROR!");
+        throw new Exception($"method not found {zsObject.GetZsType()}.{memberName}");
     }
 
     private static void RaiseOrHandleException(Frame frame, ZsValue errorValue)
@@ -267,7 +262,7 @@ public class Vm
                     }
 
                     var futureInstance = zsFuture.Future();
-                    
+
                     // if (futureInstance.State == FutureState.FULLFILL)
                     // {
                     //     frame.PushOperand(futureInstance.Result!);
@@ -283,19 +278,23 @@ public class Vm
                     {
                         var future = ZsValue.FromFuture(new Future(FutureState.PENDING, frame));
                         frame.SetFutureOrSkip(future);
-                        
-                        if (futureInstance.State == FutureState.FULLFILL || futureInstance.State == FutureState.REJECTED)
+
+                        if (futureInstance.State == FutureState.FULLFILL ||
+                            futureInstance.State == FutureState.REJECTED)
                         {
+                            frame.PushOperand(futureInstance.Result!);
                             PendingTasks.Enqueue(future);
                             return future;
                         }
-                        
+
                         futureInstance.AddListener(future);
                         return future;
                     }
-                    
-                    if (futureInstance.State == FutureState.FULLFILL || futureInstance.State == FutureState.REJECTED)
+
+                    if (futureInstance.State == FutureState.FULLFILL || 
+                        futureInstance.State == FutureState.REJECTED)
                     {
+                        frame.PushOperand(futureInstance.Result!);
                         PendingTasks.Enqueue(frame.Future);
                         return frame.Future;
                     }
@@ -338,18 +337,22 @@ public class Vm
                     frame.PushOperand(c);
                     break;
                 }
+                case OpCode.POPTOP:
+                {
+                    frame.PopOperand();
+                    break;
+                }
                 case OpCode.RETURN:
                 {
-                    if (frame.Asynchronous)
+                    if (frame.Asynchronous || frame.Future != null)
                     {
                         // Console.WriteLine(frame.Future != null);
                         var zsFuture = frame.Future != null
                             ? frame.Future
-                            : frame.Future = ZsValue.FromFuture(new Future(FutureState.FULLFILL, frame, null));
+                            : frame.Future = ZsValue.FromFuture(new Future(FutureState.FULLFILL, frame, null!));
 
-                        // 
-                        
-                        zsFuture.Future().FullFill(frame.PopOperand(), PendingTasks);
+                        zsFuture.Future()
+                            .FullFill(frame.PopOperand(), PendingTasks);
 
                         return zsFuture!;
                     }
@@ -368,11 +371,11 @@ public class Vm
 
     public void MainLoop(ZsValue globalCodeObject)
     {
-        Run(new Frame(null, globalCodeObject, false,  false));
+        Run(new Frame(null, globalCodeObject, false, false));
 
         while (PendingTasks.Count > 0)
         {
-            Console.WriteLine("Continuing...");
+            // Console.WriteLine("Continuing...");
             var nextTask = PendingTasks.Dequeue();
             var futureInstance = nextTask.Future();
             futureInstance.SuspendedFrame.Wake();

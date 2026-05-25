@@ -41,22 +41,9 @@ public class Future
             var childFut = reaction.Future();
             var frame = childFut.SuspendedFrame;
 
-            if (frame.IsCallback)
-            {
-                frame.PushOperand(Result);
-                queue.Enqueue(reaction);
-            }
-            else
-            {
-                // Propagate
-                childFut.State = FutureState.FULLFILL;
-                childFut.Result = Result;
-                childFut.IsReady = true;
-                frame.PushOperand(Result);
-                queue.Enqueue(reaction);
-            }
+            frame.PushOperand(Result);
+            queue.Enqueue(reaction);
         }
-
         
         _fullFillReactions.Clear();
         _rejectReactions.Clear();

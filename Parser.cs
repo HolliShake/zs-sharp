@@ -81,20 +81,15 @@ public class Parser(string path, string source) : Lexer(path, source)
         var node = Terminal();
         if (node == null) return node;
 
-        while (Check(".") || Check("("))
-            if (Check("."))
+        while (Check("->") || Check("("))
+            if (Check("->"))
             {
-                Expect(".");
+                Expect("->");
                 var member = Terminal();
-                if (member == null)
-                {
-                    ErrorHandler.CompileError(path,  source, "expects member", Lookahead.Position);
-                }
+                if (member == null) ErrorHandler.CompileError(path, source, "expects member", Lookahead.Position);
 
                 if (member!.Type != AstType.AstName)
-                {
-                    ErrorHandler.CompileError(path,  source, "a member must be a valid identifier", Lookahead.Position);
-                }
+                    ErrorHandler.CompileError(path, source, "a member must be a valid identifier", Lookahead.Position);
 
                 node = Ast.CreateMemberAccessNode(
                     node, member, node.Position
@@ -342,11 +337,10 @@ public class Parser(string path, string source) : Lexer(path, source)
 
     private Ast? Statement()
     {
-        if (Check("fn"))
-            return Function();
+        if (Check("fn")) return Function();
         if (Check("print")) return Print();
         if (Check("return")) return Return();
-        return Expression();
+        return ExpressionStatement();
     }
 
     private Ast Function()
@@ -429,7 +423,21 @@ public class Parser(string path, string source) : Lexer(path, source)
         var position = Lookahead.Position;
         Expect("return");
         var expr = Expression();
+        Expect(";");
         return Ast.CreateReturnNode(expr, position);
+    }
+
+    private Ast? ExpressionStatement()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        var expr = Expression();
+        if (expr == null)
+        {
+            return null;
+        }
+        Expect(";");
+        return Ast.CreateExpressionStatementNode(expr, position);
     }
 
     private Ast Program()

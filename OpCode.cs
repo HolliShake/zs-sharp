@@ -20,5 +20,6 @@ public enum OpCode : byte
     BINMOD,
     BINADD,
     BINSUB,
+    POPTOP,
     RETURN
 }

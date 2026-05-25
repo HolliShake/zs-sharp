@@ -101,9 +101,9 @@ public class ZsValue(ValueType type, object value)
 
     public Func<Vm, ZsValue[], ZsValue> NativeFunction()
     {
-        return (Func<Vm, ZsValue[], ZsValue>) Value;
+        return (Func<Vm, ZsValue[], ZsValue>)Value;
     }
-    
+
     public Future Future()
     {
         Debug.Assert(Type is ValueType.Future, "Value is not a future.");

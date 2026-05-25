@@ -6,17 +6,19 @@ fn println(a) async {
 
 fn add(a, b) async {
     print "waiting...", await println(a + b + 10);
-    println("Hola!")
-    return 1
+    await println("Hola!");
+    return 1;
 }
 
-fn callback(data) {
+fn callback(data) async {
     print "cb >>", data;
-    return data + 1
+    return data + 1;
 }
 
 add(323, 413)
-    .then(callback)
-    .then(callback)
-    
+    ->then(callback)
+    ->then(callback)
+    ->then(callback);
+
 add(100, 53)
+    ->then(callback);

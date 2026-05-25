@@ -194,6 +194,7 @@ public class Lexer(string path, string source)
             {
                 Advance();
                 if (Match('-')) return new Token(TokenType.Sym, "--", new Position(startLine, startColumn));
+                if (Match('>')) return new Token(TokenType.Sym, "->", new Position(startLine, startColumn));
                 return Match('=')
                     ? new Token(TokenType.Sym, "-=", new Position(startLine, startColumn))
                     : new Token(TokenType.Sym, "-", new Position(startLine, startColumn));

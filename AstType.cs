@@ -32,5 +32,6 @@ public enum AstType
     AstFunction,
     AstPrint,
     AstReturn,
+    AstExpressionStatement,
     AstProgram
 }

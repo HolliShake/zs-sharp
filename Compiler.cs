@@ -61,12 +61,9 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 var callable = node.A;
                 var argsHead = node.B;
                 var argc = 0;
-                
-                if (callable.Type == AstType.AstMemberAccess)
-                {
-                    Expr(code, table, callable.A!);
-                }
-                
+
+                if (callable.Type == AstType.AstMemberAccess) Expr(code, table, callable.A!);
+
                 while (argsHead != null)
                 {
                     Expr(code, table, argsHead);
@@ -85,6 +82,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                     Expr(code, table, callable);
                     code.Emit(OpCode.CALL, argc);
                 }
+
                 break;
             }
             case AstType.AstAwait:
@@ -161,9 +159,15 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Return(code, table, node);
                 break;
             }
+            case AstType.AstExpressionStatement:
+            {
+                Expr(code, table, node.A!);
+                code.Emit(OpCode.POPTOP);
+                break;
+            }
             default:
             {
-                Expr(code, table, node);
+                ErrorHandler.CompileError(path, source, "Node not implemented", node.Position);
                 break;
             }
         }
@@ -183,18 +187,14 @@ public class Compiler(State state, string path, string source) : Parser(path, so
 
         code.Emit(OpCode.PRINT, count);
     }
-    
+
     private void Return(Code code, SymbolTable table, Ast node)
     {
         var expression = node.A;
         if (expression == null)
-        {
             code.Emit(OpCode.LOADNULL);
-        }
         else
-        {
             Expr(code, table, expression);
-        }
 
         code.Emit(OpCode.RETURN);
     }
