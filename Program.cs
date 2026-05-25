@@ -58,30 +58,18 @@ public static class Program
     {
         if (!File.Exists(path))
         {
-            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine($"Error: The file at path '{path}' does not exist.");
-            Console.ResetColor();
             return;
         }
+        
+        var source = File.ReadAllText(path);
+        var state = new State();
 
-        try
-        {
-            var source = File.ReadAllText(path);
-            var state = new State();
+        var compiler = new Compiler(state, path, source);
+        var script = compiler.Compile();
 
-            var compiler = new Compiler(state, path, source);
-            var script = compiler.Compile();
-
-            var vm = new Vm(state);
-            vm.MainLoop(script);
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"Execution crashed: {ex.Message}");
-            Console.ResetColor();
-            throw;
-        }
+        var vm = new Vm(state);
+        vm.MainLoop(script);
     }
 
     private static void RunTestSuite()
