@@ -439,23 +439,28 @@ public class Vm
 
         while (PendingTasks.Count > 0)
         {
-            // Console.WriteLine("Continuing...");
             var nextTask = PendingTasks.Dequeue();
             var futureInstance = nextTask.Future();
-            if (futureInstance.State == FutureState.Fulfill)
+            switch (futureInstance.State)
             {
-                // Wakeup listeners
-                futureInstance.FullFill(futureInstance.Result!, PendingTasks);
-            }
-            else if (futureInstance.State == FutureState.Rejected)
-            {
-                // Wakeup listeners
-                futureInstance.Reject(futureInstance.Result!, PendingTasks);
-            }
-            else
-            {
-                futureInstance.SuspendedFrame.Wake();
-                Run(futureInstance.SuspendedFrame);
+                case FutureState.Fulfill:
+                {
+                    // Wakeup listeners
+                    futureInstance.FullFill(futureInstance.Result!, PendingTasks);;
+                    break;
+                }
+                case FutureState.Rejected:
+                {
+                    // Wakeup listeners
+                    futureInstance.Reject(futureInstance.Result!, PendingTasks);
+                    break;
+                }
+                default:
+                {
+                    futureInstance.SuspendedFrame.Wake();
+                    Run(futureInstance.SuspendedFrame);
+                    break;
+                }
             }
         }
     }
