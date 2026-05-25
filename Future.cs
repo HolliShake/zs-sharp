@@ -44,7 +44,7 @@ public class Future
             frame.PushOperand(Result);
             queue.Enqueue(reaction);
         }
-        
+
         _fullFillReactions.Clear();
         _rejectReactions.Clear();
     }
@@ -70,7 +70,7 @@ public class Future
                     .Reject(Result, queue);
             }
         }
-    
+
         _fullFillReactions.Clear();
         _rejectReactions.Clear();
     }
@@ -90,14 +90,11 @@ public class Future
     {
         _rejectReactions.Add(zsValue);
     }
-    
+
     //-----------------------
     public static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
     {
-        if (arguments.Length != 2)
-        {
-            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2");
-        }
+        if (arguments.Length != 2) return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2");
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -106,7 +103,7 @@ public class Future
         var newFrame = new Frame(null, callback, true, false);
         var newPromise = ZsValue.FromFuture(new Future(FutureState.PENDING, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
-        
+
         if (thisArgFut.State == FutureState.FULLFILL)
         {
             newFrame.PushOperand(thisArgFut.Result!);
@@ -114,7 +111,7 @@ public class Future
                 .FullFill(thisArgFut.Result!, vm.PendingTasks);
             vm.PendingTasks.Enqueue(newPromise);
         }
-        else if (thisArgFut.State ==  FutureState.REJECTED)
+        else if (thisArgFut.State == FutureState.REJECTED)
         {
             // Handled by Error handler
             newPromise.Future()
@@ -124,17 +121,14 @@ public class Future
         {
             thisArgFut.AddListener(newPromise);
         }
-        
+
         // Return for chaining
         return newPromise;
     }
-    
+
     public static ZsValue FutureCatchMethod(Vm vm, ZsValue[] arguments)
     {
-        if (arguments.Length != 2)
-        {
-            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2");
-        }
+        if (arguments.Length != 2) return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2");
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -143,25 +137,24 @@ public class Future
         var newFrame = new Frame(null, callback, true, false);
         var newPromise = ZsValue.FromFuture(new Future(FutureState.PENDING, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
-        
+
         if (thisArgFut.State == FutureState.FULLFILL)
         {
             newPromise.Future()
                 .FullFill(thisArgFut.Result!, vm.PendingTasks);
             vm.PendingTasks.Enqueue(newPromise);
         }
-        else if (thisArgFut.State ==  FutureState.REJECTED)
+        else if (thisArgFut.State == FutureState.REJECTED)
         {
             newFrame.PushOperand(thisArgFut.Result!);
             newPromise.Future()
                 .Reject(thisArgFut.Result!, vm.PendingTasks);
-            
         }
         else if (thisArgFut.State == FutureState.PENDING)
         {
             thisArgFut.AddListener(newPromise);
         }
-        
+
         // Return for chaining
         return newPromise;
     }

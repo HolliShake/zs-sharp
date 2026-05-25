@@ -102,7 +102,7 @@ public class Ast
             A = expression
         };
     }
-    
+
     public static Ast CreateExpressionStatementNode(Ast expression, Position position)
     {
         return new Ast(AstType.AstExpressionStatement, position)

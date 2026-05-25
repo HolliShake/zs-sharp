@@ -291,7 +291,7 @@ public class Vm
                         return future;
                     }
 
-                    if (futureInstance.State == FutureState.FULLFILL || 
+                    if (futureInstance.State == FutureState.FULLFILL ||
                         futureInstance.State == FutureState.REJECTED)
                     {
                         frame.PushOperand(futureInstance.Result!);

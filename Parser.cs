@@ -432,10 +432,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
         var expr = Expression();
-        if (expr == null)
-        {
-            return null;
-        }
+        if (expr == null) return null;
         Expect(";");
         return Ast.CreateExpressionStatementNode(expr, position);
     }
