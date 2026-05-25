@@ -172,6 +172,11 @@ public class Compiler : Parser
                 Function(code, table, node);
                 break;
             }
+            case AstType.AstTryCatch:
+            {
+                TryCatch(code, table, node);
+                break;
+            }
             case AstType.AstPrint:
             {
                 Print(code, table, node);
@@ -272,6 +277,54 @@ public class Compiler : Parser
         code.Emit(OpCode.LoadFunction, addressOfCode);
         code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.StoreName, functionAddress);
+    }
+
+    private void TryCatch(Code code, SymbolTable table, Ast node)
+    {
+        Debug.Assert(node is { C: not null }, "node.C is null");
+        var position = node.Position;
+        
+        code.EmitLine(ModuleId, position.Line);
+        var catchAddress = code.EmitJump(OpCode.SetupTry);
+        
+        var tryTable = new SymbolTable(ScopeType.TryBlock, table);
+        
+        var tryHead = node.A;
+        while (tryHead != null)
+        {
+            Stmt(code, tryTable, tryHead);
+            position = tryHead.Position;
+            tryHead = tryHead.Next;
+        }
+        
+        code.EmitLine(ModuleId, position.Line);
+        code.Emit(OpCode.PopTry);
+        
+        code.EmitLine(ModuleId, position.Line);
+        var toEndif = code.EmitJump(OpCode.Jump);
+
+        var catchTable = new SymbolTable(ScopeType.CatchBlock, table);
+        
+        code.Label(catchAddress);
+        
+        var errorVar = node.C;
+        var errorVarAddress = code.AllocateLocal();
+        catchTable.Add(errorVar.Value, errorVarAddress, false, errorVar.Position);
+        
+        code.EmitLine(ModuleId, errorVar.Position.Line);
+        code.Emit(OpCode.StoreLocal, errorVarAddress);
+        
+        var catchHead = node.B;
+        while (catchHead != null)
+        {
+            Stmt(code, catchTable, catchHead);
+            catchHead = catchHead.Next;
+        }
+        
+        code.EmitLine(ModuleId, position.Line);
+        code.Emit(OpCode.PopTry);
+        
+        code.Label(toEndif);
     }
 
     private ZsValue Program(Ast node)

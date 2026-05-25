@@ -28,6 +28,7 @@ add(100, 53)
     ->then(callback);
 
 
+
 fn callbackForError(data) {
     print "cb For Error >>", data;
 }
@@ -35,6 +36,11 @@ fn callbackForError(data) {
 add(1, "world")
     ->catch(callbackForError);
 
-
 sub(5, 2);
+
+try {
+    2 + "asdasd";
+} catch (err) {
+    println(err);
+}
     

@@ -338,6 +338,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     private Ast? Statement()
     {
         if (Check("fn")) return Function();
+        if (Check("try")) return TryCatch();
         if (Check("print")) return Print();
         if (Check("return")) return Return();
         return ExpressionStatement();
@@ -350,6 +351,8 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect("fn");
         var func = Terminal();
         if (func == null) ErrorHandler.CompileError(Path, Source, "expects function name", Lookahead.Position);
+        if (func is not { Type:  AstType.AstName })
+            ErrorHandler.CompileError(Path, Source, "expects function name", func!.Position);
 
         Expect("(");
         var argc = 0;
@@ -358,16 +361,17 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (parameterTail is not null and { Type: AstType.AstName })
         {
             argc++;
-            while (parameterTail != null && Check(","))
+            while (Check(","))
             {
                 Expect(",");
                 var next = Terminal();
                 parameterTail.Next = next;
                 parameterTail = next;
                 argc++;
-
+                
+                if (parameterTail == null) ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
                 if (parameterTail is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(Path, Source, "expects parameter name", Lookahead.Position);
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
             }
         }
 
@@ -392,6 +396,42 @@ public class Parser(string path, string source) : Lexer(path, source)
         return Ast.CreateFunctionNode(
             func!, parameterHead, bodyHead, argc, asynchronous, position
         );
+    }
+
+    private Ast TryCatch()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("try");
+        Expect("{");
+        var tryHead = Statement();
+        var tryTail = tryHead;
+        while (tryTail != null)
+        {
+            var next = Statement();
+            tryTail.Next = next;
+            tryTail = next;
+        }
+        Expect("}");
+        Expect("catch");
+        Expect("(");
+        var errorVar = Terminal();
+        if  (errorVar == null)
+            ErrorHandler.CompileError(Path, Source, "expects a catch receiver variable name", Lookahead.Position);
+        if  (errorVar is not { Type: AstType.AstName })
+            ErrorHandler.CompileError(Path, Source, "expects a catch receiver variable name", errorVar!.Position);
+        Expect(")");
+        Expect("{");
+        var catchHead = Statement();
+        var catchTail = catchHead;
+        while (catchTail != null)
+        {
+            var next = Statement();
+            catchTail.Next = next;
+            catchTail = next;
+        }
+        Expect("}");
+        return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
     }
 
     private Ast Print()

@@ -86,6 +86,16 @@ public class Ast
             Flag0 = asynchronous
         };
     }
+    
+    public static Ast CreateTryCatchNode(Ast? tryHead, Ast? catchHead, Ast catchReceiver, Position position)
+    {
+        return new Ast(AstType.AstTryCatch, position)
+        {
+            A = tryHead,
+            B = catchHead,
+            C = catchReceiver
+        };
+    }
 
     public static Ast CreatePrintNode(Ast parameterHead, Position position)
     {

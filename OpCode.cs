@@ -21,5 +21,8 @@ public enum OpCode : byte
     BinAdd,
     BinSub,
     PopTop,
+    SetupTry,
+    PopTry,
+    Jump,
     Return
 }

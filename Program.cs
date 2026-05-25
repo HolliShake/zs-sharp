@@ -33,9 +33,7 @@ public static class Program
                 // Ensure they actually provided a file path after the flag
                 if (args.Length < 2)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("Error: Missing file path after --run flag.");
-                    Console.ResetColor();
                     return;
                 }
 
@@ -45,9 +43,7 @@ public static class Program
 
             default:
             {
-                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Unknown option: {args[0]}");
-                Console.ResetColor();
                 PrintHelp();
                 break;
             }

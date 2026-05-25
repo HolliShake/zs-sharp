@@ -30,6 +30,7 @@ public enum AstType
     AstAnd,
     AstOr,
     AstFunction,
+    AstTryCatch,
     AstPrint,
     AstReturn,
     AstExpressionStatement,
