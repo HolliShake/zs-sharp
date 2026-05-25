@@ -1,6 +1,6 @@
 namespace zscript;
 
-public class OpCodeDebug(int moduleId, int index,  int line)
+public class OpCodeDebug(int moduleId, int index, int line)
 {
     public int ModuleId { get; } = moduleId;
     public int Index { get; } = index;

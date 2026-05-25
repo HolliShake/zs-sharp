@@ -16,11 +16,8 @@ public class State
     public int SaveInt(int value)
     {
         var existingIndex = Constants.FindIndex(x => x.Type == ValueType.Int && x.Int() == value);
-        if (existingIndex != -1)
-        {
-            return existingIndex;
-        }
-        
+        if (existingIndex != -1) return existingIndex;
+
         var index = Constants.Count;
         Constants.Add(ZsValue.FromInt(value));
         return index;
@@ -30,11 +27,8 @@ public class State
     {
         // ReSharper disable once CompareOfFloatsByEqualityOperator
         var existingIndex = Constants.FindIndex(x => x.Type == ValueType.Number && x.Number() == value);
-        if (existingIndex != -1)
-        {
-            return existingIndex;
-        }
-        
+        if (existingIndex != -1) return existingIndex;
+
         var index = Constants.Count;
         Constants.Add(ZsValue.FromNumber(value));
         return index;
@@ -43,11 +37,8 @@ public class State
     public int SaveStr(string value)
     {
         var existingIndex = Constants.FindIndex(x => x.Type == ValueType.Number && x.Value.Equals(value));
-        if (existingIndex != -1)
-        {
-            return existingIndex;
-        }
-        
+        if (existingIndex != -1) return existingIndex;
+
         var index = Constants.Count;
         Constants.Add(ZsValue.FromString(value));
         return index;

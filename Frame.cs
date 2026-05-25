@@ -23,26 +23,53 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         return env;
     }
 
-    public void SetFutureOrSkip(ZsValue future) => Future ??= future;
+    public void SetFutureOrSkip(ZsValue future)
+    {
+        Future ??= future;
+    }
 
-    public void Suspend() => Suspended = true;
+    public void Suspend()
+    {
+        Suspended = true;
+    }
 
-    public void Wake() => Suspended = false;
+    public void Wake()
+    {
+        Suspended = false;
+    }
 
-    public void Forward(int pc) => Pc += pc;
+    public void Forward(int pc)
+    {
+        Pc += pc;
+    }
 
-    public void PushOperand(ZsValue value) => _operands.Push(value);
+    public void PushOperand(ZsValue value)
+    {
+        _operands.Push(value);
+    }
 
-    public ZsValue PopOperand() => _operands.Pop();
+    public ZsValue PopOperand()
+    {
+        return _operands.Pop();
+    }
 
     public void PopOperand(int size)
     {
         for (var i = 0; i < size; i++) _operands.Pop();
     }
 
-    public ZsValue PeekOperandAt(int address) => _operands.ElementAt(address);
+    public ZsValue PeekOperandAt(int address)
+    {
+        return _operands.ElementAt(address);
+    }
 
-    public ZsValue? GetEnvVar(int address) => Environment[address].Value;
+    public ZsValue? GetEnvVar(int address)
+    {
+        return Environment[address].Value;
+    }
 
-    public void SetEnvVar(int address, ZsValue value) => Environment[address].Value = value;
+    public void SetEnvVar(int address, ZsValue value)
+    {
+        Environment[address].Value = value;
+    }
 }

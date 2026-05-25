@@ -4,15 +4,15 @@ namespace zscript;
 
 public class Compiler : Parser
 {
-    private State State { get; set; }
-    private int ModuleId { get; set; }
-
     public Compiler(State state, string path, string source) : base(path, source)
     {
         State = state;
         ModuleId = State.RegisterModuleName(path);
     }
-    
+
+    private State State { get; }
+    private int ModuleId { get; }
+
     private void Expr(Code code, SymbolTable table, Ast node)
     {
         switch (node.Type)
@@ -35,7 +35,7 @@ public class Compiler : Parser
                     code.Emit(OpCode.LoadCapture, address);
                     break;
                 }
-                
+
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
                 break;
@@ -207,7 +207,7 @@ public class Compiler : Parser
             parameterHead = parameterHead.Next;
             count++;
         }
-        
+
         code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.Print, count);
     }
@@ -221,7 +221,9 @@ public class Compiler : Parser
             code.Emit(OpCode.LoadNull);
         }
         else
+        {
             Expr(code, table, expression);
+        }
 
         code.Emit(OpCode.Return);
     }
@@ -234,7 +236,7 @@ public class Compiler : Parser
 
         var functionAddress = code.AllocateLocal();
         table.Add(node.A.Value, functionAddress, false, node.Position);
-        
+
         var position = node.Position;
 
         var paramHead = node.B;
@@ -259,7 +261,7 @@ public class Compiler : Parser
             position = bodyHead.Position;
             bodyHead = bodyHead.Next;
         }
-        
+
         fnCode.EmitLine(ModuleId, position.Line);
         fnCode.Emit(OpCode.LoadNull);
         fnCode.EmitLine(ModuleId, position.Line);
@@ -278,7 +280,7 @@ public class Compiler : Parser
         var globalTable = new SymbolTable(ScopeType.Global, null);
 
         var position = node.Position;
-        
+
         var bodyHead = node.A;
         while (bodyHead != null)
         {

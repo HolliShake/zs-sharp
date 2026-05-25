@@ -6,12 +6,12 @@ namespace zscript;
 
 public class Code(string name, int argCount, bool isAsync)
 {
+    public List<OpCodeDebug> DebugLines = [];
     public string Name { get; } = name;
     public int ArgCount { get; } = argCount;
     public bool IsAsync { get; } = isAsync;
 
     public List<byte> Bytecode { get; } = [];
-    public List<OpCodeDebug> DebugLines = [];
     public Dictionary<int, Cell> CapturedCells { get; } = [];
 
     public List<(int Depth, int Address, int Destination)> Captures { get; } = [];

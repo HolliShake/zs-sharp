@@ -83,7 +83,7 @@ public class ZsValue(ValueType type, object value)
         Debug.Assert(IsExtensionOf(zsErrorClass, "Error"), "Value is not error class.");
         return CreateZsObject(zsErrorClass, new Dictionary<string, ZsValue>([
             new KeyValuePair<string, ZsValue>("message", FromString(errorMessage)),
-            new KeyValuePair<string, ZsValue>("traceback", FromString(traceback)),
+            new KeyValuePair<string, ZsValue>("traceback", FromString(traceback))
         ]));
     }
 

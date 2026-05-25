@@ -65,7 +65,8 @@ public class Vm
             (double or int, double or int) => ZsValue.FromNumber(a.Number() + b.Number()),
             (string, string) => ZsValue.FromString(a.String() + b.String()),
             _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)", BuildTracebackFromFrame())
+                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
+                BuildTracebackFromFrame())
         };
 
         // Console.WriteLine($"{a} + {b} = {res}");
@@ -79,7 +80,8 @@ public class Vm
             (int, int) => ZsValue.FromInt(a.Int() - b.Int()),
             (double or int, double or int) => ZsValue.FromNumber(a.Number() - b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)", BuildTracebackFromFrame())
+                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
+                BuildTracebackFromFrame())
         };
 
         // Console.WriteLine($"{a} - {b} = {res}");
@@ -140,7 +142,8 @@ public class Vm
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
         return callableCode.ArgCount != arg
-            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}",  BuildTracebackFromFrame())
+            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}",
+                BuildTracebackFromFrame())
             : Run(newCallFrame);
     }
 
@@ -162,7 +165,8 @@ public class Vm
                     return zscript.Future.FutureCatchMethod(this, arguments);
             }
 
-        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}", BuildTracebackFromFrame());
+        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}",
+            BuildTracebackFromFrame());
     }
 
     private void RaiseOrHandleException(Frame frame, ZsValue errorValue)
@@ -171,18 +175,18 @@ public class Vm
 
         if (frame.Asynchronous || frame.Future != null)
         {
-            var fut =  frame.Future != null
-                    ? frame.Future
-                    : ZsValue.FromFuture(new Future(FutureState.Rejected, frame));
-            
+            var fut = frame.Future != null
+                ? frame.Future
+                : ZsValue.FromFuture(new Future(FutureState.Rejected, frame));
+
             frame.SetFutureOrSkip(fut);
-            
+
             fut.Future().Reject(errorValue, PendingTasks);
             frame.PushOperand(errorValue);
             PendingTasks.Enqueue(fut);
             return;
         }
-        
+
         var error = ZsValue.GetProperty(errorValue, "message");
         if (error != null) throw new Exception(error.String() + "\n" + BuildTracebackFromFrame());
     }
@@ -198,14 +202,12 @@ public class Vm
             var mid = low + ((high - low) >> 1);
             var midIndex = debugLines[mid].Index;
 
-            if (midIndex == pc)
-            {
-                return debugLines[mid];
-            }
-            else if (midIndex < pc)
+            if (midIndex == pc) return debugLines[mid];
+
+            if (midIndex < pc)
             {
                 bestMatchIndex = mid;
-                
+
                 low = mid + 1;
             }
             else
@@ -213,14 +215,14 @@ public class Vm
                 high = mid - 1;
             }
         }
-        
+
         return bestMatchIndex != -1 ? debugLines[bestMatchIndex] : debugLines[0];
     }
-    
+
     public string BuildTracebackFromFrame()
     {
         var sites = new Queue<string>();
-    
+
         var currentFrame = _currentFrame;
         while (currentFrame != null)
         {
@@ -230,7 +232,7 @@ public class Vm
             sites.Enqueue($"    at [{moduleName}:{code.Name}:{tracebackLine.Line}]");
             currentFrame = currentFrame.CallerFrame;
         }
-        
+
         return string.Join(Environment.NewLine, sites);
     }
 
@@ -252,7 +254,8 @@ public class Vm
                     var val = frame.GetEnvVar(off);
                     if (val == null)
                     {
-                        RaiseOrHandleException(frame, ZsValue.FromErrorMessage(Error, "referenced before assignment", BuildTracebackFromFrame()));
+                        RaiseOrHandleException(frame,
+                            ZsValue.FromErrorMessage(Error, "referenced before assignment", BuildTracebackFromFrame()));
                         break;
                     }
 
@@ -409,7 +412,7 @@ public class Vm
                         var zsFuture = frame.Future != null
                             ? frame.Future
                             : ZsValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
-                        
+
                         frame.SetFutureOrSkip(zsFuture);
 
                         zsFuture.Future()
@@ -443,7 +446,7 @@ public class Vm
             {
                 // Wakeup listeners
                 futureInstance.FullFill(futureInstance.Result!, PendingTasks);
-            } 
+            }
             else if (futureInstance.State == FutureState.Rejected)
             {
                 // Wakeup listeners

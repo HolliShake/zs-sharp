@@ -66,7 +66,8 @@ public class Future(FutureState initialState, Frame frame)
 
     public static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
     {
-        if (arguments.Length != 2) return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
+        if (arguments.Length != 2)
+            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -81,7 +82,7 @@ public class Future(FutureState initialState, Frame frame)
             case FutureState.Fulfill:
             {
                 newFrame.PushOperand(thisArgFut.Result!);
-               
+
                 vm.PendingTasks.Enqueue(newPromise);
                 break;
             }
@@ -105,7 +106,8 @@ public class Future(FutureState initialState, Frame frame)
 
     public static ZsValue FutureCatchMethod(Vm vm, ZsValue[] arguments)
     {
-        if (arguments.Length != 2) return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2",  vm.BuildTracebackFromFrame());
+        if (arguments.Length != 2)
+            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -121,13 +123,13 @@ public class Future(FutureState initialState, Frame frame)
             {
                 newPromise.Future()
                     .FullFill(thisArgFut.Result!, vm.PendingTasks);
-                
+
                 break;
             }
             case FutureState.Rejected:
             {
                 newFrame.PushOperand(thisArgFut.Result!);
-               
+
                 vm.PendingTasks.Enqueue(newPromise);
                 break;
             }
