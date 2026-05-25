@@ -5,17 +5,17 @@ namespace zscript;
 
 public class Vm
 {
+    private readonly State _state;
     public readonly ZsValue Error;
     public readonly ZsValue Future;
     public readonly ZsValue Null;
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
-    private readonly State State;
     public readonly ZsValue TypeError;
 
     public Vm(State state)
     {
-        State = state;
+        _state = state;
         Object = ZsValue.CreateZsClass(null, "Object");
         Error = ZsValue.CreateZsClass(Object, "Error");
         TypeError = ZsValue.CreateZsClass(Error, "TypeError");
@@ -87,7 +87,7 @@ public class Vm
 
     private ZsValue DoLoadFunction(Frame callerFrame, int off)
     {
-        var codeObject = State.Codes[off];
+        var codeObject = _state.Codes[off];
         var function = ZsValue.FromCodeToFunction(codeObject);
 
         foreach (var (depth, address, destination) in codeObject.Captures)
@@ -139,22 +139,19 @@ public class Vm
 
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
-        if (callableCode.ArgCount != arg)
-        {
-            return ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}");
-        }
-
-        return Run(newCallFrame);
+        return callableCode.ArgCount != arg
+            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}")
+            : Run(newCallFrame);
     }
 
     private ZsValue DoCallMethod(Frame frame, int arg)
     {
         var zsObject = frame.PeekOperandAt(arg + 1);
         var memberName = frame.PopOperand();
-        
+
         var arguments = new ZsValue[arg + 1];
-        for (var i = 1; i < arg + 1; i++) arguments[i] = frame.PopOperand();
         arguments[0] = zsObject;
+        for (var i = 1; i < arg + 1; i++) arguments[i] = frame.PopOperand();
 
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future))
             switch (memberName.String())
@@ -165,7 +162,7 @@ public class Vm
                     return zscript.Future.FutureCatchMethod(this, arguments);
             }
 
-        throw new Exception($"method not found {zsObject.GetZsType()}.{memberName}");
+        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}");
     }
 
     private static void RaiseOrHandleException(Frame frame, ZsValue errorValue)
@@ -184,8 +181,8 @@ public class Vm
 
             switch (opcode)
             {
-                case OpCode.LOADLOCAL:
-                case OpCode.LOADCAPTURE:
+                case OpCode.LoadLocal:
+                case OpCode.LoadCapture:
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
@@ -199,26 +196,26 @@ public class Vm
                     frame.PushOperand(val);
                     break;
                 }
-                case OpCode.LOADCONST:
+                case OpCode.LoadConst:
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
-                    frame.PushOperand(State.Constants[off]);
+                    frame.PushOperand(_state.Constants[off]);
                     break;
                 }
-                case OpCode.LOADSTRING:
+                case OpCode.LoadString:
                 {
                     var str = ReadString(frame);
                     frame.Forward(str.Length + 1);
                     frame.PushOperand(ZsValue.FromString(str));
                     break;
                 }
-                case OpCode.LOADNULL:
+                case OpCode.LoadNull:
                 {
                     frame.PushOperand(Null);
                     break;
                 }
-                case OpCode.LOADFUNCTION:
+                case OpCode.LoadFunction:
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
@@ -226,15 +223,15 @@ public class Vm
                     frame.PushOperand(function);
                     break;
                 }
-                case OpCode.STORENAME:
-                case OpCode.STORELOCAL:
+                case OpCode.StoreName:
+                case OpCode.StoreLocal:
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
                     DoStoreName(frame, off);
                     break;
                 }
-                case OpCode.CALL:
+                case OpCode.Call:
                 {
                     var arg = ReadInt(frame);
                     frame.Forward(4);
@@ -248,7 +245,7 @@ public class Vm
                     frame.PushOperand(ret);
                     break;
                 }
-                case OpCode.CALLMETHOD:
+                case OpCode.CallMethod:
                 {
                     var arg = ReadInt(frame);
                     frame.Forward(4);
@@ -262,7 +259,7 @@ public class Vm
                     frame.PushOperand(ret);
                     break;
                 }
-                case OpCode.AWAIT:
+                case OpCode.Await:
                 {
                     var zsFuture = frame.PopOperand();
                     if (!ZsValue.IsInstanceOf(zsFuture, ValueType.Future))
@@ -273,24 +270,14 @@ public class Vm
 
                     var futureInstance = zsFuture.Future();
 
-                    // if (futureInstance.State == FutureState.FULLFILL)
-                    // {
-                    //     frame.PushOperand(futureInstance.Result!);
-                    //     break;
-                    // }
-                    //
-                    // if (futureInstance.State == FutureState.REJECTED)
-                    //     // Raise error
-                    //     break;
-
                     frame.Suspend();
                     if (frame.Future == null)
                     {
-                        var future = ZsValue.FromFuture(new Future(FutureState.PENDING, frame));
+                        var future = ZsValue.FromFuture(new Future(FutureState.Pending, frame));
                         frame.SetFutureOrSkip(future);
 
-                        if (futureInstance.State == FutureState.FULLFILL ||
-                            futureInstance.State == FutureState.REJECTED)
+                        if (futureInstance.State == FutureState.Fulfill ||
+                            futureInstance.State == FutureState.Rejected)
                         {
                             frame.PushOperand(futureInstance.Result!);
                             PendingTasks.Enqueue(future);
@@ -301,8 +288,8 @@ public class Vm
                         return future;
                     }
 
-                    if (futureInstance.State == FutureState.FULLFILL ||
-                        futureInstance.State == FutureState.REJECTED)
+                    if (futureInstance.State == FutureState.Fulfill ||
+                        futureInstance.State == FutureState.Rejected)
                     {
                         frame.PushOperand(futureInstance.Result!);
                         PendingTasks.Enqueue(frame.Future);
@@ -312,14 +299,14 @@ public class Vm
                     futureInstance.AddListener(frame.Future);
                     return frame.Future;
                 }
-                case OpCode.PRINT:
+                case OpCode.Print:
                 {
                     var size = ReadInt(frame);
                     frame.Forward(4);
                     DoPrint(frame, size);
                     break;
                 }
-                case OpCode.BINADD:
+                case OpCode.BinAdd:
                 {
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
@@ -333,7 +320,7 @@ public class Vm
                     frame.PushOperand(c);
                     break;
                 }
-                case OpCode.BINSUB:
+                case OpCode.BinSub:
                 {
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
@@ -347,24 +334,23 @@ public class Vm
                     frame.PushOperand(c);
                     break;
                 }
-                case OpCode.POPTOP:
+                case OpCode.PopTop:
                 {
                     frame.PopOperand();
                     break;
                 }
-                case OpCode.RETURN:
+                case OpCode.Return:
                 {
                     if (frame.Asynchronous || frame.Future != null)
                     {
-                        // Console.WriteLine(frame.Future != null);
                         var zsFuture = frame.Future != null
                             ? frame.Future
-                            : frame.Future = ZsValue.FromFuture(new Future(FutureState.FULLFILL, frame, null!));
+                            : frame.Future = ZsValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
 
                         zsFuture.Future()
                             .FullFill(frame.PopOperand(), PendingTasks);
 
-                        return zsFuture!;
+                        return zsFuture;
                     }
 
                     return frame.PopOperand();

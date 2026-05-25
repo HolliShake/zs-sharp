@@ -254,9 +254,9 @@ public class ZsValue(ValueType type, object value)
         var fut = Future();
         var rep = fut.State switch
         {
-            FutureState.PENDING => "Pending",
-            FutureState.REJECTED => "Rejected",
-            FutureState.FULLFILL => fut.Result!.ToString(),
+            FutureState.Pending => "Pending",
+            FutureState.Rejected => "Rejected",
+            FutureState.Fulfill => fut.Result!.ToString(),
             _ => throw new InvalidOperationException()
         };
         return "Future { " + rep + " }";

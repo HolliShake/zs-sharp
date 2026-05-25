@@ -23,6 +23,7 @@ public class Frame
         Pc = 0;
         Future = null;
         CodeLen = code.Bytecode.Count;
+        IsCallback = callback;
         Suspended = false;
         Environment = new Cell[code.LocalCount];
         IsFaulted = false;

@@ -22,7 +22,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         if (!Check(type))
             ErrorHandler.CompileError(
-                path, source,
+                Path, Source,
                 $"Expected token of type {type}, but got {Lookahead} at position {Lookahead.Position}.",
                 Lookahead.Position);
 
@@ -34,7 +34,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         if (!Check(value))
             ErrorHandler.CompileError(
-                path, source,
+                Path, Source,
                 $"Expected token with value '{value}', but got {Lookahead} at position {Lookahead.Position}.",
                 Lookahead.Position);
 
@@ -86,10 +86,10 @@ public class Parser(string path, string source) : Lexer(path, source)
             {
                 Expect("->");
                 var member = Terminal();
-                if (member == null) ErrorHandler.CompileError(path, source, "expects member", Lookahead.Position);
+                if (member == null) ErrorHandler.CompileError(Path, Source, "expects member", Lookahead.Position);
 
                 if (member!.Type != AstType.AstName)
-                    ErrorHandler.CompileError(path, source, "a member must be a valid identifier", Lookahead.Position);
+                    ErrorHandler.CompileError(Path, Source, "a member must be a valid identifier", Lookahead.Position);
 
                 node = Ast.CreateMemberAccessNode(
                     node, member, node.Position
@@ -109,7 +109,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                         argumentTail = next;
 
                         if (argumentTail is null)
-                            ErrorHandler.CompileError(path, source, "expects argument after comma", Lookahead.Position);
+                            ErrorHandler.CompileError(Path, Source, "expects argument after comma", Lookahead.Position);
                     }
 
                 Expect(")");
@@ -129,7 +129,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             Expect("await");
             var futureNode = Unary();
             if (futureNode == null)
-                ErrorHandler.CompileError(path, source, "an expression is expected", Lookahead.Position);
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
 
             return Ast.CreateAwaitNode(futureNode!, position);
         }
@@ -331,7 +331,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (nullable) return null;
 
         Debug.Assert(Lookahead != null, "Lookahead is null");
-        ErrorHandler.CompileError(path, source, "an expression is required.", Lookahead.Position);
+        ErrorHandler.CompileError(Path, Source, "an expression is required.", Lookahead.Position);
         return null;
     }
 
@@ -349,7 +349,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         var position = Lookahead.Position;
         Expect("fn");
         var func = Terminal();
-        if (func == null) ErrorHandler.CompileError(path, source, "expects function name", Lookahead.Position);
+        if (func == null) ErrorHandler.CompileError(Path, Source, "expects function name", Lookahead.Position);
 
         Expect("(");
         var argc = 0;
@@ -367,7 +367,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 argc++;
 
                 if (parameterTail is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(path, source, "expects parameter name", Lookahead.Position);
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name", Lookahead.Position);
             }
         }
 
@@ -410,7 +410,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 argumentTail = next;
 
                 if (argumentTail is null)
-                    ErrorHandler.CompileError(path, source, "expects argument after comma", Lookahead.Position);
+                    ErrorHandler.CompileError(Path, Source, "expects argument after comma", Lookahead.Position);
             }
 
         Expect(";");

@@ -12,7 +12,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             {
                 var name = node.Value;
                 if (!table.SymbolExists(name))
-                    ErrorHandler.CompileError(path, source, "Symbol not found", node.Position);
+                    ErrorHandler.CompileError(Path, Source, "Symbol not found", node.Position);
 
                 var lookupDetail = table.Find(name);
 
@@ -23,36 +23,36 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                     code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address));
                     // Console.WriteLine($"{lookupDetail.Depth}, {lookupDetail.Symbol.Offset}, {address}");
                     table.Add(name, address, false, node.Position);
-                    code.Emit(OpCode.LOADCAPTURE, address);
+                    code.Emit(OpCode.LoadCapture, address);
                     break;
                 }
 
-                code.Emit(OpCode.LOADLOCAL, lookupDetail.Symbol.Offset);
+                code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
                 break;
             }
             case AstType.AstInt:
             {
                 var index = state.SaveInt(int.Parse(node.Value));
-                code.Emit(OpCode.LOADCONST, index);
+                code.Emit(OpCode.LoadConst, index);
                 break;
             }
             case AstType.AstNumber:
             {
                 var index = state.SaveNum(double.Parse(node.Value));
-                code.Emit(OpCode.LOADCONST, index);
+                code.Emit(OpCode.LoadConst, index);
                 break;
             }
             case AstType.AstString:
             {
                 var index = state.SaveStr(node.Value);
-                code.Emit(OpCode.LOADCONST, index);
+                code.Emit(OpCode.LoadConst, index);
                 break;
             }
             case AstType.AstMemberAccess:
             {
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
-                code.Emit(OpCode.GETATTR, node.B.Value);
+                code.Emit(OpCode.GetAttr, node.B.Value);
                 break;
             }
             case AstType.AstFunctionCall:
@@ -74,13 +74,13 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 var isMethodCall = callable.Type == AstType.AstMemberAccess;
                 if (isMethodCall)
                 {
-                    code.Emit(OpCode.LOADSTRING, callable.B!.Value);
-                    code.Emit(OpCode.CALLMETHOD, argc);
+                    code.Emit(OpCode.LoadString, callable.B!.Value);
+                    code.Emit(OpCode.CallMethod, argc);
                 }
                 else
                 {
                     Expr(code, table, callable);
-                    code.Emit(OpCode.CALL, argc);
+                    code.Emit(OpCode.Call, argc);
                 }
 
                 break;
@@ -89,7 +89,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             {
                 Debug.Assert(node is { A: not null }, "node.A is null");
                 Expr(code, table, node.A);
-                code.Emit(OpCode.AWAIT);
+                code.Emit(OpCode.Await);
                 break;
             }
             case AstType.AstBinMul:
@@ -97,7 +97,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
-                code.Emit(OpCode.BINMUL);
+                code.Emit(OpCode.BinMul);
                 break;
             }
             case AstType.AstBinDiv:
@@ -105,7 +105,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
-                code.Emit(OpCode.BINDIV);
+                code.Emit(OpCode.BinDiv);
                 break;
             }
             case AstType.AstBinMod:
@@ -113,7 +113,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
-                code.Emit(OpCode.BINMOD);
+                code.Emit(OpCode.BinMod);
                 break;
             }
             case AstType.AstBinAdd:
@@ -121,7 +121,7 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
-                code.Emit(OpCode.BINADD);
+                code.Emit(OpCode.BinAdd);
                 break;
             }
             case AstType.AstBinSub:
@@ -129,12 +129,12 @@ public class Compiler(State state, string path, string source) : Parser(path, so
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
                 Expr(code, table, node.A);
                 Expr(code, table, node.B);
-                code.Emit(OpCode.BINSUB);
+                code.Emit(OpCode.BinSub);
                 break;
             }
             default:
             {
-                ErrorHandler.CompileError(path, source, "Node not implemented", node.Position);
+                ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
                 break;
             }
         }
@@ -162,12 +162,12 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             case AstType.AstExpressionStatement:
             {
                 Expr(code, table, node.A!);
-                code.Emit(OpCode.POPTOP);
+                code.Emit(OpCode.PopTop);
                 break;
             }
             default:
             {
-                ErrorHandler.CompileError(path, source, "Node not implemented", node.Position);
+                ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
                 break;
             }
         }
@@ -185,18 +185,18 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             count++;
         }
 
-        code.Emit(OpCode.PRINT, count);
+        code.Emit(OpCode.Print, count);
     }
 
     private void Return(Code code, SymbolTable table, Ast node)
     {
         var expression = node.A;
         if (expression == null)
-            code.Emit(OpCode.LOADNULL);
+            code.Emit(OpCode.LoadNull);
         else
             Expr(code, table, expression);
 
-        code.Emit(OpCode.RETURN);
+        code.Emit(OpCode.Return);
     }
 
     private void Function(Code code, SymbolTable table, Ast node)
@@ -213,11 +213,11 @@ public class Compiler(State state, string path, string source) : Parser(path, so
         {
             var name = paramHead.Value;
             if (locals.AlreadyExists(name))
-                ErrorHandler.CompileError(path, source, "Parameter already exists", paramHead.Position);
+                ErrorHandler.CompileError(Path, Source, "Parameter already exists", paramHead.Position);
 
             var paramAddress = fnCode.AllocateLocal();
             locals.Add(name, paramAddress, false, node.Position);
-            fnCode.Emit(OpCode.STORELOCAL, paramAddress);
+            fnCode.Emit(OpCode.StoreLocal, paramAddress);
 
             paramHead = paramHead.Next;
         }
@@ -229,12 +229,12 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             bodyHead = bodyHead.Next;
         }
 
-        fnCode.Emit(OpCode.LOADNULL);
-        fnCode.Emit(OpCode.RETURN);
+        fnCode.Emit(OpCode.LoadNull);
+        fnCode.Emit(OpCode.Return);
 
         var addressOfCode = state.SaveCodeTemplate(fnCode);
-        code.Emit(OpCode.LOADFUNCTION, addressOfCode);
-        code.Emit(OpCode.STORENAME, functionAddress);
+        code.Emit(OpCode.LoadFunction, addressOfCode);
+        code.Emit(OpCode.StoreName, functionAddress);
     }
 
     private ZsValue Program(Ast node)
@@ -248,8 +248,8 @@ public class Compiler(State state, string path, string source) : Parser(path, so
             bodyHead = bodyHead.Next;
         }
 
-        code.Emit(OpCode.LOADNULL);
-        code.Emit(OpCode.RETURN);
+        code.Emit(OpCode.LoadNull);
+        code.Emit(OpCode.Return);
         return ZsValue.FromCodeToScript(code);
     }
 

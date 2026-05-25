@@ -1,8 +1,4 @@
 namespace zscript;
 
-public class ZsCompileError : Exception
-{
-    public ZsCompileError(string message) : base(message)
-    {
-    }
-}
+public class ZsCompileError(string message)
+    : Exception(message);

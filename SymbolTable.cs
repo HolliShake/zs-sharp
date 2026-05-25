@@ -2,21 +2,15 @@ using System.Diagnostics;
 
 namespace zscript;
 
-public class SymbolTable
+public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 {
-    public readonly SymbolTable? Parent;
-    public readonly ScopeType ScopeType;
-    public readonly Dictionary<string, Symbol> Symbols = new();
-
-    public SymbolTable(ScopeType scopeType, SymbolTable? parent)
-    {
-        ScopeType = scopeType;
-        Parent = parent;
-    }
+    private readonly SymbolTable? _parent = parent;
+    private readonly ScopeType _scopeType = scopeType;
+    private readonly Dictionary<string, Symbol> _symbols = new();
 
     public bool AlreadyExists(string symbol)
     {
-        return Symbols.ContainsKey(symbol);
+        return _symbols.ContainsKey(symbol);
     }
 
     public bool SymbolExists(string symbol, ScopeType? boundary = null)
@@ -28,10 +22,10 @@ public class SymbolTable
             if (current.AlreadyExists(symbol))
                 return true;
 
-            if (boundary.HasValue && current.ScopeType == boundary.Value)
+            if (boundary.HasValue && current._scopeType == boundary.Value)
                 break;
 
-            current = current.Parent;
+            current = current._parent;
         }
 
         return false;
@@ -49,14 +43,14 @@ public class SymbolTable
         while (current != null)
         {
             // 1. Check if the symbol is in the current scope
-            if (current.Symbols.TryGetValue(symbol, out var found))
+            if (current._symbols.TryGetValue(symbol, out var found))
                 return new LookupDetail(found, depth, isLocalToFunction);
 
             // 2. If the current scope IS the boundary, any parent scope will be non-local
-            if (isLocalToFunction && current.ScopeType == boundary) isLocalToFunction = false;
+            if (isLocalToFunction && current._scopeType == boundary) isLocalToFunction = false;
 
             // 3. Traverse up the environment chain
-            current = current.Parent;
+            current = current._parent;
             ++depth;
         }
 
@@ -65,7 +59,7 @@ public class SymbolTable
 
     public void Add(string symbol, int offset, bool constant, Position position)
     {
-        Debug.Assert(!Symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
-        Symbols[symbol] = new Symbol(symbol, offset, constant, position);
+        Debug.Assert(!_symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
+        _symbols[symbol] = new Symbol(symbol, offset, constant, position);
     }
 }

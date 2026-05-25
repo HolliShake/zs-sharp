@@ -2,37 +2,29 @@ namespace zscript;
 
 public enum FutureState
 {
-    PENDING,
-    FULLFILL,
-    REJECTED
+    Pending,
+    Fulfill,
+    Rejected
 }
 
-public class Future
+public class Future(FutureState initialState, Frame frame)
 {
     private readonly List<ZsValue> _fullFillReactions = [];
     private readonly List<ZsValue> _rejectReactions = [];
-
-    public Future(FutureState initialState, Frame frame)
-    {
-        State = initialState;
-        Result = null;
-        IsReady = false;
-        SuspendedFrame = frame;
-    }
 
     public Future(FutureState initialState, Frame frame, ZsValue zsValue) : this(initialState, frame)
     {
         Result = zsValue;
     }
 
-    public FutureState State { get; private set; }
-    public ZsValue? Result { get; set; }
+    public FutureState State { get; private set; } = initialState;
+    public ZsValue? Result { get; private set; }
     public bool IsReady { get; private set; }
-    public Frame SuspendedFrame { get; }
+    public Frame SuspendedFrame { get; } = frame;
 
     public void FullFill(ZsValue zsValue, Queue<ZsValue> queue)
     {
-        State = FutureState.FULLFILL;
+        State = FutureState.Fulfill;
         IsReady = true;
         Result = zsValue;
 
@@ -49,9 +41,9 @@ public class Future
         _rejectReactions.Clear();
     }
 
-    public void Reject(ZsValue zsValue, Queue<ZsValue> queue)
+    private void Reject(ZsValue zsValue, Queue<ZsValue> queue)
     {
-        State = FutureState.REJECTED;
+        State = FutureState.Rejected;
         IsReady = true;
         Result = zsValue;
 
@@ -74,17 +66,6 @@ public class Future
         _rejectReactions.Add(zsValue);
     }
 
-    public void AddFullFillReaction(ZsValue zsValue)
-    {
-        _fullFillReactions.Add(zsValue);
-    }
-
-    public void AddRejectReaction(ZsValue zsValue)
-    {
-        _rejectReactions.Add(zsValue);
-    }
-
-    //-----------------------
     public static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2) return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2");
@@ -94,25 +75,31 @@ public class Future
         var callback = arguments[1];
 
         var newFrame = new Frame(null, callback, true, false);
-        var newPromise = ZsValue.FromFuture(new Future(FutureState.PENDING, newFrame));
+        var newPromise = ZsValue.FromFuture(new Future(FutureState.Pending, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
 
-        if (thisArgFut.State == FutureState.FULLFILL)
+        switch (thisArgFut.State)
         {
-            newFrame.PushOperand(thisArgFut.Result!);
-            newPromise.Future()
-                .FullFill(thisArgFut.Result!, vm.PendingTasks);
-            vm.PendingTasks.Enqueue(newPromise);
-        }
-        else if (thisArgFut.State == FutureState.REJECTED)
-        {
-            // Handled by Error handler
-            newPromise.Future()
-                .Reject(thisArgFut.Result!, vm.PendingTasks);
-        }
-        else if (thisArgFut.State == FutureState.PENDING)
-        {
-            thisArgFut.AddListener(newPromise);
+            case FutureState.Fulfill:
+            {
+                newFrame.PushOperand(thisArgFut.Result!);
+                newPromise.Future()
+                    .FullFill(thisArgFut.Result!, vm.PendingTasks);
+                vm.PendingTasks.Enqueue(newPromise);
+                break;
+            }
+            case FutureState.Rejected:
+            {
+                // Handled by Error handler
+                newPromise.Future()
+                    .Reject(thisArgFut.Result!, vm.PendingTasks);
+                break;
+            }
+            case FutureState.Pending:
+            {
+                thisArgFut.AddListener(newPromise);
+                break;
+            }
         }
 
         // Return for chaining
@@ -128,24 +115,30 @@ public class Future
         var callback = arguments[1];
 
         var newFrame = new Frame(null, callback, true, false);
-        var newPromise = ZsValue.FromFuture(new Future(FutureState.PENDING, newFrame));
+        var newPromise = ZsValue.FromFuture(new Future(FutureState.Pending, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
 
-        if (thisArgFut.State == FutureState.FULLFILL)
+        switch (thisArgFut.State)
         {
-            newPromise.Future()
-                .FullFill(thisArgFut.Result!, vm.PendingTasks);
-            vm.PendingTasks.Enqueue(newPromise);
-        }
-        else if (thisArgFut.State == FutureState.REJECTED)
-        {
-            newFrame.PushOperand(thisArgFut.Result!);
-            newPromise.Future()
-                .Reject(thisArgFut.Result!, vm.PendingTasks);
-        }
-        else if (thisArgFut.State == FutureState.PENDING)
-        {
-            thisArgFut.AddListener(newPromise);
+            case FutureState.Fulfill:
+            {
+                newPromise.Future()
+                    .FullFill(thisArgFut.Result!, vm.PendingTasks);
+                vm.PendingTasks.Enqueue(newPromise);
+                break;
+            }
+            case FutureState.Rejected:
+            {
+                newFrame.PushOperand(thisArgFut.Result!);
+                newPromise.Future()
+                    .Reject(thisArgFut.Result!, vm.PendingTasks);
+                break;
+            }
+            case FutureState.Pending:
+            {
+                thisArgFut.AddListener(newPromise);
+                break;
+            }
         }
 
         // Return for chaining

@@ -10,15 +10,17 @@ public class Lexer(string path, string source)
         "base", "for", "while", "do", "print"
     ];
 
+    protected readonly string Path = path;
+    protected readonly string Source = source;
     private int _colm = 1;
     private int _indx;
     private int _line = 1;
 
     protected Token Next()
     {
-        while (_indx < source.Length)
+        while (_indx < Source.Length)
         {
-            var c = source[_indx];
+            var c = Source[_indx];
             if (char.IsWhiteSpace(c))
             {
                 Advance();
@@ -40,9 +42,9 @@ public class Lexer(string path, string source)
 
     private void Advance()
     {
-        if (_indx > source.Length) return;
+        if (_indx > Source.Length) return;
 
-        if (source[_indx] == '\n')
+        if (Source[_indx] == '\n')
         {
             _line++;
             _colm = 1;
@@ -61,9 +63,9 @@ public class Lexer(string path, string source)
         var startLine = _line;
         var startColumn = _colm;
 
-        while (_indx < source.Length && (char.IsLetterOrDigit(source[_indx]) || source[_indx] == '_')) Advance();
+        while (_indx < Source.Length && (char.IsLetterOrDigit(Source[_indx]) || Source[_indx] == '_')) Advance();
 
-        var name = source[startPos.._indx];
+        var name = Source[startPos.._indx];
         var type = Keywords.Contains(name) ? TokenType.Key : TokenType.Idn;
         return new Token(type, name, new Position(startLine, startColumn));
     }
@@ -74,58 +76,58 @@ public class Lexer(string path, string source)
         var startLine = _line;
         var startColumn = _colm;
 
-        if (_indx + 2 <= source.Length && source[_indx] == '0' && source[_indx + 1] is 'x' or 'X')
+        if (_indx + 2 <= Source.Length && Source[_indx] == '0' && Source[_indx + 1] is 'x' or 'X')
         {
             Advance();
             Advance();
-            while (_indx < source.Length && IsHexDigit(source[_indx]))
+            while (_indx < Source.Length && IsHexDigit(Source[_indx]))
                 Advance();
-            var value = source[startPos.._indx];
+            var value = Source[startPos.._indx];
             return new Token(TokenType.Num, value, new Position(startLine, startColumn));
         }
 
-        if (_indx + 2 <= source.Length && source[_indx] == '0' && source[_indx + 1] is 'b' or 'B')
+        if (_indx + 2 <= Source.Length && Source[_indx] == '0' && Source[_indx + 1] is 'b' or 'B')
         {
             Advance();
             Advance();
-            while (_indx < source.Length && source[_indx] is '0' or '1')
+            while (_indx < Source.Length && Source[_indx] is '0' or '1')
                 Advance();
-            var value = source[startPos.._indx];
+            var value = Source[startPos.._indx];
             return new Token(TokenType.Num, value, new Position(startLine, startColumn));
         }
 
-        if (_indx + 2 <= source.Length && source[_indx] == '0' && source[_indx + 1] is 'o' or 'O')
+        if (_indx + 2 <= Source.Length && Source[_indx] == '0' && Source[_indx + 1] is 'o' or 'O')
         {
             Advance();
             Advance();
-            while (_indx < source.Length && source[_indx] is >= '0' and <= '7')
+            while (_indx < Source.Length && Source[_indx] is >= '0' and <= '7')
                 Advance();
-            var value = source[startPos.._indx];
+            var value = Source[startPos.._indx];
             return new Token(TokenType.Num, value, new Position(startLine, startColumn));
         }
 
         var hasDot = false;
-        while (_indx < source.Length && char.IsDigit(source[_indx])) Advance();
+        while (_indx < Source.Length && char.IsDigit(Source[_indx])) Advance();
 
-        if (_indx < source.Length && source[_indx] == '.')
+        if (_indx < Source.Length && Source[_indx] == '.')
         {
             hasDot = true;
             Advance();
-            while (_indx < source.Length && char.IsDigit(source[_indx]))
+            while (_indx < Source.Length && char.IsDigit(Source[_indx]))
                 Advance();
         }
 
-        if (_indx < source.Length && source[_indx] is 'e' or 'E')
+        if (_indx < Source.Length && Source[_indx] is 'e' or 'E')
         {
             Advance();
-            if (_indx < source.Length && source[_indx] is '+' or '-')
+            if (_indx < Source.Length && Source[_indx] is '+' or '-')
                 Advance();
-            while (_indx < source.Length && char.IsDigit(source[_indx]))
+            while (_indx < Source.Length && char.IsDigit(Source[_indx]))
                 Advance();
             hasDot = true;
         }
 
-        var number = source[startPos.._indx];
+        var number = Source[startPos.._indx];
         return new Token(hasDot ? TokenType.Num : TokenType.Int, number, new Position(startLine, startColumn));
     }
 
@@ -138,7 +140,7 @@ public class Lexer(string path, string source)
     {
         var startLine = _line;
         var startColumn = _colm;
-        var c = source[_indx];
+        var c = Source[_indx];
 
         switch (c)
         {
@@ -257,7 +259,7 @@ public class Lexer(string path, string source)
                 if (Match('&')) return new Token(TokenType.Sym, "&&", new Position(startLine, startColumn));
                 if (Match('=')) return new Token(TokenType.Sym, "&=", new Position(startLine, startColumn));
 
-                ErrorHandler.CompileError(path, source, "Unexpected '&'. Expected '&&' or '&='.",
+                ErrorHandler.CompileError(Path, Source, "Unexpected '&'. Expected '&&' or '&='.",
                     new Position(startLine, startColumn));
                 break;
             }
@@ -268,7 +270,7 @@ public class Lexer(string path, string source)
                 if (Match('|')) return new Token(TokenType.Sym, "||", new Position(startLine, startColumn));
                 if (Match('=')) return new Token(TokenType.Sym, "|=", new Position(startLine, startColumn));
 
-                ErrorHandler.CompileError(path, source, "Unexpected '|'. Expected '||' or '|='.",
+                ErrorHandler.CompileError(Path, Source, "Unexpected '|'. Expected '||' or '|='.",
                     new Position(startLine, startColumn));
                 break;
             }
@@ -289,7 +291,7 @@ public class Lexer(string path, string source)
             }
             default:
             {
-                ErrorHandler.CompileError(path, source, $"Unknown operator or symbol '{c}' (U+{(int)c:X4}).",
+                ErrorHandler.CompileError(Path, Source, $"Unknown operator or symbol '{c}' (U+{(int)c:X4}).",
                     new Position(startLine, startColumn));
                 break;
             }
@@ -300,7 +302,7 @@ public class Lexer(string path, string source)
 
     private bool Match(char expected)
     {
-        if (_indx >= source.Length || source[_indx] != expected)
+        if (_indx >= Source.Length || Source[_indx] != expected)
             return false;
         _indx++;
         return true;
@@ -313,14 +315,14 @@ public class Lexer(string path, string source)
         Advance();
         var str = new StringBuilder();
 
-        while (_indx < source.Length)
+        while (_indx < Source.Length)
         {
-            var c = source[_indx];
+            var c = Source[_indx];
             if (c == '\\')
             {
                 Advance();
-                if (_indx >= source.Length) break;
-                var next = source[_indx];
+                if (_indx >= Source.Length) break;
+                var next = Source[_indx];
                 switch (next)
                 {
                     case '"': str.Append('"'); break;

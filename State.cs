@@ -2,16 +2,8 @@ namespace zscript;
 
 public class State
 {
-    public readonly List<Code> Codes;
-    public readonly List<ZsValue> Constants;
-    public readonly List<string> Strings;
-
-    public State()
-    {
-        Constants = [];
-        Strings = [];
-        Codes = [];
-    }
+    public readonly List<Code> Codes = [];
+    public readonly List<ZsValue> Constants = [];
 
     public int SaveInt(int value)
     {

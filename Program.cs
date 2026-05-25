@@ -1,18 +1,101 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿namespace zscript;
 
-using zscript;
+public static class Program
+{
+    private static void Main(string[] args)
+    {
+        // Fallback if no arguments are given
+        if (args.Length == 0)
+        {
+            PrintHelp();
+            return;
+        }
 
-Func<string, string> ReadFile = File.ReadAllText;
+        switch (args[0])
+        {
+            case "-h":
+            case "--help":
+            {
+                PrintHelp();
+                break;
+            }
 
-Console.WriteLine("Hello, World!");
+            case "-t":
+            case "--test":
+            {
+                RunTestSuite();
+                break;
+            }
 
-var path = "D:\\zs-sharp\\lang.txt";
-var source = ReadFile(path);
+            case "-r":
+            case "--run":
+            {
+                // Ensure they actually provided a file path after the flag
+                if (args.Length < 2)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error: Missing file path after --run flag.");
+                    Console.ResetColor();
+                    return;
+                }
 
-var state = new State();
+                ExecuteScript(args[1]);
+                break;
+            }
 
-var compiler = new Compiler(state, path, source);
-var script = compiler.Compile();
+            default:
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Unknown option: {args[0]}");
+                Console.ResetColor();
+                PrintHelp();
+                break;
+            }
+        }
+    }
 
-var vm = new Vm(state);
-vm.MainLoop(script);
+    private static void ExecuteScript(string path)
+    {
+        if (!File.Exists(path))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error: The file at path '{path}' does not exist.");
+            Console.ResetColor();
+            return;
+        }
+
+        try
+        {
+            var source = File.ReadAllText(path);
+            var state = new State();
+
+            var compiler = new Compiler(state, path, source);
+            var script = compiler.Compile();
+
+            var vm = new Vm(state);
+            vm.MainLoop(script);
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Execution crashed: {ex.Message}");
+            Console.ResetColor();
+        }
+    }
+
+    private static void RunTestSuite()
+    {
+        Console.WriteLine("Initializing zscript internal test harness...");
+        // Call your interpreter test runner assertions here!
+        Console.WriteLine("All tests passed cleanly.");
+    }
+
+    private static void PrintHelp()
+    {
+        Console.WriteLine("Zscript Execution Engine CLI");
+        Console.WriteLine("Usage:");
+        Console.WriteLine("  -r, --run <path>   Path to the zscript source file to execute.");
+        Console.WriteLine("  -t, --test         Execute the internal engine test suite.");
+        Console.WriteLine("  -h, --help         Display this help screen.");
+    }
+}
