@@ -171,10 +171,20 @@ public class Vm
 
     private void RaiseOrHandleException(Frame frame, ZsValue errorValue)
     {
-        frame.Suspend();
+        var currentFrame = frame;
+        while (currentFrame != null)
+        {
+            if (currentFrame.HasTryHandler())
+            {
+                var currentHandler = currentFrame.PopTryTable();
+                return;
+            }
+            currentFrame = currentFrame.CallerFrame;
+        }
 
         if (frame.Asynchronous || frame.Future != null)
         {
+            frame.Suspend();
             var fut = frame.Future != null
                 ? frame.Future
                 : ZsValue.FromFuture(new Future(FutureState.Rejected, frame));
@@ -403,6 +413,14 @@ public class Vm
                 case OpCode.PopTop:
                 {
                     frame.PopOperand();
+                    break;
+                }
+                case OpCode.SetupTry:
+                {
+                    var jmp = ReadInt(frame);
+                    var fromLine = GetLine(code.DebugLines, frame.Pc - 1);
+                    var toLine = GetLine(code.DebugLines, frame.Pc - 1);
+                    frame.PushTryTable(new TryBlock(frame.Pc-1, jmp, fromLine.Line, toLine.Line));
                     break;
                 }
                 case OpCode.Return:

@@ -8,6 +8,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public readonly Frame? CallerFrame = callerFrame;
     public readonly int CodeLen = functionValue.Code().Bytecode.Count;
     public readonly Cell[] Environment = BuildEnvironment(functionValue.Code());
+    public readonly Stack<TryBlock> TryCatchTable = [];
     public readonly ZsValue FunctionValue = functionValue;
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
     public ZsValue? Future;
@@ -71,5 +72,26 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public void SetEnvVar(int address, ZsValue value)
     {
         Environment[address].Value = value;
+    }
+
+    public void PushTryTable(TryBlock tryBlock)
+    {
+        TryCatchTable.Push(tryBlock);
+    }
+
+    public TryBlock PopTryTable()
+    {
+        return TryCatchTable.Pop();
+    }
+
+    public bool HasTryHandler()
+    {
+        return TryCatchTable.Count > 0;
+    }
+    
+    public void Terminate()
+    {
+        Suspended = true;
+        Pc = CodeLen;
     }
 }
