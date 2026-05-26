@@ -44,6 +44,11 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         Pc += pc;
     }
 
+    public void JumpTo(int pc)
+    {
+        Pc = pc;
+    }
+
     public void PushOperand(ZsValue value)
     {
         _operands.Push(value);

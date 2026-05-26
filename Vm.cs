@@ -174,31 +174,45 @@ public class Vm
         var currentFrame = frame;
         while (currentFrame != null)
         {
+            if (currentFrame.Asynchronous || currentFrame.Future != null)
+            {
+                TerminateUntil(frame, currentFrame);
+                
+                var fut = frame.Future != null
+                    ? currentFrame.Future
+                    : ZsValue.FromFuture(new Future(FutureState.Rejected, currentFrame));
+
+                currentFrame.SetFutureOrSkip(fut);
+
+                fut.Future().Reject(errorValue, PendingTasks);
+                currentFrame.PushOperand(errorValue);
+                PendingTasks.Enqueue(fut);
+                return;
+            }
+            
             if (currentFrame.HasTryHandler())
             {
+                // unwind frame with the handler
                 var currentHandler = currentFrame.PopTryTable();
+                currentFrame.PushOperand(errorValue);
+                currentFrame.JumpTo(currentHandler.ToPc);
                 return;
             }
             currentFrame = currentFrame.CallerFrame;
         }
 
-        if (frame.Asynchronous || frame.Future != null)
-        {
-            frame.Suspend();
-            var fut = frame.Future != null
-                ? frame.Future
-                : ZsValue.FromFuture(new Future(FutureState.Rejected, frame));
-
-            frame.SetFutureOrSkip(fut);
-
-            fut.Future().Reject(errorValue, PendingTasks);
-            frame.PushOperand(errorValue);
-            PendingTasks.Enqueue(fut);
-            return;
-        }
-
         var error = ZsValue.GetProperty(errorValue, "message");
         if (error != null) throw new Exception(error.String() + "\n" + BuildTracebackFromFrame());
+    }
+
+    private void TerminateUntil(Frame thrownByFrame, Frame until)
+    {
+        var f = thrownByFrame;
+        while (f != null && f != until)
+        {
+            f.Terminate();
+            f = f.CallerFrame;
+        }
     }
 
     private OpCodeDebug GetLine(List<OpCodeDebug> debugLines, long pc)
@@ -261,6 +275,7 @@ public class Vm
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
+                    Console.WriteLine(off);
                     var val = frame.GetEnvVar(off);
                     if (val == null)
                     {
@@ -418,9 +433,15 @@ public class Vm
                 case OpCode.SetupTry:
                 {
                     var jmp = ReadInt(frame);
+                    frame.Forward(4);
                     var fromLine = GetLine(code.DebugLines, frame.Pc - 1);
                     var toLine = GetLine(code.DebugLines, frame.Pc - 1);
                     frame.PushTryTable(new TryBlock(frame.Pc-1, jmp, fromLine.Line, toLine.Line));
+                    break;
+                }
+                case OpCode.PopTry:
+                {
+                    frame.PopTryTable();
                     break;
                 }
                 case OpCode.Return:

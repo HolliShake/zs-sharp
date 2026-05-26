@@ -1,15 +1,15 @@
 
 
 fn println(a) async {
-    print ">>", a;
+    print ">>";
 }
 
-println(">>");
+println("this");
 
 
 try {
     2 + "asdasd";
 } catch (err) {
-    println(err);
+    println("Hola!!");
 }
     
