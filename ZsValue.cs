@@ -147,6 +147,7 @@ public class ZsValue(ValueType type, object value)
         {
             ValueType.Script => "script",
             ValueType.Function => "function",
+            ValueType.Future => "future",
             ValueType.Error or
                 ValueType.Object => GetInternalType(this),
             ValueType.Int => "int",
@@ -256,7 +257,7 @@ public class ZsValue(ValueType type, object value)
         var rep = fut.State switch
         {
             FutureState.Pending => "Pending",
-            FutureState.Rejected => "Rejected",
+            FutureState.Rejected => fut.Result!.ToString(),
             FutureState.Fulfill => fut.Result!.ToString(),
             _ => throw new InvalidOperationException()
         };

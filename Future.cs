@@ -40,17 +40,22 @@ public class Future(FutureState initialState, Frame frame)
         _rejectReactions.Clear();
     }
 
-    public void Reject(ZsValue zsValue, Queue<ZsValue> queue)
+    public void Reject(ZsValue zsValue, Queue<ZsValue>? queue)
     {
         State = FutureState.Rejected;
         Result = zsValue;
+
+        // null means "record the rejection silently — MainLoop will notify listeners
+        // at the correct time, after any synchronous catch/continue code has run."
+        if (queue == null) return;
 
         foreach (var reaction in _rejectReactions)
         {
             var childFut = reaction.Future();
             var frame = childFut.SuspendedFrame;
 
-            frame.PushOperand(Result);
+            frame.PendingError = zsValue;
+            frame.Wake();
             queue.Enqueue(reaction);
         }
 
@@ -100,7 +105,6 @@ public class Future(FutureState initialState, Frame frame)
             }
         }
 
-        // Return for chaining
         return newPromise;
     }
 
@@ -140,7 +144,6 @@ public class Future(FutureState initialState, Frame frame)
             }
         }
 
-        // Return for chaining
         return newPromise;
     }
 }

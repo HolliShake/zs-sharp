@@ -12,6 +12,7 @@ public class Vm
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
     public readonly ZsValue TypeError;
+    private ZsValue _currentError;
     private Frame? _currentFrame;
 
     public Vm(State state)
@@ -22,6 +23,8 @@ public class Vm
         TypeError = ZsValue.CreateZsClass(Error, "TypeError");
         Future = ZsValue.CreateZsClass(Object, "Future");
         Null = ZsValue.CreateNull();
+        _currentFrame = null;
+        _currentError = null;
     }
 
     private int ReadInt(Frame frame)
@@ -40,15 +43,12 @@ public class Vm
 
         var endMatch = frame.Pc;
 
-        // Scan until we find the null terminator
         while (endMatch < code.Bytecode.Count && code.Bytecode[endMatch] != 0) endMatch++;
 
-        // Calculate the actual number of string bytes relative to Pc
         var stringLength = endMatch - frame.Pc;
 
         if (stringLength <= 0) return string.Empty;
 
-        // Slice exactly from the current Pc for 'stringLength' bytes
         ReadOnlySpan<byte> stringBytes = CollectionsMarshal.AsSpan(code.Bytecode)
             .Slice(frame.Pc, stringLength);
 
@@ -69,7 +69,6 @@ public class Vm
                 BuildTracebackFromFrame())
         };
 
-        // Console.WriteLine($"{a} + {b} = {res}");
         return res;
     }
 
@@ -84,7 +83,6 @@ public class Vm
                 BuildTracebackFromFrame())
         };
 
-        // Console.WriteLine($"{a} - {b} = {res}");
         return res;
     }
 
@@ -169,49 +167,83 @@ public class Vm
             BuildTracebackFromFrame());
     }
 
-    private void RaiseOrHandleException(Frame frame, ZsValue errorValue)
+    private void RaiseOrHandleException(Frame thrownByFrame, ZsValue errorValue)
+    {
+        var current = thrownByFrame;
+
+        while (current != null)
+        {
+            // 1. Synchronous Catch: Does this frame have a try/catch block?
+            if (current.HasTryHandler())
+            {
+                // Push the error onto the stack so the 'catch (err)' variable can access it
+                current.PushOperand(errorValue);
+
+                // Jump the Program Counter to the catch block's offset
+                var tryBlock = current.PeekTryTable();
+                current.JumpTo(tryBlock.ToPc);
+
+                // Ensure the frame is awake so the VM loop continues executing it
+                current.Wake();
+
+                // Error handled. Stop unwinding!
+                return;
+            }
+
+            // 2. Async Boundary: If no try/catch, does this escape an async function?
+            if (current.Asynchronous || current.Future != null)
+            {
+                current.Suspend();
+
+                var zsFuture = current.Future ?? ZsValue.FromFuture(new Future(FutureState.Rejected, current));
+                current.SetFutureOrSkip(zsFuture);
+
+                // Pass null so listeners are NOT notified yet. The future is just marked
+                // Rejected and its result stored. MainLoop will call Reject(result, PendingTasks)
+                // when it dequeues this future, by which point all synchronous catch/continue
+                // code higher up the stack will have already executed.
+                zsFuture.Future().Reject(errorValue, null);
+
+                // Enqueue the future itself so MainLoop picks it up and fans out to listeners.
+                PendingTasks.Enqueue(zsFuture);
+
+                // Error safely converted to a rejected Future. Stop unwinding!
+                return;
+            }
+
+            // 3. Unhandled in this frame: Move up the call stack
+            current.Terminate();
+            current = current.CallerFrame;
+        }
+
+        // 4. Fatal Error: The exception escaped the global scope without being caught.
+        _currentError = errorValue;
+        Console.WriteLine($"[VM Fatal] Uncaught Exception: {errorValue}");
+        PendingTasks.Clear();
+    }
+
+    private static Frame? GetHandlerFrame(Frame frame)
     {
         var currentFrame = frame;
         while (currentFrame != null)
         {
-            if (currentFrame.Asynchronous || currentFrame.Future != null)
-            {
-                TerminateUntil(frame, currentFrame);
-                
-                var fut = frame.Future != null
-                    ? currentFrame.Future
-                    : ZsValue.FromFuture(new Future(FutureState.Rejected, currentFrame));
-
-                currentFrame.SetFutureOrSkip(fut);
-
-                fut.Future().Reject(errorValue, PendingTasks);
-                currentFrame.PushOperand(errorValue);
-                PendingTasks.Enqueue(fut);
-                return;
-            }
-            
             if (currentFrame.HasTryHandler())
             {
-                // unwind frame with the handler
-                var currentHandler = currentFrame.PeekTryTable();
-                currentFrame.PushOperand(errorValue);
-                currentFrame.JumpTo(currentHandler.ToPc);
-                return;
+                return currentFrame;
             }
             currentFrame = currentFrame.CallerFrame;
         }
 
-        var error = ZsValue.GetProperty(errorValue, "message");
-        if (error != null) throw new Exception(error.String() + "\n" + BuildTracebackFromFrame());
+        return null;
     }
 
-    private void TerminateUntil(Frame thrownByFrame, Frame until)
+    private static void TerminateFrame(Frame frame, Frame until)
     {
-        var f = thrownByFrame;
-        while (f != null && f != until)
+        var c = frame;
+        while (c != null && c != until)
         {
-            f.Terminate();
-            f = f.CallerFrame;
+            c.Terminate();
+            c = c.CallerFrame;
         }
     }
 
@@ -231,7 +263,6 @@ public class Vm
             if (midIndex < pc)
             {
                 bestMatchIndex = mid;
-
                 low = mid + 1;
             }
             else
@@ -264,6 +295,17 @@ public class Vm
     {
         _currentFrame = frame;
         var code = frame.FunctionValue.Code();
+
+        if (frame.PendingError != null)
+        {
+            var err = frame.PendingError;
+            frame.PendingError = null;
+
+            RaiseOrHandleException(frame, err);
+
+            if (frame.Suspended) return frame.Future!;
+        }
+
         while (frame.Pc < frame.CodeLen && !frame.Suspended)
         {
             var opcode = (OpCode)code.Bytecode[frame.Pc++];
@@ -332,7 +374,7 @@ public class Vm
                         break;
                     }
 
-                    frame.PushOperand(ret);
+                    if (!frame.Suspended) frame.PushOperand(ret);
                     break;
                 }
                 case OpCode.CallMethod:
@@ -346,48 +388,27 @@ public class Vm
                         break;
                     }
 
-                    frame.PushOperand(ret);
+                    if (!frame.Suspended) frame.PushOperand(ret);
                     break;
                 }
                 case OpCode.Await:
                 {
                     var zsFuture = frame.PopOperand();
-                    if (!ZsValue.IsInstanceOf(zsFuture, ValueType.Future))
-                    {
-                        frame.PushOperand(zsFuture);
-                        break;
-                    }
-
                     var futureInstance = zsFuture.Future();
 
+                    // 1. ALWAYS Suspend. No synchronous execution!
                     frame.Suspend();
+
                     if (frame.Future == null)
                     {
                         var future = ZsValue.FromFuture(new Future(FutureState.Pending, frame));
                         frame.SetFutureOrSkip(future);
-
-                        if (futureInstance.State == FutureState.Fulfill ||
-                            futureInstance.State == FutureState.Rejected)
-                        {
-                            frame.PushOperand(futureInstance.Result!);
-                            PendingTasks.Enqueue(future);
-                            return future;
-                        }
-
-                        futureInstance.AddListener(future);
-                        return future;
                     }
 
-                    if (futureInstance.State == FutureState.Fulfill ||
-                        futureInstance.State == FutureState.Rejected)
-                    {
-                        frame.PushOperand(futureInstance.Result!);
-                        PendingTasks.Enqueue(frame.Future);
-                        return frame.Future;
-                    }
+                    // 2. Register the listener.
+                    futureInstance.AddListener(frame.Future!);
 
-                    futureInstance.AddListener(frame.Future);
-                    return frame.Future;
+                    return frame.Future!;
                 }
                 case OpCode.Print:
                 {
@@ -435,12 +456,18 @@ public class Vm
                     frame.Forward(4);
                     var fromLine = GetLine(code.DebugLines, frame.Pc - 1);
                     var toLine = GetLine(code.DebugLines, frame.Pc - 1);
-                    frame.PushTryTable(new TryBlock(frame.Pc-1, jmp, fromLine.Line, toLine.Line));
+                    frame.PushTryTable(new TryBlock(frame.Pc - 1, jmp, fromLine.Line, toLine.Line));
                     break;
                 }
                 case OpCode.PopTry:
                 {
                     frame.PopTryTable();
+                    break;
+                }
+                case OpCode.Jump:
+                {
+                    var address = ReadInt(frame);
+                    frame.JumpTo(address);
                     break;
                 }
                 case OpCode.Return:
@@ -468,7 +495,12 @@ public class Vm
             }
         }
 
-        return frame.Future ?? ZsValue.FromInt(0);
+        if (frame.Future != null)
+        {
+            return frame.Future;
+        }
+
+        return ZsValue.FromInt(0);
     }
 
     public void MainLoop(ZsValue globalCodeObject)
@@ -483,13 +515,12 @@ public class Vm
             {
                 case FutureState.Fulfill:
                 {
-                    // Wakeup listeners
-                    futureInstance.FullFill(futureInstance.Result!, PendingTasks);;
+                    futureInstance.FullFill(futureInstance.Result!, PendingTasks);
                     break;
                 }
                 case FutureState.Rejected:
                 {
-                    // Wakeup listeners
+                    // Now it's safe to notify listeners — all synchronous code has finished.
                     futureInstance.Reject(futureInstance.Result!, PendingTasks);
                     break;
                 }

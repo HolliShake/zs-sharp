@@ -4,12 +4,54 @@ fn println(a) async {
     print a;
 }
 
-println("this");
 
 
-try {
-    2 + "asdasd";
-} catch (err) {
-    println(err);
+
+
+
+
+
+
+
+
+
+
+fn willThrow() async {
+    2 + "Fooc!";
+    println("HEHE!");
 }
-    
+
+fn wrapper() async {
+    await willThrow();
+    println("continue wrapper!");
+}
+
+fn caller() async {
+    try {
+        await wrapper();
+        println("continue try!");
+    } catch(err) {
+        print "FROM CATCH!!", err;
+    }
+    println("Continue!!!");
+}
+
+
+caller();
+println("Done!");
+
+fn cb(data) {
+    print "CB", data;
+    return data + 1;
+}
+
+fn add(a, b) async {
+    return a + b;
+}
+
+
+
+add(0, 1)
+    ->then(cb)
+    ->then(cb)
+    ->then(cb);

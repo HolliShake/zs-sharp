@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace zscript;
 
 public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
@@ -12,6 +14,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public readonly ZsValue FunctionValue = functionValue;
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
     public ZsValue? Future;
+    public ZsValue? PendingError;
     public bool IsFaulted;
     public int Pc;
 
@@ -50,7 +53,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     }
 
     public void PushOperand(ZsValue value)
-    {
+    { 
         _operands.Push(value);
     }
 
@@ -103,5 +106,18 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     {
         Suspended = true;
         Pc = CodeLen;
+    }
+
+    public void DumpOperand()
+    {
+        var sb = new StringBuilder();
+        sb.Append('[');
+        foreach (var op in _operands)
+        {
+            sb.Append(op.ToString());
+            sb.Append(',');
+        }
+        sb.Append(']');
+        Console.WriteLine(sb.ToString());
     }
 }

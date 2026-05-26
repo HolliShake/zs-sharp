@@ -42,16 +42,14 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 
         while (current != null)
         {
-            // 1. Check if the symbol is in the current scope
             if (current._symbols.TryGetValue(symbol, out var found))
                 return new LookupDetail(found, depth, isLocalToFunction);
-
-            // 2. If the current scope IS the boundary, any parent scope will be non-local
+            
             if (isLocalToFunction && current._scopeType == boundary) isLocalToFunction = false;
-
-            // 3. Traverse up the environment chain
+            if (current._scopeType == boundary) ++depth;
+            
+            
             current = current._parent;
-            ++depth;
         }
 
         throw new KeyNotFoundException($"Symbol '{symbol}' not found.");

@@ -71,7 +71,7 @@ public class Compiler : Parser
             }
             case AstType.AstFunctionCall:
             {
-                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Debug.Assert(node is { A: not null }, "node.A is null");
                 var callable = node.A;
                 var argsHead = node.B;
                 var argc = 0;
