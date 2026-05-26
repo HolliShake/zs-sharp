@@ -22,10 +22,12 @@ public class Future(FutureState initialState, Frame frame)
 
     public Frame SuspendedFrame { get; } = frame;
 
-    public void FullFill(ZsValue zsValue, Queue<ZsValue> queue)
+    public void FullFill(ZsValue zsValue, Queue<ZsValue>? queue)
     {
         State = FutureState.Fulfill;
         Result = zsValue;
+
+        if (queue == null) return;
 
         foreach (var reaction in _fullFillReactions)
         {

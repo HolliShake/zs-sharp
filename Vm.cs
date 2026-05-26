@@ -11,6 +11,7 @@ public class Vm
     public readonly ZsValue Null;
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
+    public readonly Queue<ZsValue> DeferredTasks = new();
     public readonly ZsValue TypeError;
     private ZsValue _currentError;
     private Frame? _currentFrame;
@@ -481,7 +482,12 @@ public class Vm
                         frame.SetFutureOrSkip(zsFuture);
 
                         zsFuture.Future()
-                            .FullFill(frame.PopOperand(), PendingTasks);
+                            .FullFill(frame.PopOperand(), frame.IsCallback ? null : PendingTasks);
+
+                        if (frame.IsCallback)
+                        {
+                            DeferredTasks.Enqueue(zsFuture);
+                        }
 
                         return zsFuture;
                     }
@@ -507,8 +513,16 @@ public class Vm
     {
         Run(new Frame(null, globalCodeObject, false, false));
 
-        while (PendingTasks.Count > 0)
+        while (PendingTasks.Count > 0 || DeferredTasks.Count > 0)
         {
+            if (PendingTasks.Count == 0)
+            {
+                while (DeferredTasks.Count > 0)
+                {
+                    PendingTasks.Enqueue(DeferredTasks.Dequeue());
+                }
+            }
+
             var nextTask = PendingTasks.Dequeue();
             var futureInstance = nextTask.Future();
             switch (futureInstance.State)
