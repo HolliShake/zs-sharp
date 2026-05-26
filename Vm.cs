@@ -193,7 +193,7 @@ public class Vm
             if (currentFrame.HasTryHandler())
             {
                 // unwind frame with the handler
-                var currentHandler = currentFrame.PopTryTable();
+                var currentHandler = currentFrame.PeekTryTable();
                 currentFrame.PushOperand(errorValue);
                 currentFrame.JumpTo(currentHandler.ToPc);
                 return;
@@ -275,7 +275,6 @@ public class Vm
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
-                    Console.WriteLine(off);
                     var val = frame.GetEnvVar(off);
                     if (val == null)
                     {

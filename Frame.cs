@@ -89,6 +89,11 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         return TryCatchTable.Pop();
     }
 
+    public TryBlock PeekTryTable()
+    {
+        return TryCatchTable.Peek();
+    }
+
     public bool HasTryHandler()
     {
         return TryCatchTable.Count > 0;

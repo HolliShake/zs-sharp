@@ -298,10 +298,7 @@ public class Compiler : Parser
         }
         
         code.EmitLine(ModuleId, position.Line);
-        code.Emit(OpCode.PopTry);
-        
-        code.EmitLine(ModuleId, position.Line);
-        var toEndif = code.EmitJump(OpCode.Jump);
+        var toEndTry = code.EmitJump(OpCode.Jump);
 
         var catchTable = new SymbolTable(ScopeType.CatchBlock, table);
         
@@ -321,10 +318,11 @@ public class Compiler : Parser
             catchHead = catchHead.Next;
         }
         
+        code.Label(toEndTry);
+        
+        // end catch, pop try
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);
-        
-        code.Label(toEndif);
     }
 
     private ZsValue Program(Ast node)

@@ -1,7 +1,7 @@
 
 
 fn println(a) async {
-    print ">>";
+    print a;
 }
 
 println("this");
