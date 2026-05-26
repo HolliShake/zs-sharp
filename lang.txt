@@ -10,6 +10,6 @@ println("this");
 try {
     2 + "asdasd";
 } catch (err) {
-    println("Hola!!");
+    println(err);
 }
     
