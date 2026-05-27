@@ -11,12 +11,27 @@ public class Code(string name, int argCount, bool isAsync)
     public int ArgCount { get; } = argCount;
     public bool IsAsync { get; } = isAsync;
 
-    public List<byte> Bytecode { get; } = [];
-    public Dictionary<int, Cell> CapturedCells { get; } = [];
+    public List<byte> Bytecode = [];
+    public Dictionary<int, Cell> CapturedCells = [];
 
-    public List<(int Depth, int Address, int Destination)> Captures { get; } = [];
+    public List<(int Depth, int Address, int Destination)> Captures = [];
 
     public int LocalCount { get; private set; }
+
+    public Code Clone()
+    {
+        return new Code(Name, ArgCount, IsAsync)
+        {
+            DebugLines = [.. DebugLines],
+            Bytecode   = [.. Bytecode],
+            Captures   = [.. Captures],
+            LocalCount = LocalCount,
+            CapturedCells = CapturedCells.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value
+            )
+        };
+    }
 
     public int AllocateLocal()
     {

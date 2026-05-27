@@ -1,6 +1,7 @@
 namespace zscript;
 
-public class Cell
+public class Cell(ZsValue? value)
 {
-    public ZsValue? Value;
+    public ZsValue? Value = value;
+    
 }

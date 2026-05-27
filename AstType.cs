@@ -31,6 +31,7 @@ public enum AstType
     AstOr,
     AstFunction,
     AstTryCatch,
+    AstBlock,
     AstPrint,
     AstReturn,
     AstExpressionStatement,

@@ -97,6 +97,14 @@ public class Ast
         };
     }
 
+    public static Ast CreateBlock(Ast? bodyHead, Position position)
+    {
+        return new Ast(AstType.AstBlock, position)
+        {
+            A = bodyHead
+        };
+    }
+
     public static Ast CreatePrintNode(Ast parameterHead, Position position)
     {
         return new Ast(AstType.AstPrint, position)

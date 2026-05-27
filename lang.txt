@@ -5,7 +5,7 @@ fn println(a) async {
 }
 
 fn willThrow() async {
-    2 + "Fooc!";
+    2 + "fooc!";
     println("HEHE!");
 }
 
@@ -18,12 +18,11 @@ fn caller() async {
     try {
         await wrapper();
         println("continue try!");
-    } catch(err) {
+    } catch (err) {
         print "FROM CATCH!!", err;
     }
     println("Continue!!!");
 }
-
 
 caller();
 
@@ -43,11 +42,25 @@ fn add(a, b) async {
 }
 
 add(0, 1)
-    ->then(cb)
-    ->then(cb)
+    ->then(fn(data) {
+        return data + 1;
+    })
+    ->then(fn(data) {
+        return data * 2;
+    })
     ->then(cb);
     
 add(0, "fooccers")
-    ->then(cb)
+    ->catch(fn(data) {
+        print "THEN";
+    })
     ->catch(cbError);
+    
+println(3 > 2);
+println(5 && 2);
+
+{
+    2 + 2;
+    println("HEHERE!!!!");
+}
 

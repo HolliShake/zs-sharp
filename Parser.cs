@@ -75,10 +75,70 @@ public class Parser(string path, string source) : Lexer(path, source)
         }
     }
 
+    private Ast? Group()
+    {
+        if (Check("fn"))
+        {
+            return FunctionExpression();
+        }
+        
+        return Terminal();
+    }
+
+    private Ast FunctionExpression()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("fn");
+        Expect("(");
+        var argc = 0;
+        var parameterHead = Terminal();
+        var parameterTail = parameterHead;
+        if (parameterTail is not null and { Type: AstType.AstName })
+        {
+            argc++;
+            while (Check(","))
+            {
+                Expect(",");
+                var next = Terminal();
+                parameterTail.Next = next;
+                parameterTail = next;
+                argc++;
+
+                if (parameterTail == null)
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
+                if (parameterTail is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+            }
+        }
+
+        Expect(")");
+
+        var asynchronous = Check("async");
+
+        if (asynchronous) Expect("async");
+
+        Expect("{");
+        var bodyHead = Statement();
+        var bodyTail = bodyHead;
+        while (bodyTail != null)
+        {
+            var next = Statement();
+            bodyTail.Next = next;
+            bodyTail = next;
+        }
+
+        Expect("}");
+
+        return Ast.CreateFunctionNode(
+            null!, parameterHead, bodyHead, argc, asynchronous, position
+        );
+    }
+
     private Ast? MemberOrCall()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
-        var node = Terminal();
+        var node = Group();
         if (node == null) return node;
 
         while (Check("->") || Check("("))
@@ -339,6 +399,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         if (Check("fn")) return Function();
         if (Check("try")) return TryCatch();
+        if (Check("{")) return Block();
         if (Check("print")) return Print();
         if (Check("return")) return Return();
         return ExpressionStatement();
@@ -435,6 +496,24 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect("}");
         return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
+    }
+
+    private Ast Block()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("{");
+        var bodyHead = Statement();
+        var bodyTail = bodyHead;
+        while (bodyTail != null)
+        {
+            var next = Statement();
+            bodyTail.Next = next;
+            bodyTail = next;
+        }
+
+        Expect("}");
+        return Ast.CreateBlock(bodyHead, position);
     }
 
     private Ast Print()

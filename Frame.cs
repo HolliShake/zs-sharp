@@ -23,7 +23,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     private static Cell[] BuildEnvironment(Code code)
     {
         var env = new Cell[code.LocalCount];
-        for (var i = 0; i < code.LocalCount; i++) env[i] = new Cell();
+        for (var i = 0; i < code.LocalCount; i++) env[i] = new Cell(null);
         return env;
     }
 
@@ -60,6 +60,11 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public ZsValue PopOperand()
     {
         return _operands.Pop();
+    }
+    
+    public ZsValue PeekOperand()
+    {
+        return _operands.Peek();
     }
 
     public void PopOperand(int size)

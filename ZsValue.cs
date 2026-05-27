@@ -149,6 +149,21 @@ public class ZsValue(ValueType type, object value)
             _ => 0
         };
     }
+    
+    public bool Bool()
+    {
+        return Value switch
+        {
+            int i => i != 0,
+            double d => d != 0,
+            string s => !string.IsNullOrEmpty(s),
+            bool b => b,
+            Code c => c != null!,
+            Future f => f is { State: FutureState.Fulfill } or { State: FutureState.Pending },
+            Dictionary<string, ZsValue> d => d.Count > 0,
+            _ => false
+        };
+    }
 
     public string String()
     {
@@ -169,6 +184,7 @@ public class ZsValue(ValueType type, object value)
                 ValueType.Object => GetInternalType(this),
             ValueType.Int => "int",
             ValueType.Number => "number",
+            ValueType.Bool => "bool",
             ValueType.String => "string",
             ValueType.Null => "null",
             _ => "unknown"

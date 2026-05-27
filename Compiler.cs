@@ -61,6 +61,46 @@ public class Compiler : Parser
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
+            case AstType.AstFunction:
+            {
+                var fnCode = new Code("<anon/>", node.IntArg0, node.Flag0);
+                var locals = new SymbolTable(ScopeType.Function, table);
+
+                var position = node.Position;
+
+                var paramHead = node.B;
+                while (paramHead != null)
+                {
+                    var name = paramHead.Value;
+                    if (locals.AlreadyExists(name))
+                        ErrorHandler.CompileError(Path, Source, "Parameter already exists", paramHead.Position);
+
+                    var paramAddress = fnCode.AllocateLocal();
+                    locals.Add(name, paramAddress, false, paramHead.Position);
+                    fnCode.EmitLine(ModuleId, paramHead.Position.Line);
+                    fnCode.Emit(OpCode.StoreLocal, paramAddress);
+                    position = paramHead.Position;
+                    paramHead = paramHead.Next;
+                }
+
+                var bodyHead = node.C;
+                while (bodyHead != null)
+                {
+                    Stmt(fnCode, locals, bodyHead);
+                    position = bodyHead.Position;
+                    bodyHead = bodyHead.Next;
+                }
+
+                fnCode.EmitLine(ModuleId, position.Line);
+                fnCode.Emit(OpCode.LoadNull);
+                fnCode.EmitLine(ModuleId, position.Line);
+                fnCode.Emit(OpCode.Return);
+
+                var addressOfCode = State.SaveCodeTemplate(fnCode);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.LoadFunction, addressOfCode);
+                break;
+            }
             case AstType.AstMemberAccess:
             {
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
@@ -296,6 +336,11 @@ public class Compiler : Parser
                 TryCatch(code, table, node);
                 break;
             }
+            case AstType.AstBlock:
+            {
+                Block(code, table, node);
+                break;
+            }
             case AstType.AstPrint:
             {
                 Print(code, table, node);
@@ -442,6 +487,17 @@ public class Compiler : Parser
         // end catch, pop try
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);
+    }
+
+    private void Block(Code code, SymbolTable table, Ast node)
+    {
+        var blockTable = new SymbolTable(ScopeType.Block, table);
+        var bodyHead = node.A;
+        while (bodyHead != null)
+        {
+            Stmt(code, blockTable, bodyHead);
+            bodyHead = bodyHead.Next;
+        }
     }
 
     private ZsValue Program(Ast node)

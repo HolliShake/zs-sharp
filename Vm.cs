@@ -285,7 +285,8 @@ public class Vm
 
     private ZsValue DoLoadFunction(Frame callerFrame, int off)
     {
-        var codeObject = _state.Codes[off];
+        var codeObjectTemplate = _state.Codes[off];
+        var codeObject = codeObjectTemplate.Clone();
         var function = ZsValue.FromCodeToFunction(codeObject);
 
         foreach (var (depth, address, destination) in codeObject.Captures)
@@ -556,6 +557,11 @@ public class Vm
                 case OpCode.Await:
                 {
                     var zsFuture = frame.PopOperand();
+                    if (!ZsValue.IsInstanceOf(zsFuture, ValueType.Future))
+                    {
+                        frame.PushOperand(zsFuture);
+                        break;
+                    }
                     var futureInstance = zsFuture.Future();
 
                     frame.Suspend();
@@ -818,6 +824,36 @@ public class Vm
                 case OpCode.PopTry:
                 {
                     frame.PopTryTable();
+                    break;
+                }
+                case OpCode.JumpIfFalseOrPop:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+                    var con = frame.PeekOperand();
+                    if (!con.Bool())
+                    {
+                        frame.JumpTo(jmp);
+                    }
+                    else
+                    {
+                        frame.PopOperand();
+                    }
+                    break;
+                }
+                case OpCode.JumpIfTrueOrPop:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+                    var con = frame.PeekOperand();
+                    if (con.Bool())
+                    {
+                        frame.JumpTo(jmp);
+                    }
+                    else
+                    {
+                        frame.PopOperand();
+                    }
                     break;
                 }
                 case OpCode.Jump:
