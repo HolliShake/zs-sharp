@@ -8,7 +8,7 @@ public class Lexer(string path, string source)
     [
         "class", "fn", "async", "await", "if", "switch",
         "default", "base", "for", "while", "do", "print",
-        "true", "false", "null"
+        "true", "false", "null", "var", "local", "const"
     ];
 
     protected readonly string Path = path;
