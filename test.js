@@ -39,6 +39,10 @@ function cbForError(data) {
     console.log("cb error", data);
 }
 
+function cbError(data) {
+    console.log("CB ERROR", data);
+}
+
 async function add(a, b) {
     // ⚠️  add(1, "str") won't reject in JS — 1 + "str" = "1str".
     //     Guard added to match original type-strict behaviour.
@@ -54,3 +58,7 @@ add(0, 1)
     .then(cb)
     .then(cb)
     .then(cb);
+
+
+add(0, "foccers")
+    .catch(cbError);

@@ -155,6 +155,125 @@ public class Compiler : Parser
                 code.Emit(OpCode.BinSub);
                 break;
             }
+            case AstType.AstBinLShift:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BinLshift);
+                break;
+            }
+            case AstType.AstBinRShift:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BinRshift);
+                break;
+            }
+            case AstType.AstBinLt:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpLt);
+                break;
+            }
+            case AstType.AstBinLe:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpLe);
+                break;
+            }
+            case AstType.AstBinGt:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpGt);
+                break;
+            }
+            case AstType.AstBinGe:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpGe);
+                break;
+            }
+            case AstType.AstBinEq:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpEq);
+                break;
+            }
+            case AstType.AstBinNe:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.CmpNe);
+                break;
+            }
+            case AstType.AstBinAnd:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BinAnd);
+                break;
+            }
+            case AstType.AstBinOr:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BinOr);
+                break;
+            }
+            case AstType.AstBinXor:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BinXor);
+                break;
+            }
+            case AstType.AstAnd:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                var jumpToNext = code.EmitJump(OpCode.JumpIfFalseOrPop);
+                Expr(code, table, node.B);
+                code.Label(jumpToNext);
+                break;
+            }
+            case AstType.AstOr:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                var jumpToNext = code.EmitJump(OpCode.JumpIfTrueOrPop);
+                Expr(code, table, node.B);
+                code.Label(jumpToNext);
+                break;
+            }
             default:
             {
                 ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
@@ -283,12 +402,12 @@ public class Compiler : Parser
     {
         Debug.Assert(node is { C: not null }, "node.C is null");
         var position = node.Position;
-        
+
         code.EmitLine(ModuleId, position.Line);
         var catchAddress = code.EmitJump(OpCode.SetupTry);
-        
+
         var tryTable = new SymbolTable(ScopeType.TryBlock, table);
-        
+
         var tryHead = node.A;
         while (tryHead != null)
         {
@@ -296,30 +415,30 @@ public class Compiler : Parser
             position = tryHead.Position;
             tryHead = tryHead.Next;
         }
-        
+
         code.EmitLine(ModuleId, position.Line);
         var toEndTry = code.EmitJump(OpCode.Jump);
 
         var catchTable = new SymbolTable(ScopeType.CatchBlock, table);
-        
+
         code.Label(catchAddress);
-        
+
         var errorVar = node.C;
         var errorVarAddress = code.AllocateLocal();
         catchTable.Add(errorVar.Value, errorVarAddress, false, errorVar.Position);
-        
+
         code.EmitLine(ModuleId, errorVar.Position.Line);
         code.Emit(OpCode.StoreLocal, errorVarAddress);
-        
+
         var catchHead = node.B;
         while (catchHead != null)
         {
             Stmt(code, catchTable, catchHead);
             catchHead = catchHead.Next;
         }
-        
+
         code.Label(toEndTry);
-        
+
         // end catch, pop try
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);

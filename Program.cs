@@ -57,7 +57,7 @@ public static class Program
             Console.WriteLine($"Error: The file at path '{path}' does not exist.");
             return;
         }
-        
+
         var source = File.ReadAllText(path);
         var state = new State();
 

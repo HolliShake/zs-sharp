@@ -44,11 +44,11 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         {
             if (current._symbols.TryGetValue(symbol, out var found))
                 return new LookupDetail(found, depth, isLocalToFunction);
-            
+
             if (isLocalToFunction && current._scopeType == boundary) isLocalToFunction = false;
             if (current._scopeType == boundary) ++depth;
-            
-            
+
+
             current = current._parent;
         }
 

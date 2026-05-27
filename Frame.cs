@@ -10,13 +10,13 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public readonly Frame? CallerFrame = callerFrame;
     public readonly int CodeLen = functionValue.Code().Bytecode.Count;
     public readonly Cell[] Environment = BuildEnvironment(functionValue.Code());
-    public readonly Stack<TryBlock> TryCatchTable = [];
     public readonly ZsValue FunctionValue = functionValue;
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
+    public readonly Stack<TryBlock> TryCatchTable = [];
     public ZsValue? Future;
-    public ZsValue? PendingError;
     public bool IsFaulted;
     public int Pc;
+    public ZsValue? PendingError;
 
     public bool Suspended { get; private set; }
 
@@ -53,7 +53,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     }
 
     public void PushOperand(ZsValue value)
-    { 
+    {
         _operands.Push(value);
     }
 
@@ -101,7 +101,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     {
         return TryCatchTable.Count > 0;
     }
-    
+
     public void Terminate()
     {
         Suspended = true;
@@ -114,9 +114,10 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         sb.Append('[');
         foreach (var op in _operands)
         {
-            sb.Append(op.ToString());
+            sb.Append(op);
             sb.Append(',');
         }
+
         sb.Append(']');
         Console.WriteLine(sb.ToString());
     }

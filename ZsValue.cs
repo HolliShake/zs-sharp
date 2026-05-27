@@ -13,6 +13,7 @@ public enum ValueType
     Future,
     Int,
     Number,
+    Bool,
     String,
     Null
 }
@@ -42,6 +43,11 @@ public class ZsValue(ValueType type, object value)
     public static ZsValue FromNumber(double value)
     {
         return new ZsValue(ValueType.Number, value);
+    }
+    
+    public static ZsValue FromBool(bool value)
+    {
+        return new ZsValue(ValueType.Bool, value);
     }
 
     public static ZsValue FromString(string value)
@@ -118,7 +124,18 @@ public class ZsValue(ValueType type, object value)
         {
             int i => i,
             double d => (int)d,
-            _ => Convert.ToInt32(Value)
+            _ => 0
+        };
+    }
+    
+    public long Long()
+    {
+        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
+        return Value switch
+        {
+            int i => i,
+            double d => (long)d,
+            _ => 0
         };
     }
 
@@ -127,9 +144,9 @@ public class ZsValue(ValueType type, object value)
         Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
         return Value switch
         {
-            double d => d,
             int i => i,
-            _ => Convert.ToDouble(Value)
+            double d => d,
+            _ => 0
         };
     }
 

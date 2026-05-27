@@ -351,7 +351,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect("fn");
         var func = Terminal();
         if (func == null) ErrorHandler.CompileError(Path, Source, "expects function name", Lookahead.Position);
-        if (func is not { Type:  AstType.AstName })
+        if (func is not { Type: AstType.AstName })
             ErrorHandler.CompileError(Path, Source, "expects function name", func!.Position);
 
         Expect("(");
@@ -368,8 +368,9 @@ public class Parser(string path, string source) : Lexer(path, source)
                 parameterTail.Next = next;
                 parameterTail = next;
                 argc++;
-                
-                if (parameterTail == null) ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
+
+                if (parameterTail == null)
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
                 if (parameterTail is not { Type: AstType.AstName })
                     ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
             }
@@ -412,13 +413,14 @@ public class Parser(string path, string source) : Lexer(path, source)
             tryTail.Next = next;
             tryTail = next;
         }
+
         Expect("}");
         Expect("catch");
         Expect("(");
         var errorVar = Terminal();
-        if  (errorVar == null)
+        if (errorVar == null)
             ErrorHandler.CompileError(Path, Source, "expects a catch receiver variable name", Lookahead.Position);
-        if  (errorVar is not { Type: AstType.AstName })
+        if (errorVar is not { Type: AstType.AstName })
             ErrorHandler.CompileError(Path, Source, "expects a catch receiver variable name", errorVar!.Position);
         Expect(")");
         Expect("{");
@@ -430,6 +432,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             catchTail.Next = next;
             catchTail = next;
         }
+
         Expect("}");
         return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
     }

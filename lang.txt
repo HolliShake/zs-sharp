@@ -4,18 +4,6 @@ fn println(a) async {
     print a;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 fn willThrow() async {
     2 + "Fooc!";
     println("HEHE!");
@@ -38,6 +26,7 @@ fn caller() async {
 
 
 caller();
+
 println("Done!");
 
 fn cb(data) {
@@ -45,13 +34,20 @@ fn cb(data) {
     return data + 1;
 }
 
+fn cbError(data) {
+    print "CB ERROR", data;
+}
+
 fn add(a, b) async {
     return a + b;
 }
-
-
 
 add(0, 1)
     ->then(cb)
     ->then(cb)
     ->then(cb);
+    
+add(0, "fooccers")
+    ->then(cb)
+    ->catch(cbError);
+
