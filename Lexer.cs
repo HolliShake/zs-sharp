@@ -7,7 +7,7 @@ public class Lexer(string path, string source)
     private static readonly HashSet<string> Keywords =
     [
         "class", "fn", "async", "await", "if", "switch",
-        "default", "base", "for", "while", "do", "print", 
+        "default", "base", "for", "while", "do", "print",
         "true", "false", "null"
     ];
 
@@ -279,6 +279,7 @@ public class Lexer(string path, string source)
             case '=':
             {
                 Advance();
+                if (Match('>')) return new Token(TokenType.Sym, "=>", new Position(startLine, startColumn));
                 return Match('=')
                     ? new Token(TokenType.Sym, "==", new Position(startLine, startColumn))
                     : new Token(TokenType.Sym, "=", new Position(startLine, startColumn));

@@ -116,7 +116,7 @@ public class Ast
             C = defaultValue
         };
     }
-    
+
     public static Ast CreateCaseNode(Ast condition, Ast value, Position position)
     {
         return new Ast(AstType.AstCase, position)

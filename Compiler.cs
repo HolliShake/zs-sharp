@@ -101,6 +101,89 @@ public class Compiler : Parser
                 code.Emit(OpCode.LoadFunction, addressOfCode);
                 break;
             }
+            case AstType.AstSwitch:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                var position = node.Position;
+
+                Expr(code, table, node.A);
+
+                var caseNode = node.B;
+                var endJumps = new List<int>();
+                int? defaultJumpPlaceholder = null;
+
+                while (caseNode != null)
+                {
+                    Debug.Assert(caseNode.A != null && caseNode.B != null, "Case condition or value is null");
+
+                    position = caseNode.Position;
+
+                    if (caseNode.A.Type == AstType.AstName && caseNode.A.Value == "_")
+                    {
+                        defaultJumpPlaceholder = code.EmitJump(OpCode.Jump);
+                        caseNode = caseNode.Next;
+                        continue;
+                    }
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.DupTop);
+
+                    Expr(code, table, caseNode.A);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.CmpEq);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    var nextCaseJump = code.EmitJump(OpCode.PopJumpIfFalse);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.PopTop);
+
+                    Expr(code, table, caseNode.B);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    endJumps.Add(code.EmitJump(OpCode.Jump));
+
+                    code.Label(nextCaseJump);
+
+                    caseNode = caseNode.Next;
+                }
+
+                if (defaultJumpPlaceholder != null)
+                {
+                    var defaultNode = node.B;
+                    while (defaultNode != null && !(defaultNode.A!.Type == AstType.AstName && defaultNode.A.Value == "_"))
+                    {
+                        defaultNode = defaultNode.Next;
+                    }
+
+                    position = defaultNode!.Position;
+
+                    code.Label(defaultJumpPlaceholder.Value);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.PopTop);
+
+                    Expr(code, table, defaultNode.B!);
+                }
+                else
+                {
+                    position = node.Position;
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.PopTop);
+
+                    code.EmitLine(ModuleId, position.Line);
+                    code.Emit(OpCode.LoadNull);
+                }
+
+                foreach (var jumpAddress in endJumps)
+                {
+                    code.Label(jumpAddress);
+                }
+
+                break;
+            }
             case AstType.AstMemberAccess:
             {
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");

@@ -61,7 +61,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     {
         return _operands.Pop();
     }
-    
+
     public ZsValue PeekOperand()
     {
         return _operands.Peek();

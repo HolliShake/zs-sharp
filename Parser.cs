@@ -78,10 +78,10 @@ public class Parser(string path, string source) : Lexer(path, source)
     private Ast? Group()
     {
         if (Check("fn"))
-        {
             return FunctionExpression();
-        }
-        
+        if (Check("switch"))
+            return Switch();
+
         return Terminal();
     }
 
@@ -139,64 +139,70 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
+
         Expect("switch");
         Expect("(");
+
         var condition = Expression();
         if (condition == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
-        }
+            ErrorHandler.CompileError(Path, Source, "Expected switch condition expression.", Lookahead.Position);
+
         Expect(")");
         Expect("{");
-        var caseCondition = Expression();
-        if (caseCondition == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects case condition", Lookahead.Position);
-        }
-        Expect("=>");
-        var caseValue = Expression();
-        if (caseValue == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects case value", Lookahead.Position);
-        }
-        var caseHead = Ast.CreateCaseNode(caseCondition!, caseValue!, caseCondition!.Position);
-        var caseTail = caseHead;
-        Ast? defaultCase = null;
-        var withDefault = caseTail.A is { Type:AstType.AstName, Value:"_" };
-        while (Check(","))
-        {
-            Expect(",");
-            caseCondition = Expression();
-            if (caseCondition == null)
-            {
-                ErrorHandler.CompileError(Path, Source, "expects case condition after comma", Lookahead.Position);
-            }
-            Expect("=>");
-            caseValue = Expression();
-            if (caseValue == null)
-            {
-                ErrorHandler.CompileError(Path, Source, "expects case value", Lookahead.Position);
-            }
 
-            caseTail.Next = Ast.CreateCaseNode(caseCondition!, caseValue!, caseCondition!.Position);
-            caseTail = caseTail.Next;
-            if (withDefault && caseTail.A is { Type: AstType.AstName, Value: "_" })
+        Ast? caseHead = null;
+        Ast? caseTail = null;
+        Ast? defaultCase = null;
+        var hasDefault = false;
+
+        // Process all cases
+        while (!Check("}"))
+        {
+            if (hasDefault)
+                ErrorHandler.CompileError(Path, Source,
+                    "The fallback/default case '_' must be the last branch in the switch statement.",
+                    Lookahead.Position);
+
+            var caseCondition = Expression();
+            if (caseCondition == null)
+                ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
+
+            Expect("=>");
+
+            var caseValue = Expression();
+            if (caseValue == null)
+                ErrorHandler.CompileError(Path, Source, "Expected case value expression.", Lookahead.Position);
+
+            if (caseCondition!.Type == AstType.AstName && caseCondition.Value == "_") hasDefault = true;
+
+            var newCaseNode = Ast.CreateCaseNode(caseCondition, caseValue!, caseCondition.Position);
+
+            if (caseHead == null)
             {
-                ErrorHandler.CompileError(Path, Source, "duplicate fallback/default case", Lookahead.Position);
+                caseHead = newCaseNode;
+                caseTail = newCaseNode;
             }
             else
             {
-                withDefault = caseTail.A is { Type:AstType.AstName, Value:"_" };
-                if (withDefault)
-                {
-                    
-                }
+                caseTail!.Next = newCaseNode;
+                caseTail = newCaseNode;
             }
+
+            if (hasDefault && defaultCase == null) defaultCase = newCaseNode;
+
+            if (Check(","))
+                Expect(",");
+            else if (!Check("}"))
+                ErrorHandler.CompileError(Path, Source, "Expected ',' or '}' after case arm.", Lookahead.Position);
         }
+
+        if (defaultCase == null)
+            ErrorHandler.CompileError(Path, Source, "Expected a default case in the switch statement.",
+                Lookahead.Position);
+
         Expect("}");
-        return Ast.CreateSwitchNode(
-            condition, caseHead
-        );
+
+        return Ast.CreateSwitchNode(condition!, caseHead!, defaultCase!, position);
     }
 
     private Ast? MemberOrCall()
@@ -521,7 +527,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect("}");
 
         return Ast.CreateFunctionNode(
-            func!, parameterHead, bodyHead, argc, asynchronous, position
+            func, parameterHead, bodyHead, argc, asynchronous, position
         );
     }
 
@@ -570,30 +576,19 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect("if");
         Expect("(");
         var condition = Expression();
-        if (condition == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
-        }
+        if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
         Expect(")");
         var thenBranch = Statement();
-        if (thenBranch == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects then branch", Lookahead.Position);
-        }
+        if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects then branch", Lookahead.Position);
         Ast? elseBranch = null;
         if (!Check("else"))
-        {
             return Ast.CreateIfNode(
                 condition!, thenBranch!, elseBranch, position
             );
-        }
-        
+
         Expect("else");
         elseBranch = Statement();
-        if (elseBranch == null)
-        {
-            ErrorHandler.CompileError(Path, Source, "expects else branch", Lookahead.Position);
-        }
+        if (elseBranch == null) ErrorHandler.CompileError(Path, Source, "expects else branch", Lookahead.Position);
 
         return Ast.CreateIfNode(
             condition!, thenBranch!, elseBranch, position
@@ -613,6 +608,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             bodyTail.Next = next;
             bodyTail = next;
         }
+
         Expect("}");
         return Ast.CreateBlockNode(bodyHead, position);
     }

@@ -15,6 +15,7 @@ public enum OpCode : byte
     Call,
     CallMethod,
     Await,
+    DupTop,
     BinMul,
     BinDiv,
     BinMod,

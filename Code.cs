@@ -6,15 +6,14 @@ namespace zscript;
 
 public class Code(string name, int argCount, bool isAsync)
 {
-    public List<OpCodeDebug> DebugLines = [];
-    public string Name { get; } = name;
-    public int ArgCount { get; } = argCount;
-    public bool IsAsync { get; } = isAsync;
-
     public List<byte> Bytecode = [];
     public Dictionary<int, Cell> CapturedCells = [];
 
     public List<(int Depth, int Address, int Destination)> Captures = [];
+    public List<OpCodeDebug> DebugLines = [];
+    public string Name { get; } = name;
+    public int ArgCount { get; } = argCount;
+    public bool IsAsync { get; } = isAsync;
 
     public int LocalCount { get; private set; }
 
@@ -23,8 +22,8 @@ public class Code(string name, int argCount, bool isAsync)
         return new Code(Name, ArgCount, IsAsync)
         {
             DebugLines = [.. DebugLines],
-            Bytecode   = [.. Bytecode],
-            Captures   = [.. Captures],
+            Bytecode = [.. Bytecode],
+            Captures = [.. Captures],
             LocalCount = LocalCount,
             CapturedCells = CapturedCells.ToDictionary(
                 kvp => kvp.Key,

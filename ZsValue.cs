@@ -44,7 +44,7 @@ public class ZsValue(ValueType type, object value)
     {
         return new ZsValue(ValueType.Number, value);
     }
-    
+
     public static ZsValue FromBool(bool value)
     {
         return new ZsValue(ValueType.Bool, value);
@@ -127,7 +127,7 @@ public class ZsValue(ValueType type, object value)
             _ => 0
         };
     }
-    
+
     public long Long()
     {
         Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
@@ -149,7 +149,7 @@ public class ZsValue(ValueType type, object value)
             _ => 0
         };
     }
-    
+
     public bool Bool()
     {
         return Value switch

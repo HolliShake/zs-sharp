@@ -8,12 +8,12 @@ public class Vm
     private readonly State _state;
     public readonly Queue<ZsValue> DeferredTasks = new();
     public readonly ZsValue Error;
+    public readonly ZsValue False;
     public readonly ZsValue Future;
     public readonly ZsValue Null;
-    public readonly ZsValue True;
-    public readonly ZsValue False;
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
+    public readonly ZsValue True;
     public readonly ZsValue TypeError;
     public readonly ZsValue ZeroDivideError;
     private ZsValue _currentError;
@@ -63,7 +63,7 @@ public class Vm
 
         return result;
     }
-    
+
     private ZsValue DoMul(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -77,14 +77,12 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoDiv(ZsValue a, ZsValue b)
     {
-        if ((b is { Type: ValueType.Int } or { Type: ValueType.Number }) && b.Number() == 0)
-        {
+        if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(ZeroDivideError, "zero division error", BuildTracebackFromFrame());
-        }
-        
+
         var res = (a.Value, b.Value) switch
         {
             (double or int, double or int) => ZsValue.FromNumber(a.Number() / b.Number()),
@@ -95,14 +93,12 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoMod(ZsValue a, ZsValue b)
     {
-        if ((b is { Type: ValueType.Int } or { Type: ValueType.Number }) && b.Number() == 0)
-        {
+        if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(ZeroDivideError, "zero division error", BuildTracebackFromFrame());
-        }
-        
+
         var res = (a.Value, b.Value) switch
         {
             (double or int, double or int) => ZsValue.FromNumber(a.Number() % b.Number()),
@@ -142,7 +138,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoLshift(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -155,7 +151,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoRshift(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -168,13 +164,13 @@ public class Vm
 
         return res;
     }
-    
-    
+
+
     private ZsValue DoLt(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => a.Number() < b.Number() ? True : False ,
+            (double or int, double or int) => a.Number() < b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame())
@@ -182,7 +178,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoLe(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -195,7 +191,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoGt(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -208,7 +204,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoGe(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -221,7 +217,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoEq(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -232,7 +228,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoNe(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -243,7 +239,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoAnd(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -256,7 +252,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoOr(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -269,7 +265,7 @@ public class Vm
 
         return res;
     }
-    
+
     private ZsValue DoXor(ZsValue a, ZsValue b)
     {
         var res = (a.Value, b.Value) switch
@@ -380,7 +376,7 @@ public class Vm
                 current.JumpTo(tryBlock.ToPc);
 
                 current.Wake();
-            
+
                 return;
             }
 
@@ -404,7 +400,6 @@ public class Vm
             current = current.CallerFrame;
         }
 
-        Unhandled:;
         _currentError = errorValue;
         Console.WriteLine($"[VM Fatal] Uncaught Exception: {errorValue}");
         PendingTasks.Clear();
@@ -554,6 +549,11 @@ public class Vm
                     if (!frame.Suspended) frame.PushOperand(ret);
                     break;
                 }
+                case OpCode.DupTop:
+                {
+                    frame.PushOperand(frame.PeekOperand());
+                    break;
+                }
                 case OpCode.Await:
                 {
                     var zsFuture = frame.PopOperand();
@@ -562,6 +562,7 @@ public class Vm
                         frame.PushOperand(zsFuture);
                         break;
                     }
+
                     var futureInstance = zsFuture.Future();
 
                     frame.Suspend();
@@ -832,13 +833,9 @@ public class Vm
                     frame.Forward(4);
                     var con = frame.PeekOperand();
                     if (!con.Bool())
-                    {
                         frame.JumpTo(jmp);
-                    }
                     else
-                    {
                         frame.PopOperand();
-                    }
                     break;
                 }
                 case OpCode.JumpIfTrueOrPop:
@@ -847,33 +844,23 @@ public class Vm
                     frame.Forward(4);
                     var con = frame.PeekOperand();
                     if (con.Bool())
-                    {
                         frame.JumpTo(jmp);
-                    }
                     else
-                    {
                         frame.PopOperand();
-                    }
                     break;
                 }
                 case OpCode.PopJumpIfFalse:
                 {
                     var jmp = ReadInt(frame);
                     frame.Forward(4);
-                    if (!frame.PopOperand().Bool())
-                    {
-                        frame.JumpTo(jmp);
-                    }
+                    if (!frame.PopOperand().Bool()) frame.JumpTo(jmp);
                     break;
                 }
                 case OpCode.PopJumpIfTrue:
                 {
                     var jmp = ReadInt(frame);
                     frame.Forward(4);
-                    if (frame.PopOperand().Bool())
-                    {
-                        frame.JumpTo(jmp);
-                    }
+                    if (frame.PopOperand().Bool()) frame.JumpTo(jmp);
                     break;
                 }
                 case OpCode.Jump:
@@ -885,7 +872,7 @@ public class Vm
                 case OpCode.Return:
                 {
                     _currentFrame = _currentFrame.CallerFrame;
-                    
+
                     if (frame.Asynchronous || frame.Future != null)
                     {
                         var zsFuture = frame.Future != null!
@@ -910,7 +897,7 @@ public class Vm
                 }
             }
         }
-    
+
         // 1 := fail
         return frame.Future ?? ZsValue.FromInt(1);
     }
