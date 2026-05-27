@@ -97,7 +97,36 @@ public class Ast
         };
     }
 
-    public static Ast CreateBlock(Ast? bodyHead, Position position)
+    public static Ast CreateIfNode(Ast condition, Ast thenBranch, Ast? elseBranch, Position position)
+    {
+        return new Ast(AstType.AstIf, position)
+        {
+            A = condition,
+            B = thenBranch,
+            C = elseBranch
+        };
+    }
+
+    public static Ast CreateSwitchNode(Ast condition, Ast? caseHead, Ast defaultValue, Position position)
+    {
+        return new Ast(AstType.AstSwitch, position)
+        {
+            A = condition,
+            B = caseHead,
+            C = defaultValue
+        };
+    }
+    
+    public static Ast CreateCaseNode(Ast condition, Ast value, Position position)
+    {
+        return new Ast(AstType.AstCase, position)
+        {
+            A = condition,
+            B = value
+        };
+    }
+
+    public static Ast CreateBlockNode(Ast? bodyHead, Position position)
     {
         return new Ast(AstType.AstBlock, position)
         {

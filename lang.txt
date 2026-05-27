@@ -64,3 +64,14 @@ println(5 && 2);
     println("HEHERE!!!!");
 }
 
+if (0) {
+    println("from then");
+} else {
+    println("from else");
+}
+
+fn catcher() {
+    5 + "5";
+}
+
+catcher();

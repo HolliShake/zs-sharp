@@ -135,6 +135,70 @@ public class Parser(string path, string source) : Lexer(path, source)
         );
     }
 
+    private Ast Switch()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("switch");
+        Expect("(");
+        var condition = Expression();
+        if (condition == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
+        }
+        Expect(")");
+        Expect("{");
+        var caseCondition = Expression();
+        if (caseCondition == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects case condition", Lookahead.Position);
+        }
+        Expect("=>");
+        var caseValue = Expression();
+        if (caseValue == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects case value", Lookahead.Position);
+        }
+        var caseHead = Ast.CreateCaseNode(caseCondition!, caseValue!, caseCondition!.Position);
+        var caseTail = caseHead;
+        Ast? defaultCase = null;
+        var withDefault = caseTail.A is { Type:AstType.AstName, Value:"_" };
+        while (Check(","))
+        {
+            Expect(",");
+            caseCondition = Expression();
+            if (caseCondition == null)
+            {
+                ErrorHandler.CompileError(Path, Source, "expects case condition after comma", Lookahead.Position);
+            }
+            Expect("=>");
+            caseValue = Expression();
+            if (caseValue == null)
+            {
+                ErrorHandler.CompileError(Path, Source, "expects case value", Lookahead.Position);
+            }
+
+            caseTail.Next = Ast.CreateCaseNode(caseCondition!, caseValue!, caseCondition!.Position);
+            caseTail = caseTail.Next;
+            if (withDefault && caseTail.A is { Type: AstType.AstName, Value: "_" })
+            {
+                ErrorHandler.CompileError(Path, Source, "duplicate fallback/default case", Lookahead.Position);
+            }
+            else
+            {
+                withDefault = caseTail.A is { Type:AstType.AstName, Value:"_" };
+                if (withDefault)
+                {
+                    
+                }
+            }
+        }
+        Expect("}");
+        return Ast.CreateSwitchNode(
+            condition, caseHead
+        );
+    }
+
     private Ast? MemberOrCall()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
@@ -399,6 +463,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         if (Check("fn")) return Function();
         if (Check("try")) return TryCatch();
+        if (Check("if")) return If();
         if (Check("{")) return Block();
         if (Check("print")) return Print();
         if (Check("return")) return Return();
@@ -498,6 +563,43 @@ public class Parser(string path, string source) : Lexer(path, source)
         return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
     }
 
+    private Ast If()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("if");
+        Expect("(");
+        var condition = Expression();
+        if (condition == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
+        }
+        Expect(")");
+        var thenBranch = Statement();
+        if (thenBranch == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects then branch", Lookahead.Position);
+        }
+        Ast? elseBranch = null;
+        if (!Check("else"))
+        {
+            return Ast.CreateIfNode(
+                condition!, thenBranch!, elseBranch, position
+            );
+        }
+        
+        Expect("else");
+        elseBranch = Statement();
+        if (elseBranch == null)
+        {
+            ErrorHandler.CompileError(Path, Source, "expects else branch", Lookahead.Position);
+        }
+
+        return Ast.CreateIfNode(
+            condition!, thenBranch!, elseBranch, position
+        );
+    }
+
     private Ast Block()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
@@ -511,9 +613,8 @@ public class Parser(string path, string source) : Lexer(path, source)
             bodyTail.Next = next;
             bodyTail = next;
         }
-
         Expect("}");
-        return Ast.CreateBlock(bodyHead, position);
+        return Ast.CreateBlockNode(bodyHead, position);
     }
 
     private Ast Print()

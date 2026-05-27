@@ -10,6 +10,8 @@ public class Vm
     public readonly ZsValue Error;
     public readonly ZsValue Future;
     public readonly ZsValue Null;
+    public readonly ZsValue True;
+    public readonly ZsValue False;
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
     public readonly ZsValue TypeError;
@@ -26,6 +28,8 @@ public class Vm
         ZeroDivideError = ZsValue.CreateZsClass(Error, "ZeroDivideError");
         Future = ZsValue.CreateZsClass(Object, "Future");
         Null = ZsValue.CreateNull();
+        True = ZsValue.FromBool(true);
+        False = ZsValue.FromBool(false);
         _currentFrame = null;
         _currentError = null;
     }
@@ -170,7 +174,7 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() < b.Number()),
+            (double or int, double or int) => a.Number() < b.Number() ? True : False ,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame())
@@ -183,7 +187,7 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() <= b.Number()),
+            (double or int, double or int) => a.Number() <= b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
                 BuildTracebackFromFrame())
@@ -196,7 +200,7 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() > b.Number()),
+            (double or int, double or int) => a.Number() > b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
                 BuildTracebackFromFrame())
@@ -209,7 +213,7 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() <= b.Number()),
+            (double or int, double or int) => a.Number() <= b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
                 BuildTracebackFromFrame())
@@ -222,10 +226,8 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() == b.Number()),
-            _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (==)",
-                BuildTracebackFromFrame())
+            (double or int, double or int) => a.Number() == b.Number() ? True : False,
+            _ => a.Value == b.Value || a == b ? True : False
         };
 
         return res;
@@ -235,10 +237,8 @@ public class Vm
     {
         var res = (a.Value, b.Value) switch
         {
-            (double or int, double or int) => ZsValue.FromBool(a.Number() != b.Number()),
-            _ => ZsValue.FromErrorMessage(TypeError,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (!=)",
-                BuildTracebackFromFrame())
+            (double or int, double or int) => a.Number() != b.Number() ? True : False,
+            _ => a.Value != b.Value || a != b ? True : False
         };
 
         return res;
@@ -856,10 +856,30 @@ public class Vm
                     }
                     break;
                 }
+                case OpCode.PopJumpIfFalse:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+                    if (!frame.PopOperand().Bool())
+                    {
+                        frame.JumpTo(jmp);
+                    }
+                    break;
+                }
+                case OpCode.PopJumpIfTrue:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+                    if (frame.PopOperand().Bool())
+                    {
+                        frame.JumpTo(jmp);
+                    }
+                    break;
+                }
                 case OpCode.Jump:
                 {
-                    var address = ReadInt(frame);
-                    frame.JumpTo(address);
+                    var jmp = ReadInt(frame);
+                    frame.JumpTo(jmp);
                     break;
                 }
                 case OpCode.Return:

@@ -336,6 +336,11 @@ public class Compiler : Parser
                 TryCatch(code, table, node);
                 break;
             }
+            case AstType.AstIf:
+            {
+                If(code, table, node);
+                break;
+            }
             case AstType.AstBlock:
             {
                 Block(code, table, node);
@@ -487,6 +492,19 @@ public class Compiler : Parser
         // end catch, pop try
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);
+    }
+
+    private void If(Code code, SymbolTable table, Ast node)
+    {
+        Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+        Expr(code, table, node.A);
+        code.EmitLine(ModuleId, node.Position.Line);
+        var jumpToElse = code.EmitJump(OpCode.PopJumpIfFalse);
+        Stmt(code, table, node.B);
+        var jumpToEndIf = code.EmitJump(OpCode.Jump);
+        code.Label(jumpToElse);
+        if (node.C != null) Stmt(code, table, node.C);
+        code.Label(jumpToEndIf);
     }
 
     private void Block(Code code, SymbolTable table, Ast node)

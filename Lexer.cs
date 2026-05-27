@@ -7,7 +7,8 @@ public class Lexer(string path, string source)
     private static readonly HashSet<string> Keywords =
     [
         "class", "fn", "async", "await", "if", "switch",
-        "base", "for", "while", "do", "print"
+        "default", "base", "for", "while", "do", "print", 
+        "true", "false", "null"
     ];
 
     protected readonly string Path = path;
