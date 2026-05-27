@@ -74,9 +74,7 @@ fn catcher() {
     5 + "5";
 }
 
-
-
-println(switch(8) {
+println(switch(100) {
     0 => "zero",
     1 => "one",
     2 => "two",

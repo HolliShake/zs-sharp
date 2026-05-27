@@ -126,4 +126,9 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         sb.Append(']');
         Console.WriteLine(sb.ToString());
     }
+
+    public int GetOperandCount()
+    {
+        return _operands.Count;
+    }
 }

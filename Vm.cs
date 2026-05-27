@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -347,6 +348,9 @@ public class Vm
         var arguments = new ZsValue[arg + 1];
         arguments[0] = zsObject;
         for (var i = 1; i < arg + 1; i++) arguments[i] = frame.PopOperand();
+        
+        // Pop this
+        frame.PopOperand();
 
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future))
             switch (memberName.String())
@@ -871,6 +875,9 @@ public class Vm
                 }
                 case OpCode.Return:
                 {
+                    var count = frame.GetOperandCount();
+                    Debug.Assert(count == 1, $"{code.Name} -> frame.GetOperandCount()({count}) != 1");
+                    
                     _currentFrame = _currentFrame.CallerFrame;
 
                     if (frame.Asynchronous || frame.Future != null)
@@ -905,7 +912,7 @@ public class Vm
     public void MainLoop(ZsValue globalCodeObject)
     {
         Run(new Frame(null, globalCodeObject, false, false));
-
+        
         while (PendingTasks.Count > 0 || DeferredTasks.Count > 0)
         {
             if (PendingTasks.Count == 0)
