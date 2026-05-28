@@ -263,7 +263,52 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             return Ast.CreateAwaitNode(futureNode!, position);
         }
-
+        else if (Check("!"))
+        {
+            Expect("!");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+            
+            return Ast.CreateUnaryNode(AstType.AstUnaNot, operand!, position);
+        }
+        else if (Check("++"))
+        {
+            Expect("++");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+            
+            return Ast.CreateUnaryNode(AstType.AstUnaPlusPlus, operand!, position);
+        }
+        else if (Check("--"))
+        {
+            Expect("--");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+            
+            return Ast.CreateUnaryNode(AstType.AstUnaMinusMinus, operand!, position);
+        }
+        else if (Check("+"))
+        {
+            Expect("+");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+            
+            return Ast.CreateUnaryNode(AstType.AstUnaPos, operand!, position);
+        }
+        else if (Check("-"))
+        {
+            Expect("-");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+            
+            return Ast.CreateUnaryNode(AstType.AstUnaMinus, operand!, position);
+        }
+        
         return MemberOrCall();
     }
 
@@ -380,7 +425,7 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         if (lhs == null) return null;
 
-        while (Check("==") || Check("!="))
+        while (Check("==") || Check("!=") || Check("is") || Check("not"))
         {
             Debug.Assert(Lookahead != null, "Lookahead is null");
             var opt = Lookahead.Value;
@@ -391,8 +436,10 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             lhs = Ast.CreateBinaryOperationNode(opt switch
             {
-                "==" => AstType.AstBinEq,
-                "!=" => AstType.AstBinNe,
+                "=="  => AstType.AstBinEq,
+                "!="  => AstType.AstBinNe,
+                "is"  => AstType.AstBinIs,
+                "not" => AstType.AstBinNot,
                 _ => throw new Exception($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
             }, lhs, rhs, lhs.Position);
         }

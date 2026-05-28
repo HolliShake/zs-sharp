@@ -8,7 +8,8 @@ public class Lexer(string path, string source)
     [
         "class", "fn", "async", "await", "if", "switch",
         "default", "base", "for", "while", "do", "print",
-        "true", "false", "null", "var", "local", "const"
+        "true", "false", "null", "var", "local", "const",
+        "is", "not"
     ];
 
     protected readonly string Path = path;
@@ -21,18 +22,34 @@ public class Lexer(string path, string source)
     {
         while (_indx < Source.Length)
         {
-            var c = Source[_indx];
-            if (char.IsWhiteSpace(c))
+            var rune = Rune.GetRuneAt(Source, _indx);
+
+            if (Rune.IsWhiteSpace(rune))
             {
                 Advance();
                 continue;
             }
 
-            if (char.IsLetter(c) || c == '_') return ReadIdentifierOrKeyword();
+            if (Rune.IsLetter(rune) || Source[_indx] == '_') return ReadIdentifierOrKeyword();
 
-            if (char.IsDigit(c)) return ReadNumber();
+            if (Rune.IsDigit(rune)) return ReadNumber();
 
-            if (c == '"') return ReadString();
+            if (Source[_indx] == '"') return ReadString();
+
+            if (Source[_indx] == '/' && _indx + 1 < Source.Length)
+            {
+                if (Source[_indx + 1] == '/')
+                {
+                    SkipLineComment();
+                    continue;
+                }
+
+                if (Source[_indx + 1] == '*')
+                {
+                    SkipBlockComment();
+                    continue;
+                }
+            }
 
             var symbol = TryReadOperator();
             if (symbol != null) return symbol;
@@ -43,19 +60,58 @@ public class Lexer(string path, string source)
 
     private void Advance()
     {
-        if (_indx > Source.Length) return;
+        if (_indx >= Source.Length) return;
 
         if (Source[_indx] == '\n')
         {
             _line++;
             _colm = 1;
+            _indx++;
         }
         else
         {
+            var rune = Rune.GetRuneAt(Source, _indx);
             _colm++;
+            _indx += rune.Utf16SequenceLength;
+        }
+    }
+
+    private void SkipLineComment()
+    {
+        // Consume the leading '//'
+        Advance();
+        Advance();
+
+        // Advance until end of line or end of source
+        while (_indx < Source.Length && Source[_indx] != '\n')
+            Advance();
+    }
+
+    private void SkipBlockComment()
+    {
+        var startLine = _line;
+        var startColumn = _colm;
+
+        // Consume the leading '/*'
+        Advance();
+        Advance();
+
+        while (_indx < Source.Length)
+        {
+            if (Source[_indx] == '*' && _indx + 1 < Source.Length && Source[_indx + 1] == '/')
+            {
+                // Consume the closing '*/'
+                Advance();
+                Advance();
+                return;
+            }
+
+            Advance();
         }
 
-        _indx++;
+        // Reached end of source without finding '*/'
+        ErrorHandler.CompileError(Path, Source, "Unterminated block comment.",
+            new Position(startLine, startColumn));
     }
 
     private Token ReadIdentifierOrKeyword()
@@ -64,7 +120,12 @@ public class Lexer(string path, string source)
         var startLine = _line;
         var startColumn = _colm;
 
-        while (_indx < Source.Length && (char.IsLetterOrDigit(Source[_indx]) || Source[_indx] == '_')) Advance();
+        while (_indx < Source.Length)
+        {
+            var rune = Rune.GetRuneAt(Source, _indx);
+            if (!Rune.IsLetterOrDigit(rune) && Source[_indx] != '_') break;
+            Advance();
+        }
 
         var name = Source[startPos.._indx];
         var type = Keywords.Contains(name) ? TokenType.Key : TokenType.Idn;
@@ -108,13 +169,13 @@ public class Lexer(string path, string source)
         }
 
         var hasDot = false;
-        while (_indx < Source.Length && char.IsDigit(Source[_indx])) Advance();
+        while (_indx < Source.Length && Rune.IsDigit(Rune.GetRuneAt(Source, _indx))) Advance();
 
         if (_indx < Source.Length && Source[_indx] == '.')
         {
             hasDot = true;
             Advance();
-            while (_indx < Source.Length && char.IsDigit(Source[_indx]))
+            while (_indx < Source.Length && Rune.IsDigit(Rune.GetRuneAt(Source, _indx)))
                 Advance();
         }
 
@@ -123,7 +184,7 @@ public class Lexer(string path, string source)
             Advance();
             if (_indx < Source.Length && Source[_indx] is '+' or '-')
                 Advance();
-            while (_indx < Source.Length && char.IsDigit(Source[_indx]))
+            while (_indx < Source.Length && Rune.IsDigit(Rune.GetRuneAt(Source, _indx)))
                 Advance();
             hasDot = true;
         }

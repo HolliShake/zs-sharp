@@ -55,6 +55,14 @@ public class Ast
             A = future
         };
     }
+    
+    public static Ast CreateUnaryNode(AstType astType, Ast future, Position position)
+    {
+        return new Ast(astType, position)
+        {
+            A = future
+        };
+    }
 
     public static Ast CreateFunctionCallNode(Ast callable, Ast? argumentHead, Position position)
     {
