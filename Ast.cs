@@ -55,7 +55,7 @@ public class Ast
             A = future
         };
     }
-    
+
     public static Ast CreateUnaryNode(AstType astType, Ast future, Position position)
     {
         return new Ast(astType, position)
@@ -115,7 +115,7 @@ public class Ast
         };
     }
 
-    public static Ast CreateSwitchNode(Ast condition, Ast? caseHead, Ast defaultValue, Position position)
+    public static Ast CreateSwitchNode(Ast condition, Ast? caseHead, Ast? defaultValue, Position position)
     {
         return new Ast(AstType.AstSwitch, position)
         {

@@ -7,7 +7,7 @@ public class Lexer(string path, string source)
     private static readonly HashSet<string> Keywords =
     [
         "class", "fn", "async", "await", "if", "switch",
-        "default", "base", "for", "while", "do", "print",
+        "case", "default", "base", "for", "while", "do", "print",
         "true", "false", "null", "var", "local", "const",
         "is", "not"
     ];
@@ -240,6 +240,11 @@ public class Lexer(string path, string source)
             {
                 Advance();
                 return new Token(TokenType.Sym, ",", new Position(startLine, startColumn));
+            }
+            case ':':
+            {
+                Advance();
+                return new Token(TokenType.Sym, ":", new Position(startLine, startColumn));
             }
             case ';':
             {

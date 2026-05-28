@@ -50,7 +50,7 @@ add(0, 1)
     })
     ->then(cb);
     
-add(0, "fooccers")
+add(0, "foccer")
     ->catch(fn(data) {
         print "THEN";
     })
@@ -61,7 +61,7 @@ println(5 && 2);
 
 {
     2 + 2;
-    println("HEHERE!!!!");
+    println("HEHEHE!!!!");
 }
 
 if (0) {
@@ -71,10 +71,15 @@ if (0) {
 }
 
 fn catcher() {
-    5 + "5";
+    switch (100) {
+        case 100:
+        case 200: {
+            println("Hola!");
+        }
+    }
 }
 
-println(switch(100) {
+println(switch (100) {
     0 => "zero",
     1 => "one",
     2 => "two",
@@ -85,5 +90,20 @@ println(switch(100) {
     7 => "seven",
     8 => "eight",
     9 => "nine",
-    _ => "other",
+    _ => "other"
 });
+
+if (2) {
+    println("foo");
+}
+
+fn fact(n) {
+    if (n == 0) {
+        return 1;
+    }
+    return n * fact(n - 1);
+}
+
+catcher();
+
+println(fact(5));

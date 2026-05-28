@@ -80,7 +80,14 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check("fn"))
             return FunctionExpression();
         if (Check("switch"))
-            return Switch();
+            return SwitchExpression();
+        if (Check("("))
+        {
+            Expect("(");
+            var node = Expression(false);
+            Expect(")");
+            return node;
+        }
 
         return Terminal();
     }
@@ -135,7 +142,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         );
     }
 
-    private Ast Switch()
+    private Ast SwitchExpression()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
@@ -156,7 +163,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         var hasDefault = false;
 
         // Process all cases
-        while (!Check("}"))
+        while (true)
         {
             if (hasDefault)
                 ErrorHandler.CompileError(Path, Source,
@@ -190,10 +197,8 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             if (hasDefault && defaultCase == null) defaultCase = newCaseNode;
 
-            if (Check(","))
-                Expect(",");
-            else if (!Check("}"))
-                ErrorHandler.CompileError(Path, Source, "Expected ',' or '}' after case arm.", Lookahead.Position);
+            if (!Check(",")) break;
+            Expect(",");
         }
 
         if (defaultCase == null)
@@ -202,7 +207,7 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect("}");
 
-        return Ast.CreateSwitchNode(condition!, caseHead!, defaultCase!, position);
+        return Ast.CreateSwitchNode(condition!, caseHead, defaultCase, position);
     }
 
     private Ast? MemberOrCall()
@@ -263,52 +268,57 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             return Ast.CreateAwaitNode(futureNode!, position);
         }
-        else if (Check("!"))
+
+        if (Check("!"))
         {
             Expect("!");
             var operand = Unary();
             if (operand == null)
                 ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
-            
+
             return Ast.CreateUnaryNode(AstType.AstUnaNot, operand!, position);
         }
-        else if (Check("++"))
+
+        if (Check("++"))
         {
             Expect("++");
             var operand = Unary();
             if (operand == null)
                 ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
-            
+
             return Ast.CreateUnaryNode(AstType.AstUnaPlusPlus, operand!, position);
         }
-        else if (Check("--"))
+
+        if (Check("--"))
         {
             Expect("--");
             var operand = Unary();
             if (operand == null)
                 ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
-            
+
             return Ast.CreateUnaryNode(AstType.AstUnaMinusMinus, operand!, position);
         }
-        else if (Check("+"))
+
+        if (Check("+"))
         {
             Expect("+");
             var operand = Unary();
             if (operand == null)
                 ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
-            
+
             return Ast.CreateUnaryNode(AstType.AstUnaPos, operand!, position);
         }
-        else if (Check("-"))
+
+        if (Check("-"))
         {
             Expect("-");
             var operand = Unary();
             if (operand == null)
                 ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
-            
+
             return Ast.CreateUnaryNode(AstType.AstUnaMinus, operand!, position);
         }
-        
+
         return MemberOrCall();
     }
 
@@ -436,9 +446,9 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             lhs = Ast.CreateBinaryOperationNode(opt switch
             {
-                "=="  => AstType.AstBinEq,
-                "!="  => AstType.AstBinNe,
-                "is"  => AstType.AstBinIs,
+                "==" => AstType.AstBinEq,
+                "!=" => AstType.AstBinNe,
+                "is" => AstType.AstBinIs,
                 "not" => AstType.AstBinNot,
                 _ => throw new Exception($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
             }, lhs, rhs, lhs.Position);
@@ -517,6 +527,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check("fn")) return Function();
         if (Check("try")) return TryCatch();
         if (Check("if")) return If();
+        if (Check("switch")) return Switch();
         if (Check("{")) return Block();
         if (Check("print")) return Print();
         if (Check("return")) return Return();
@@ -576,6 +587,82 @@ public class Parser(string path, string source) : Lexer(path, source)
         return Ast.CreateFunctionNode(
             func, parameterHead, bodyHead, argc, asynchronous, position
         );
+    }
+
+    private Ast Switch()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+
+        Expect("switch");
+        Expect("(");
+
+        var condition = Expression();
+        if (condition == null)
+            ErrorHandler.CompileError(Path, Source, "Expected switch condition expression.", Lookahead.Position);
+
+        Expect(")");
+        Expect("{");
+
+        Ast? caseHead = null;
+        Ast? caseTail = null;
+        Ast? defaultCase = null;
+        var hasDefault = false;
+
+        // Process all cases
+        while (true)
+        {
+            if (hasDefault)
+                ErrorHandler.CompileError(Path, Source,
+                    "The fallback/default case '_' must be the last branch in the switch statement.",
+                    Lookahead.Position);
+
+            Expect("case");
+            var caseCondition = Expression();
+            var tailCaseCondition = caseCondition!;
+            if (caseCondition == null)
+                ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
+            Expect(":");
+
+            while (Check("case"))
+            {
+                Expect("case");
+                var nextCaseCondition = Expression();
+                if (nextCaseCondition == null)
+                    ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
+                Expect(":");
+                tailCaseCondition.Next = nextCaseCondition!;
+                tailCaseCondition = tailCaseCondition.Next;
+            }
+
+            var caseValue = Statement();
+            if (caseValue == null)
+                ErrorHandler.CompileError(Path, Source, "Expected case statement.", Lookahead.Position);
+
+            if (caseCondition!.Type == AstType.AstName && caseCondition.Value == "_") hasDefault = true;
+
+            var newCaseNode = Ast.CreateCaseNode(caseCondition, caseValue!, caseCondition.Position);
+
+            if (caseHead == null)
+            {
+                caseHead = newCaseNode;
+                caseTail = newCaseNode;
+            }
+            else
+            {
+                caseTail!.Next = newCaseNode;
+                caseTail = newCaseNode;
+            }
+
+            if (hasDefault && defaultCase == null) defaultCase = newCaseNode;
+
+            if (!Check(",")) break;
+            Expect(",");
+        }
+
+        Expect("}");
+
+        return Ast.CreateSwitchNode(condition!, caseHead, defaultCase, position);
     }
 
     private Ast TryCatch()
