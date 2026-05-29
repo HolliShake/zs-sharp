@@ -103,26 +103,18 @@ public class Compiler : Parser
             }
             case AstType.AstSwitch:
             {
-                Debug.Assert(node is { A: not null }, "node.A or node.B is null");
+                Debug.Assert(node is { A: not null, C: not null }, "node.A or node.B is null");
               
                 Expr(code, table, node.A);
 
                 var caseNode = node.B;
                 var endJumps = new List<int>();
-                int? defaultJumpPlaceholder = null;
 
                 while (caseNode != null)
                 {
-                    Debug.Assert(caseNode.A != null && caseNode.B != null, "Case condition or value is null");
+                    Debug.Assert(caseNode is { A: not null , B: not null}, "Case condition or value is null");
 
                     var position = caseNode.Position;
-
-                    if (caseNode.A.Type == AstType.AstName && caseNode.A.Value == "_")
-                    {
-                        defaultJumpPlaceholder = code.EmitJump(OpCode.Jump);
-                        caseNode = caseNode.Next;
-                        continue;
-                    }
 
                     code.EmitLine(ModuleId, position.Line);
                     code.Emit(OpCode.DupTop);
@@ -147,33 +139,11 @@ public class Compiler : Parser
 
                     caseNode = caseNode.Next;
                 }
-
-                if (defaultJumpPlaceholder != null)
-                {
-                    var defaultNode = node.B;
-                    while (defaultNode != null &&
-                           !(defaultNode.A!.Type == AstType.AstName && defaultNode.A.Value == "_"))
-                        defaultNode = defaultNode.Next;
-
-                    var position = defaultNode!.Position;
-
-                    code.Label(defaultJumpPlaceholder.Value);
-
-                    code.EmitLine(ModuleId, position.Line);
-                    code.Emit(OpCode.PopTop);
-
-                    Expr(code, table, defaultNode.B!);
-                }
-                else
-                {
-                    var position = node.Position;
-
-                    code.EmitLine(ModuleId, position.Line);
-                    code.Emit(OpCode.PopTop);
-
-                    code.EmitLine(ModuleId, position.Line);
-                    code.Emit(OpCode.LoadNull);
-                }
+                
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.PopTop);
+                
+                Expr(code, table, node.C);
 
                 foreach (var jumpAddress in endJumps) code.Label(jumpAddress);
 
@@ -598,20 +568,12 @@ public class Compiler : Parser
 
         var caseNode = node.B;
         var endJumps = new List<int>();
-        int? defaultJumpPlaceholder = null;
 
         while (caseNode != null)
         {
-            Debug.Assert(caseNode.A != null && caseNode.B != null, "Case condition or value is null");
+            Debug.Assert(caseNode is { A: not null , B: not null}, "Case condition or value is null");
 
             var position = caseNode.Position;
-
-            if (caseNode.A.Type == AstType.AstName && caseNode.A.Value == "_")
-            {
-                defaultJumpPlaceholder = code.EmitJump(OpCode.Jump);
-                caseNode = caseNode.Next;
-                continue;
-            }
 
             var nextCaseJumps = new List<int>();
             var currentCase = caseNode;
@@ -643,33 +605,11 @@ public class Compiler : Parser
 
             caseNode = caseNode.Next;
         }
-
-        if (defaultJumpPlaceholder != null)
-        {
-            var defaultNode = node.B;
-            while (defaultNode != null &&
-                   !(defaultNode.A!.Type == AstType.AstName && defaultNode.A.Value == "_"))
-                defaultNode = defaultNode.Next;
-
-            var position = defaultNode!.Position;
-
-            code.Label(defaultJumpPlaceholder.Value);
-
-            code.EmitLine(ModuleId, position.Line);
-            code.Emit(OpCode.PopTop);
-
-            Stmt(code, table, defaultNode.B!);
-        }
-        else
-        {
-            var position = node.Position;
-
-            code.EmitLine(ModuleId, position.Line);
-            code.Emit(OpCode.PopTop);
-
-            code.EmitLine(ModuleId, position.Line);
-            code.Emit(OpCode.LoadNull);
-        }
+        
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.Emit(OpCode.PopTop);
+        
+        if (node.C != null) Stmt(code, table, node.C);
 
         foreach (var jumpAddress in endJumps) code.Label(jumpAddress);
     }

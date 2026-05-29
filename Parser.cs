@@ -180,9 +180,14 @@ public class Parser(string path, string source) : Lexer(path, source)
             if (caseValue == null)
                 ErrorHandler.CompileError(Path, Source, "Expected case value expression.", Lookahead.Position);
 
-            if (caseCondition!.Type == AstType.AstName && caseCondition.Value == "_") hasDefault = true;
+            if (caseCondition is { Type: AstType.AstName, Value: "_" })
+            {
+                hasDefault = true;
+                defaultCase = caseValue;
+                goto ConsumeComma;
+            }
 
-            var newCaseNode = Ast.CreateCaseNode(caseCondition, caseValue!, caseCondition.Position);
+            var newCaseNode = Ast.CreateCaseNode(caseCondition!, caseValue!, caseCondition!.Position);
 
             if (caseHead == null)
             {
@@ -194,9 +199,8 @@ public class Parser(string path, string source) : Lexer(path, source)
                 caseTail!.Next = newCaseNode;
                 caseTail = newCaseNode;
             }
-
-            if (hasDefault && defaultCase == null) defaultCase = newCaseNode;
-
+            
+            ConsumeComma: ;
             if (!Check(",")) break;
             Expect(",");
         }
@@ -589,6 +593,85 @@ public class Parser(string path, string source) : Lexer(path, source)
         );
     }
 
+    private Ast VariableDeclaration(string keyword)
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+
+        var typeOfVariable = keyword switch
+        {
+            "var" => AstType.AstGlobalVar,
+            "local" => AstType.AstLocalVar,
+            "const" => AstType.AstConstVar,
+            _ => throw new NotImplementedException()
+        };
+        
+        Expect(keyword);
+
+        if (Check("["))
+        {
+            Expect("[");
+            Expect("]");
+            if (!Check("=")) ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration", Lookahead.Position);
+            Expect("=");
+            var value = Expression(true);
+        }
+        else if (Check("{"))
+        {
+            Expect("{");
+            Expect("}");
+            if (!Check("=")) ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration", Lookahead.Position);
+            Expect("=");
+            var value = Expression(true);
+        }
+        else
+        {
+            var pairPosition = Lookahead.Position;
+            var variable = Terminal();
+            if (variable == null)
+                ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
+            if (variable is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
+
+            Ast? value = null;
+            
+            if (Check("="))
+            {
+                value = Expression(false);
+            }
+
+            var variableInit = Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
+            var variableTail = variableInit;
+
+            while (Check(","))
+            {
+                Expect(",");
+                pairPosition = Lookahead.Position;
+                
+                variable = Terminal();
+                if (variable == null)
+                    ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
+                if (variable is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
+
+                value = null;
+                if (Check("="))
+                {
+                    value = Expression(false);
+                }
+                
+                variableTail.Next = Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
+                variableTail = variableTail.Next;
+            }
+         
+            Expect(";");
+            
+            return Ast.CreateVariableNode(typeOfVariable, variableInit, position);
+        }
+
+        throw new NotImplementedException();
+    }
+
     private Ast Switch()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
@@ -610,54 +693,65 @@ public class Parser(string path, string source) : Lexer(path, source)
         var hasDefault = false;
 
         // Process all cases
-        while (true)
+        // Process all cases
+        while (Check("case") || Check("default"))
         {
             if (hasDefault)
                 ErrorHandler.CompileError(Path, Source,
-                    "The fallback/default case '_' must be the last branch in the switch statement.",
+                    "The fallback/default case must be the last branch in the switch statement.",
                     Lookahead.Position);
 
-            Expect("case");
-            var caseCondition = Expression();
-            var tailCaseCondition = caseCondition!;
-            if (caseCondition == null)
-                ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
-            Expect(":");
+            Ast? caseCondition = null;
 
-            while (Check("case"))
+            if (Check("default") && !hasDefault)
+            {
+                Expect("default");
+                Expect(":");
+                hasDefault = true;
+            }
+            else
             {
                 Expect("case");
-                var nextCaseCondition = Expression();
-                if (nextCaseCondition == null)
+                caseCondition = Expression();
+                var tailCaseCondition = caseCondition!;
+                if (caseCondition == null)
                     ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
                 Expect(":");
-                tailCaseCondition.Next = nextCaseCondition!;
-                tailCaseCondition = tailCaseCondition.Next;
+
+                while (Check("case"))
+                {
+                    Expect("case");
+                    var nextCaseCondition = Expression();
+                    if (nextCaseCondition == null)
+                        ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
+                    Expect(":");
+                    tailCaseCondition.Next = nextCaseCondition!;
+                    tailCaseCondition = tailCaseCondition.Next;
+                }
             }
 
             var caseValue = Statement();
             if (caseValue == null)
                 ErrorHandler.CompileError(Path, Source, "Expected case statement.", Lookahead.Position);
 
-            if (caseCondition!.Type == AstType.AstName && caseCondition.Value == "_") hasDefault = true;
-
-            var newCaseNode = Ast.CreateCaseNode(caseCondition, caseValue!, caseCondition.Position);
-
+            if (caseCondition == null && hasDefault)
+            {
+                defaultCase = caseValue;
+                continue;
+            }
+            
+            var newCaseNode = Ast.CreateCaseNode(caseCondition!, caseValue!, position);
+            
             if (caseHead == null)
             {
                 caseHead = newCaseNode;
-                caseTail = newCaseNode;
             }
             else
             {
                 caseTail!.Next = newCaseNode;
-                caseTail = newCaseNode;
             }
-
-            if (hasDefault && defaultCase == null) defaultCase = newCaseNode;
-
-            if (!Check(",")) break;
-            Expect(",");
+            
+            caseTail = newCaseNode;
         }
 
         Expect("}");

@@ -71,11 +71,13 @@ if (0) {
 }
 
 fn catcher() {
-    switch (100) {
+    switch (1003) {
         case 100:
         case 200: {
             println("Hola!");
         }
+        default:
+            println(">>>Other!");
     }
 }
 
@@ -107,3 +109,6 @@ fn fact(n) {
 catcher();
 
 println(fact(5));
+
+
+var x = 2;

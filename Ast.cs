@@ -95,6 +95,23 @@ public class Ast
         };
     }
 
+    public static Ast CreateInitializerNode(AstType type, Ast? variableOrDestructuring, Ast? value, Position position)
+    {
+        return new Ast(type, position)
+        {
+            A = variableOrDestructuring,
+            B = value
+        };
+    }
+    
+    public static Ast CreateVariableNode(AstType type, Ast initializerHead, Position position)
+    {
+        return new Ast(type, position)
+        {
+            A = initializerHead
+        };
+    }
+
     public static Ast CreateTryCatchNode(Ast? tryHead, Ast? catchHead, Ast catchReceiver, Position position)
     {
         return new Ast(AstType.AstTryCatch, position)
