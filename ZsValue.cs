@@ -154,13 +154,13 @@ public class ZsValue(ValueType type, object value)
     {
         return Value switch
         {
+            Code c => c != null!,
+            Dictionary<string, ZsValue> d => d.Count > 0,
+            Future f => f is { State: FutureState.Fulfill } or { State: FutureState.Pending },
             int i => i != 0,
             double d => d != 0,
-            string s => !string.IsNullOrEmpty(s),
             bool b => b,
-            Code c => c != null!,
-            Future f => f is { State: FutureState.Fulfill } or { State: FutureState.Pending },
-            Dictionary<string, ZsValue> d => d.Count > 0,
+            string s => !string.IsNullOrEmpty(s),
             _ => false
         };
     }
@@ -179,9 +179,10 @@ public class ZsValue(ValueType type, object value)
         {
             ValueType.Script => "script",
             ValueType.Function => "function",
-            ValueType.Future => "future",
             ValueType.Error or
                 ValueType.Object => GetInternalType(this),
+            ValueType.Array => "array",
+            ValueType.Future => "future",
             ValueType.Int => "int",
             ValueType.Number => "number",
             ValueType.Bool => "bool",
@@ -275,12 +276,12 @@ public class ZsValue(ValueType type, object value)
     {
         return Type switch
         {
-            ValueType.Error when IsInstanceOf(this, "Error") => FormatError(),
-            ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
+            ValueType.Function => "[function]",
+            ValueType.Object when IsInstanceOf(this, "Error") => FormatError(),
             ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, false),
             ValueType.ObjectLiteral => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, true),
+            ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
             ValueType.Future => FormatFuture(),
-            ValueType.Function => "[function]",
             ValueType.Null => "null",
             _ => $"{Value}"
         };
@@ -313,19 +314,17 @@ public class ZsValue(ValueType type, object value)
     {
         return value.Type switch
         {
-            ValueType.String => $"'{value.Value as string}'",
-            ValueType.Number => Convert.ToString(value.Value) ?? "null",
-            ValueType.Null => "null",
-            ValueType.Array when value.Value is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
+            ValueType.Function => "[function]",
             ValueType.Object when value.Value is Dictionary<string, ZsValue> props
                 => ConvertDictToJsonFormat(value.GetZsType(), props, false, depth),
             ValueType.ObjectLiteral when value.Value is Dictionary<string, ZsValue> props
                 => ConvertDictToJsonFormat(value.GetZsType(), props, true, depth),
-
+            ValueType.Array when value.Value is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
             ValueType.Class when value.Value is Dictionary<string, ZsValue?> classProps
                 => $"[class {classProps.GetValueOrDefault("type")?.Value as string ?? "?"}]",
-            ValueType.Function => "[function]",
-
+            ValueType.Number => Convert.ToString(value.Value) ?? "null",
+            ValueType.String => $"'{value.Value as string}'",
+            ValueType.Null => "null",
             _ => $"{value.Value}"
         };
     }

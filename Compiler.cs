@@ -102,6 +102,10 @@ public class Compiler : Parser
                 var locals = new SymbolTable(ScopeType.Function, table);
 
                 var position = node.Position;
+                
+                // We inject 'this' to all functions as first local variable.
+                var thisAddress = fnCode.AllocateLocal();
+                locals.Add("this", thisAddress, false, node.B != null ? node.B.Position : position);
 
                 var paramHead = node.B;
                 while (paramHead != null)
@@ -500,6 +504,10 @@ public class Compiler : Parser
         table.Add(node.A.Value, functionAddress, false, node.Position);
 
         var position = node.Position;
+        
+        // We inject 'this' to all functions as first local variable.
+        var thisAddress = fnCode.AllocateLocal();
+        locals.Add("this", thisAddress, false, node.B != null ? node.B.Position : position);
 
         var paramHead = node.B;
         while (paramHead != null)
