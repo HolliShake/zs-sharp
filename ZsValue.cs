@@ -3,22 +3,6 @@ using System.Text;
 
 namespace zscript;
 
-public enum ValueType
-{
-    Script,
-    Function,
-    Class,
-    Error,
-    Object,
-    ObjectLiteral,
-    Array,
-    Future,
-    Int,
-    Number,
-    Bool,
-    String,
-    Null
-}
 
 public class ZsValue(ValueType type, object value)
 {
@@ -291,11 +275,12 @@ public class ZsValue(ValueType type, object value)
     {
         return Type switch
         {
-            ValueType.Object when IsInstanceOf(this, "Error") => FormatError(),
+            ValueType.Error when IsInstanceOf(this, "Error") => FormatError(),
             ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
             ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, false),
             ValueType.ObjectLiteral => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, true),
             ValueType.Future => FormatFuture(),
+            ValueType.Function => "[function]",
             ValueType.Null => "null",
             _ => $"{Value}"
         };
@@ -339,6 +324,7 @@ public class ZsValue(ValueType type, object value)
 
             ValueType.Class when value.Value is Dictionary<string, ZsValue?> classProps
                 => $"[class {classProps.GetValueOrDefault("type")?.Value as string ?? "?"}]",
+            ValueType.Function => "[function]",
 
             _ => $"{value.Value}"
         };

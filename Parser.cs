@@ -105,7 +105,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         var argc = 0;
         var parameterHead = Terminal();
         var parameterTail = parameterHead;
-        if (parameterTail == null)
+        if (parameterTail != null)
         {
             if (parameterTail is not { Type: AstType.AstName })
                 ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
