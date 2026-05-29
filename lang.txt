@@ -51,10 +51,10 @@ add(0, 1)
     ->then(cb);
     
 add(0, "foccer")
-    ->catch(fn(data) {
+    ->error(fn(data) {
         print "THEN";
     })
-    ->catch(cbError);
+    ->error(cbError);
     
 println(3 > 2);
 println(5 && 2);
@@ -100,9 +100,8 @@ if (2) {
 }
 
 fn fact(n) {
-    if (n == 0) {
-        return 1;
-    }
+    if (n == 0) return 1;
+    
     return n * fact(n - 1);
 }
 
@@ -111,4 +110,7 @@ catcher();
 println(fact(5));
 
 
-var x = 2;
+var { a: EY } = 2;
+var [a, b] = 2;
+var x = 2, y = 2 * 3;
+

@@ -38,6 +38,7 @@ public enum AstType
     AstAnd,
     AstOr,
     AstFunction,
+    AstKeyValuePair,
     AstDestructureObjectInitializer,
     AstDestructureArrayInitializer,
     AstVariableInitializer,

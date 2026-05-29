@@ -6,10 +6,30 @@ public class Lexer(string path, string source)
 {
     private static readonly HashSet<string> Keywords =
     [
-        "class", "fn", "async", "await", "if", "switch",
-        "case", "default", "base", "for", "while", "do", "print",
-        "true", "false", "null", "var", "local", "const",
-        "is", "not"
+        "class",
+        "base",
+        "fn",
+        "async",
+        "await",
+        "return",
+        "var",
+        "local",
+        "const",
+        "try",
+        "catch",
+        "if",
+        "switch",
+        "case",
+        "default",
+        "for",
+        "while",
+        "do",
+        "print",
+        "true",
+        "false",
+        "null",
+        "is",
+        "not"
     ];
 
     protected readonly string Path = path;

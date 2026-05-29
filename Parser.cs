@@ -199,7 +199,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 caseTail!.Next = newCaseNode;
                 caseTail = newCaseNode;
             }
-            
+
             ConsumeComma: ;
             if (!Check(",")) break;
             Expect(",");
@@ -529,6 +529,9 @@ public class Parser(string path, string source) : Lexer(path, source)
     private Ast? Statement()
     {
         if (Check("fn")) return Function();
+        if (Check("var")) return VariableDeclaration("var");
+        if (Check("local")) return VariableDeclaration("local");
+        if (Check("const")) return VariableDeclaration("const");
         if (Check("try")) return TryCatch();
         if (Check("if")) return If();
         if (Check("switch")) return Switch();
@@ -605,24 +608,100 @@ public class Parser(string path, string source) : Lexer(path, source)
             "const" => AstType.AstConstVar,
             _ => throw new NotImplementedException()
         };
-        
+
         Expect(keyword);
 
         if (Check("["))
         {
+            var arrayPosition = Lookahead.Position;
             Expect("[");
+            var variableNameHead = Terminal();
+            var variableNameTail = variableNameHead;
+
+            if (variableNameTail == null)
+                ErrorHandler.CompileError(Path, Source, "expects variable name", Lookahead.Position);
+            if (variableNameTail is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects variable name", variableNameTail!.Position);
+
+            while (Check(","))
+            {
+                Expect(",");
+                var next = Terminal();
+
+                if (next == null)
+                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", arrayPosition);
+                if (next is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", arrayPosition);
+
+                variableNameTail!.Next = next;
+                variableNameTail = next;
+            }
+
             Expect("]");
-            if (!Check("=")) ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration", Lookahead.Position);
+            if (!Check("="))
+                ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration",
+                    Lookahead.Position);
             Expect("=");
-            var value = Expression(true);
+            var value = Expression();
+            Expect(";");
+            return Ast.CreateVariableNode(typeOfVariable,
+                Ast.CreateInitializerNode(AstType.AstDestructureArrayInitializer, variableNameHead, value,
+                    arrayPosition), position);
         }
-        else if (Check("{"))
+
+        if (Check("{"))
         {
+            var objectPosition = Lookahead.Position;
             Expect("{");
+            var key = Terminal();
+            if (key == null)
+                ErrorHandler.CompileError(Path, Source, "expects variable name", objectPosition);
+            if (key is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects variable name", objectPosition);
+            
+            Expect(":");
+            
+            var alias = Terminal();
+            if (alias == null)
+                ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
+            if (alias is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
+
+            var keyValuePairHead = Ast.CreateKeyValuePairNode(key!, alias!, objectPosition);
+            var keyValuePairTail = keyValuePairHead;
+
+            while (Check(","))
+            {
+                Expect(",");
+                key = Terminal();
+                if (key == null)
+                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", objectPosition);
+                if (key is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", objectPosition);
+                
+                Expect(":");
+                
+                alias = Terminal();
+                if (alias == null)
+                    ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
+                if (alias is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
+                
+                keyValuePairTail.Next = Ast.CreateKeyValuePairNode(key!, alias!, objectPosition);
+                keyValuePairTail = keyValuePairTail.Next;
+            }
+            
             Expect("}");
-            if (!Check("=")) ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration", Lookahead.Position);
+            if (!Check("="))
+                ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration",
+                    Lookahead.Position);
             Expect("=");
-            var value = Expression(true);
+            var value = Expression();
+            Expect(";");
+            
+            return Ast.CreateVariableNode(typeOfVariable,
+                Ast.CreateInitializerNode(AstType.AstDestructureObjectInitializer, keyValuePairHead, value,
+                    objectPosition), position);
         }
         else
         {
@@ -634,20 +713,22 @@ public class Parser(string path, string source) : Lexer(path, source)
                 ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
 
             Ast? value = null;
-            
+
             if (Check("="))
             {
+                Expect("=");
                 value = Expression(false);
             }
 
-            var variableInit = Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
+            var variableInit =
+                Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
             var variableTail = variableInit;
 
             while (Check(","))
             {
                 Expect(",");
                 pairPosition = Lookahead.Position;
-                
+
                 variable = Terminal();
                 if (variable == null)
                     ErrorHandler.CompileError(Path, Source, "expects variable name", pairPosition);
@@ -657,15 +738,17 @@ public class Parser(string path, string source) : Lexer(path, source)
                 value = null;
                 if (Check("="))
                 {
+                    Expect("=");
                     value = Expression(false);
                 }
-                
-                variableTail.Next = Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
+
+                variableTail.Next =
+                    Ast.CreateInitializerNode(AstType.AstVariableInitializer, variable!, value, pairPosition);
                 variableTail = variableTail.Next;
             }
-         
+
             Expect(";");
-            
+
             return Ast.CreateVariableNode(typeOfVariable, variableInit, position);
         }
 
@@ -723,7 +806,8 @@ public class Parser(string path, string source) : Lexer(path, source)
                     Expect("case");
                     var nextCaseCondition = Expression();
                     if (nextCaseCondition == null)
-                        ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
+                        ErrorHandler.CompileError(Path, Source, "Expected case condition expression.",
+                            Lookahead.Position);
                     Expect(":");
                     tailCaseCondition.Next = nextCaseCondition!;
                     tailCaseCondition = tailCaseCondition.Next;
@@ -739,18 +823,14 @@ public class Parser(string path, string source) : Lexer(path, source)
                 defaultCase = caseValue;
                 continue;
             }
-            
+
             var newCaseNode = Ast.CreateCaseNode(caseCondition!, caseValue!, position);
-            
+
             if (caseHead == null)
-            {
                 caseHead = newCaseNode;
-            }
             else
-            {
                 caseTail!.Next = newCaseNode;
-            }
-            
+
             caseTail = newCaseNode;
         }
 

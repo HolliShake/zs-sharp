@@ -95,6 +95,15 @@ public class Ast
         };
     }
 
+    public static Ast CreateKeyValuePairNode(Ast key, Ast value, Position position)
+    {
+        return new Ast(AstType.AstKeyValuePair, position)
+        {
+            A = key,
+            B = value
+        };
+    }
+
     public static Ast CreateInitializerNode(AstType type, Ast? variableOrDestructuring, Ast? value, Position position)
     {
         return new Ast(type, position)
@@ -103,7 +112,7 @@ public class Ast
             B = value
         };
     }
-    
+
     public static Ast CreateVariableNode(AstType type, Ast initializerHead, Position position)
     {
         return new Ast(type, position)

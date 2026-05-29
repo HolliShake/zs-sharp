@@ -104,7 +104,7 @@ public class Compiler : Parser
             case AstType.AstSwitch:
             {
                 Debug.Assert(node is { A: not null, C: not null }, "node.A or node.B is null");
-              
+
                 Expr(code, table, node.A);
 
                 var caseNode = node.B;
@@ -112,7 +112,7 @@ public class Compiler : Parser
 
                 while (caseNode != null)
                 {
-                    Debug.Assert(caseNode is { A: not null , B: not null}, "Case condition or value is null");
+                    Debug.Assert(caseNode is { A: not null, B: not null }, "Case condition or value is null");
 
                     var position = caseNode.Position;
 
@@ -139,10 +139,10 @@ public class Compiler : Parser
 
                     caseNode = caseNode.Next;
                 }
-                
+
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.PopTop);
-                
+
                 Expr(code, table, node.C);
 
                 foreach (var jumpAddress in endJumps) code.Label(jumpAddress);
@@ -571,7 +571,7 @@ public class Compiler : Parser
 
         while (caseNode != null)
         {
-            Debug.Assert(caseNode is { A: not null , B: not null}, "Case condition or value is null");
+            Debug.Assert(caseNode is { A: not null, B: not null }, "Case condition or value is null");
 
             var position = caseNode.Position;
 
@@ -589,7 +589,7 @@ public class Compiler : Parser
 
                 code.EmitLine(ModuleId, position.Line);
                 nextCaseJumps.Add(code.EmitJump(OpCode.PopJumpIfFalse));
-                
+
                 currentCase = currentCase.Next;
             }
 
@@ -605,10 +605,10 @@ public class Compiler : Parser
 
             caseNode = caseNode.Next;
         }
-        
+
         code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.PopTop);
-        
+
         if (node.C != null) Stmt(code, table, node.C);
 
         foreach (var jumpAddress in endJumps) code.Label(jumpAddress);

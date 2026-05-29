@@ -48,7 +48,7 @@ public class Future(FutureState initialState, Frame frame)
         Result = zsValue;
 
         // null means "record the rejection silently — MainLoop will notify listeners
-        // at the correct time, after any synchronous catch/continue code has run."
+        // at the correct time, after any synchronous error/continue code has run."
         if (queue == null) return;
 
         foreach (var reaction in _rejectReactions)
@@ -110,7 +110,7 @@ public class Future(FutureState initialState, Frame frame)
         return newPromise;
     }
 
-    public static ZsValue FutureCatchMethod(Vm vm, ZsValue[] arguments)
+    public static ZsValue FutureErrorMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2)
             return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());

@@ -357,8 +357,8 @@ public class Vm
             {
                 case "then":
                     return zscript.Future.FutureThenMethod(this, arguments);
-                case "catch":
-                    return zscript.Future.FutureCatchMethod(this, arguments);
+                case "error":
+                    return zscript.Future.FutureErrorMethod(this, arguments);
             }
 
         return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}",
