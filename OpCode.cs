@@ -7,6 +7,8 @@ public enum OpCode : byte
     LoadConst,
     LoadString,
     LoadNull,
+    MakeArray,
+    MakeObject,
     LoadFunction,
     StoreLocal,
     StoreName,

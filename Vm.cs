@@ -280,6 +280,27 @@ public class Vm
         return res;
     }
 
+
+    private ZsValue DoMakeArray(Frame frame, int size)
+    {
+        var array = new List<ZsValue>(size);
+        for (var i = 0; i < size; i++) array.Add(frame.PopOperand());
+        array.Reverse();
+        return ZsValue.FromArray(array);
+    }
+
+    private ZsValue DoMakeObject(Frame frame, int size)
+    {
+        var dict = new Dictionary<string, ZsValue>();
+        for (var i = 0; i < size; i++)
+        {
+            var val = frame.PopOperand();
+            var key = frame.PopOperand().ToString();
+            dict[key] = val;
+        }
+        return ZsValue.CreateZsObject(Object, dict);
+    }
+
     private ZsValue DoLoadFunction(Frame callerFrame, int off)
     {
         var codeObjectTemplate = _state.Codes[off];
@@ -502,6 +523,22 @@ public class Vm
                 case OpCode.LoadNull:
                 {
                     frame.PushOperand(Null);
+                    break;
+                }
+                case OpCode.MakeArray:
+                {
+                    var size = ReadInt(frame);
+                    frame.Forward(4);
+                    var arrayValue = DoMakeArray(frame, size);
+                    frame.PushOperand(arrayValue);
+                    break;
+                }
+                case OpCode.MakeObject:
+                {
+                    var size = ReadInt(frame);
+                    frame.Forward(4);
+                    var objectValue = DoMakeObject(frame, size);
+                    frame.PushOperand(objectValue);
                     break;
                 }
                 case OpCode.LoadFunction:

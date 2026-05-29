@@ -10,6 +10,7 @@ public enum ValueType
     Class,
     Error,
     Object,
+    Array,
     Future,
     Int,
     Number,
@@ -25,6 +26,11 @@ public class ZsValue(ValueType type, object value)
 
     // ── Factories ────────────────────────────────────────────────────────────
 
+    public static ZsValue FromArray(List<ZsValue> values)
+    {
+        return new ZsValue(ValueType.Array, values);
+    }
+    
     public static ZsValue FromCodeToScript(Code code)
     {
         return new ZsValue(ValueType.Script, code);
@@ -276,6 +282,7 @@ public class ZsValue(ValueType type, object value)
         return Type switch
         {
             ValueType.Object when IsInstanceOf(this, "Error") => FormatError(),
+            ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
             ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value),
             ValueType.Future => FormatFuture(),
             ValueType.Null => "null",
@@ -313,7 +320,7 @@ public class ZsValue(ValueType type, object value)
             ValueType.String => $"'{value.Value as string}'",
             ValueType.Number => Convert.ToString(value.Value) ?? "null",
             ValueType.Null => "null",
-
+            ValueType.Array when value.Value is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
             ValueType.Object when value.Value is Dictionary<string, ZsValue> props
                 => ConvertDictToJsonFormat(value.GetZsType(), props, depth),
 
@@ -322,6 +329,34 @@ public class ZsValue(ValueType type, object value)
 
             _ => $"{value.Value}"
         };
+    }
+
+    private string ConvertArrayToJsonFormat(List<ZsValue> array, int depth = 0)
+    {
+       
+        if (array.Count == 0)
+            return "[]";
+
+        var indent = new string(' ', (depth + 1) * 2);
+        var closingIndent = new string(' ', (depth + 1) * 2);
+        var sb = new StringBuilder();
+        
+        sb.Append('[');
+
+        var first = true;
+        foreach (var item in array)
+        {
+            if (!first) sb.Append(',');
+            first = false;
+
+            sb.Append(indent)
+                .Append(ReferenceEquals(item, this) ? "[Circular *1]" : FormatValue(item, depth + 1));
+        }
+
+        sb.Append(closingIndent)
+            .Append(']');
+
+        return sb.ToString();
     }
 
     private string ConvertDictToJsonFormat(string typePrefix, Dictionary<string, ZsValue> dict, int depth = 0)

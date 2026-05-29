@@ -105,8 +105,11 @@ public class Parser(string path, string source) : Lexer(path, source)
         var argc = 0;
         var parameterHead = Terminal();
         var parameterTail = parameterHead;
-        if (parameterTail is not null and { Type: AstType.AstName })
+        if (parameterTail == null)
         {
+            if (parameterTail is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+            
             argc++;
             while (Check(","))
             {
@@ -119,7 +122,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 if (parameterTail == null)
                     ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
                 if (parameterTail is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", parameterTail!.Position);
             }
         }
 
@@ -295,8 +298,10 @@ public class Parser(string path, string source) : Lexer(path, source)
             return Ast.CreateUnaryNode(AstType.AstSpread, Expression(false)!, position);
         }
         
-        var key = Expression();
+        var key = Terminal();
         if (key == null) return null;
+        if (key is not { Type: AstType.AstName })
+            ErrorHandler.CompileError(Path, Source, "expects identifier/name as key", key.Position);
         Expect(":");
         var val = Expression(false);
         return Ast.CreateKeyValuePairNode(key, val!, position);
@@ -314,9 +319,8 @@ public class Parser(string path, string source) : Lexer(path, source)
                 Expect("->");
                 var member = Terminal();
                 if (member == null) ErrorHandler.CompileError(Path, Source, "expects member", Lookahead.Position);
-
-                if (member!.Type != AstType.AstName)
-                    ErrorHandler.CompileError(Path, Source, "a member must be a valid identifier", Lookahead.Position);
+                if (member is not { Type: AstType.AstName })
+                    ErrorHandler.CompileError(Path, Source, "a member must be a valid identifier/name", member!.Position);
 
                 node = Ast.CreateMemberAccessNode(
                     node, member, node.Position
@@ -746,9 +750,9 @@ public class Parser(string path, string source) : Lexer(path, source)
             Expect("{");
             var key = Terminal();
             if (key == null)
-                ErrorHandler.CompileError(Path, Source, "expects variable name", objectPosition);
+                ErrorHandler.CompileError(Path, Source, "expects property name", objectPosition);
             if (key is not { Type: AstType.AstName })
-                ErrorHandler.CompileError(Path, Source, "expects variable name", objectPosition);
+                ErrorHandler.CompileError(Path, Source, "expects property name", objectPosition);
             
             Expect(":");
             
@@ -766,9 +770,9 @@ public class Parser(string path, string source) : Lexer(path, source)
                 Expect(",");
                 key = Terminal();
                 if (key == null)
-                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", objectPosition);
+                    ErrorHandler.CompileError(Path, Source, "expects property name after comma", objectPosition);
                 if (key is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(Path, Source, "expects variable name after comma", objectPosition);
+                    ErrorHandler.CompileError(Path, Source, "expects property name after comma", objectPosition);
                 
                 Expect(":");
                 

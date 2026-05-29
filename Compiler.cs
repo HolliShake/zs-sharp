@@ -61,6 +61,39 @@ public class Compiler : Parser
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
+            case AstType.AstArrayLiteral:
+            {
+                var elementHead = node.A;
+                var count = 0;
+                while (elementHead != null)
+                {
+                    Expr(code, table, elementHead);
+                    elementHead = elementHead.Next;
+                    ++count; 
+                }
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.MakeArray, count);
+                break;
+            }
+            case AstType.AstObjectLiteral:
+            {
+                var elementHead = node.A;
+                var count = 0;
+                while (elementHead != null)
+                {
+                    var key = elementHead.A;
+                    var val = elementHead.B;
+                    var index = State.SaveStr(key!.Value);
+                    code.EmitLine(ModuleId, key!.Position.Line);
+                    code.Emit(OpCode.LoadConst, index);
+                    Expr(code, table, val!);
+                    elementHead = elementHead.Next;
+                    ++count; 
+                }
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.MakeObject, count);
+                break;
+            }
             case AstType.AstFunction:
             {
                 var fnCode = new Code("<anon/>", node.IntArg0, node.Flag0);

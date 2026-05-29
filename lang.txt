@@ -108,12 +108,8 @@ catcher();
 
 println(fact(5));
 
-({
-    A: "A",
-    "B": 2
+println([1,2,3]);
+println({
+    Hello: "World"
 });
-
-var { a: ey } = 2;
-var [ a, b ]  = 2;
-var a = 2, y  = 2 * 3;
 
