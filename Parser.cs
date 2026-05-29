@@ -81,6 +81,10 @@ public class Parser(string path, string source) : Lexer(path, source)
             return FunctionExpression();
         if (Check("switch"))
             return SwitchExpression();
+        if (Check("["))
+            return ArrayLiteral();
+        if (Check("{"))
+            return ObjectLiteral();
         if (Check("("))
         {
             Expect("(");
@@ -212,6 +216,90 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect("}");
 
         return Ast.CreateSwitchNode(condition!, caseHead, defaultCase, position);
+    }
+
+    private Ast ArrayLiteral()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("[");
+        var elementHead = ArrayElement();
+        var elementTail = elementHead;
+
+        if (elementTail != null)
+        {
+            while (Check(","))
+            {
+                Expect(",");
+                
+                var next = ArrayElement();
+                if (next == null)
+                    ErrorHandler.CompileError(Path, Source, "expects expression after comma", Lookahead.Position);
+                
+                elementTail!.Next = next;
+                elementTail = next;
+            }
+        }
+        
+        Expect("]");
+        
+        return Ast.CreateArrayLiteralNode(elementHead!, position);
+    }
+
+    private Ast ObjectLiteral()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("{");
+        var elementHead = ObjectElement();
+        var elementTail = elementHead;
+
+        if (elementTail != null)
+        {
+            while (Check(","))
+            {
+                Expect(",");
+                
+                var next = ObjectElement();
+                if (next == null)
+                    ErrorHandler.CompileError(Path, Source, "expects expression after comma", Lookahead.Position);
+                
+                elementTail!.Next = next;
+                elementTail = next;
+            }
+        }
+        Expect("}");
+        return Ast.CreateObjectLiteralNode(elementHead, position);
+    }
+    
+    private Ast? ArrayElement()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        if (!Check("..."))
+        {
+            return Expression();
+        }
+        
+        Expect("...");
+        return Ast.CreateUnaryNode(AstType.AstSpread, Expression(false)!, position);
+    }
+
+    private Ast? ObjectElement()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        if (Check("..."))
+        {
+            Expect("...");
+            return Ast.CreateUnaryNode(AstType.AstSpread, Expression(false)!, position);
+        }
+        
+        var key = Expression();
+        if (key == null) return null;
+        Expect(":");
+        var val = Expression(false);
+        return Ast.CreateKeyValuePairNode(key, val!, position);
     }
 
     private Ast? MemberOrCall()
@@ -555,8 +643,11 @@ public class Parser(string path, string source) : Lexer(path, source)
         var argc = 0;
         var parameterHead = Terminal();
         var parameterTail = parameterHead;
-        if (parameterTail is not null and { Type: AstType.AstName })
+        if (parameterTail != null)
         {
+            if (parameterTail is not { Type: AstType.AstName })
+                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+            
             argc++;
             while (Check(","))
             {

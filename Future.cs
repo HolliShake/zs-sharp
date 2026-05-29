@@ -1,13 +1,7 @@
 namespace zscript;
 
-public enum FutureState
-{
-    Pending,
-    Fulfill,
-    Rejected
-}
 
-public class Future(FutureState initialState, Frame frame)
+public class Future(FutureState initialState, Frame frame) : IBuiltin
 {
     private readonly List<ZsValue> _fullFillReactions = [];
     private readonly List<ZsValue> _rejectReactions = [];
@@ -71,7 +65,7 @@ public class Future(FutureState initialState, Frame frame)
         _rejectReactions.Add(zsValue);
     }
 
-    public static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
+    private static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2)
             return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
@@ -110,7 +104,7 @@ public class Future(FutureState initialState, Frame frame)
         return newPromise;
     }
 
-    public static ZsValue FutureErrorMethod(Vm vm, ZsValue[] arguments)
+    private static ZsValue FutureErrorMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2)
             return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
@@ -148,4 +142,15 @@ public class Future(FutureState initialState, Frame frame)
 
         return newPromise;
     }
+    
+    private static readonly string[] Methods = [ "then", "error" ];
+    
+    public static bool HasMethod(string methodName) => Methods.Contains(methodName);
+    
+    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName) => methodName switch
+    {
+        "then" => FutureThenMethod,
+        "error" => FutureErrorMethod,
+        _ => throw new NotImplementedException($"method {methodName} not implemented")
+    };
 }

@@ -39,6 +39,22 @@ public class Ast
         };
     }
 
+    public static Ast CreateArrayLiteralNode(Ast? elementHead, Position position)
+    {
+        return new Ast(AstType.AstArrayLiteral, position)
+        {
+            A = elementHead
+        };
+    }
+    
+    public static Ast CreateObjectLiteralNode(Ast? elementHead, Position position)
+    {
+        return new Ast(AstType.AstObjectLiteral, position)
+        {
+            A = elementHead
+        };
+    }
+
     public static Ast CreateMemberAccessNode(Ast indexable, Ast member, Position position)
     {
         return new Ast(AstType.AstMemberAccess, position)
@@ -47,7 +63,16 @@ public class Ast
             B = member
         };
     }
-
+    
+    public static Ast CreateFunctionCallNode(Ast callable, Ast? argumentHead, Position position)
+    {
+        return new Ast(AstType.AstFunctionCall, position)
+        {
+            A = callable,
+            B = argumentHead
+        };
+    }
+    
     public static Ast CreateAwaitNode(Ast future, Position position)
     {
         return new Ast(AstType.AstAwait, position)
@@ -61,15 +86,6 @@ public class Ast
         return new Ast(astType, position)
         {
             A = future
-        };
-    }
-
-    public static Ast CreateFunctionCallNode(Ast callable, Ast? argumentHead, Position position)
-    {
-        return new Ast(AstType.AstFunctionCall, position)
-        {
-            A = callable,
-            B = argumentHead
         };
     }
 

@@ -17,7 +17,7 @@ public class Vm
     public readonly ZsValue True;
     public readonly ZsValue TypeError;
     public readonly ZsValue ZeroDivideError;
-    private ZsValue _currentError;
+    private ZsValue? _currentError;
     private Frame? _currentFrame;
 
     public Vm(State state)
@@ -351,15 +351,10 @@ public class Vm
 
         // Pop this
         frame.PopOperand();
-
-        if (ZsValue.IsInstanceOf(zsObject, ValueType.Future))
-            switch (memberName.String())
-            {
-                case "then":
-                    return zscript.Future.FutureThenMethod(this, arguments);
-                case "error":
-                    return zscript.Future.FutureErrorMethod(this, arguments);
-            }
+        
+        var memberNameString = memberName.String();
+        if (ZsValue.IsInstanceOf(zsObject, ValueType.Future) && zscript.Future.HasMethod(memberNameString))
+            return zscript.Future.GetMethod(memberNameString)(this, arguments);
 
         return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}",
             BuildTracebackFromFrame());

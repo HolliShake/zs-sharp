@@ -76,8 +76,7 @@ fn catcher() {
         case 200: {
             println("Hola!");
         }
-        default:
-            println(">>>Other!");
+        default: println(">>> Other!");
     }
 }
 
@@ -109,8 +108,12 @@ catcher();
 
 println(fact(5));
 
+({
+    A: "A",
+    "B": 2
+});
 
-var { a: EY } = 2;
-var [a, b] = 2;
-var x = 2, y = 2 * 3;
+var { a: ey } = 2;
+var [ a, b ]  = 2;
+var a = 2, y  = 2 * 3;
 
