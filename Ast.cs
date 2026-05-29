@@ -46,7 +46,7 @@ public class Ast
             A = elementHead
         };
     }
-    
+
     public static Ast CreateObjectLiteralNode(Ast? elementHead, Position position)
     {
         return new Ast(AstType.AstObjectLiteral, position)
@@ -63,7 +63,7 @@ public class Ast
             B = member
         };
     }
-    
+
     public static Ast CreateFunctionCallNode(Ast callable, Ast? argumentHead, Position position)
     {
         return new Ast(AstType.AstFunctionCall, position)
@@ -72,7 +72,7 @@ public class Ast
             B = argumentHead
         };
     }
-    
+
     public static Ast CreateAwaitNode(Ast future, Position position)
     {
         return new Ast(AstType.AstAwait, position)

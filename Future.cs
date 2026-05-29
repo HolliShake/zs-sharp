@@ -1,8 +1,8 @@
 namespace zscript;
 
-
 public class Future(FutureState initialState, Frame frame) : IBuiltin
 {
+    private static readonly string[] Methods = ["then", "error"];
     private readonly List<ZsValue> _fullFillReactions = [];
     private readonly List<ZsValue> _rejectReactions = [];
 
@@ -15,6 +15,21 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     public ZsValue? Result { get; private set; }
 
     public Frame SuspendedFrame { get; } = frame;
+
+    public static bool HasMethod(string methodName)
+    {
+        return Methods.Contains(methodName);
+    }
+
+    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName)
+    {
+        return methodName switch
+        {
+            "then" => FutureThenMethod,
+            "error" => FutureErrorMethod,
+            _ => throw new NotImplementedException($"method {methodName} not implemented")
+        };
+    }
 
     public void FullFill(ZsValue zsValue, Queue<ZsValue>? queue)
     {
@@ -142,15 +157,4 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
 
         return newPromise;
     }
-    
-    private static readonly string[] Methods = [ "then", "error" ];
-    
-    public static bool HasMethod(string methodName) => Methods.Contains(methodName);
-    
-    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName) => methodName switch
-    {
-        "then" => FutureThenMethod,
-        "error" => FutureErrorMethod,
-        _ => throw new NotImplementedException($"method {methodName} not implemented")
-    };
 }

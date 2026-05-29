@@ -298,7 +298,8 @@ public class Vm
             var key = frame.PopOperand().ToString();
             dict[key] = val;
         }
-        return ZsValue.CreateZsObject(Object, dict);
+
+        return ZsValue.CreateZsObjectLiteral(Object, dict.Reverse().ToDictionary(x => x.Key, x => x.Value));
     }
 
     private ZsValue DoLoadFunction(Frame callerFrame, int off)
@@ -372,7 +373,7 @@ public class Vm
 
         // Pop this
         frame.PopOperand();
-        
+
         var memberNameString = memberName.String();
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future) && zscript.Future.HasMethod(memberNameString))
             return zscript.Future.GetMethod(memberNameString)(this, arguments);

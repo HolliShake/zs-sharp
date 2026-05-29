@@ -69,8 +69,9 @@ public class Compiler : Parser
                 {
                     Expr(code, table, elementHead);
                     elementHead = elementHead.Next;
-                    ++count; 
+                    ++count;
                 }
+
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.MakeArray, count);
                 break;
@@ -88,8 +89,9 @@ public class Compiler : Parser
                     code.Emit(OpCode.LoadConst, index);
                     Expr(code, table, val!);
                     elementHead = elementHead.Next;
-                    ++count; 
+                    ++count;
                 }
+
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.MakeObject, count);
                 break;

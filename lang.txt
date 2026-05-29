@@ -110,6 +110,7 @@ println(fact(5));
 
 println([1,2,3]);
 println({
-    Hello: "World"
+    Hello: "World",
+    World: "Hello"
 });
 

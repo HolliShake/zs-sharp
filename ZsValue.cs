@@ -10,6 +10,7 @@ public enum ValueType
     Class,
     Error,
     Object,
+    ObjectLiteral,
     Array,
     Future,
     Int,
@@ -30,7 +31,7 @@ public class ZsValue(ValueType type, object value)
     {
         return new ZsValue(ValueType.Array, values);
     }
-    
+
     public static ZsValue FromCodeToScript(Code code)
     {
         return new ZsValue(ValueType.Script, code);
@@ -85,6 +86,15 @@ public class ZsValue(ValueType type, object value)
     {
         Debug.Assert(zsClass.Type == ValueType.Class, "Parent is not a class.");
         return new ZsValue(ValueType.Object, new Dictionary<string, ZsValue>([
+            new KeyValuePair<string, ZsValue>("constructor", zsClass),
+            ..properties
+        ]));
+    }
+
+    public static ZsValue CreateZsObjectLiteral(ZsValue zsClass, Dictionary<string, ZsValue> properties)
+    {
+        Debug.Assert(zsClass.Type == ValueType.Class, "Parent is not a class.");
+        return new ZsValue(ValueType.ObjectLiteral, new Dictionary<string, ZsValue>([
             new KeyValuePair<string, ZsValue>("constructor", zsClass),
             ..properties
         ]));
@@ -283,7 +293,8 @@ public class ZsValue(ValueType type, object value)
         {
             ValueType.Object when IsInstanceOf(this, "Error") => FormatError(),
             ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
-            ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value),
+            ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, false),
+            ValueType.ObjectLiteral => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, true),
             ValueType.Future => FormatFuture(),
             ValueType.Null => "null",
             _ => $"{Value}"
@@ -322,7 +333,9 @@ public class ZsValue(ValueType type, object value)
             ValueType.Null => "null",
             ValueType.Array when value.Value is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
             ValueType.Object when value.Value is Dictionary<string, ZsValue> props
-                => ConvertDictToJsonFormat(value.GetZsType(), props, depth),
+                => ConvertDictToJsonFormat(value.GetZsType(), props, false, depth),
+            ValueType.ObjectLiteral when value.Value is Dictionary<string, ZsValue> props
+                => ConvertDictToJsonFormat(value.GetZsType(), props, true, depth),
 
             ValueType.Class when value.Value is Dictionary<string, ZsValue?> classProps
                 => $"[class {classProps.GetValueOrDefault("type")?.Value as string ?? "?"}]",
@@ -333,14 +346,13 @@ public class ZsValue(ValueType type, object value)
 
     private string ConvertArrayToJsonFormat(List<ZsValue> array, int depth = 0)
     {
-       
         if (array.Count == 0)
             return "[]";
 
         var indent = new string(' ', (depth + 1) * 2);
         var closingIndent = new string(' ', (depth + 1) * 2);
         var sb = new StringBuilder();
-        
+
         sb.Append('[');
 
         var first = true;
@@ -359,23 +371,27 @@ public class ZsValue(ValueType type, object value)
         return sb.ToString();
     }
 
-    private string ConvertDictToJsonFormat(string typePrefix, Dictionary<string, ZsValue> dict, int depth = 0)
+    private string ConvertDictToJsonFormat(string typePrefix, Dictionary<string, ZsValue> dict, bool literal,
+        int depth = 0)
     {
         var prefix = string.IsNullOrEmpty(typePrefix) ? "" : $"{typePrefix} ";
 
         if (dict.Count == 0)
-            return $"{prefix}{{}}";
+            return literal ? "{}" : $"{prefix}{{}}";
 
         var indent = new string(' ', (depth + 1) * 2);
         var closingIndent = new string(' ', depth * 2);
         var sb = new StringBuilder();
 
-        sb.Append(prefix);
+        if (!literal) sb.Append(prefix);
         sb.AppendLine("{");
 
         var first = true;
         foreach (var (key, value) in dict)
         {
+            if (key == "constructor" && value is { Type: ValueType.Class })
+                continue;
+
             if (!first) sb.AppendLine(",");
             first = false;
 

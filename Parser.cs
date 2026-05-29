@@ -109,7 +109,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         {
             if (parameterTail is not { Type: AstType.AstName })
                 ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
-            
+
             argc++;
             while (Check(","))
             {
@@ -122,7 +122,8 @@ public class Parser(string path, string source) : Lexer(path, source)
                 if (parameterTail == null)
                     ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", Lookahead.Position);
                 if (parameterTail is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(Path, Source, "expects parameter name after comma", parameterTail!.Position);
+                    ErrorHandler.CompileError(Path, Source, "expects parameter name after comma",
+                        parameterTail!.Position);
             }
         }
 
@@ -230,22 +231,20 @@ public class Parser(string path, string source) : Lexer(path, source)
         var elementTail = elementHead;
 
         if (elementTail != null)
-        {
             while (Check(","))
             {
                 Expect(",");
-                
+
                 var next = ArrayElement();
                 if (next == null)
                     ErrorHandler.CompileError(Path, Source, "expects expression after comma", Lookahead.Position);
-                
+
                 elementTail!.Next = next;
                 elementTail = next;
             }
-        }
-        
+
         Expect("]");
-        
+
         return Ast.CreateArrayLiteralNode(elementHead!, position);
     }
 
@@ -258,32 +257,28 @@ public class Parser(string path, string source) : Lexer(path, source)
         var elementTail = elementHead;
 
         if (elementTail != null)
-        {
             while (Check(","))
             {
                 Expect(",");
-                
+
                 var next = ObjectElement();
                 if (next == null)
                     ErrorHandler.CompileError(Path, Source, "expects expression after comma", Lookahead.Position);
-                
+
                 elementTail!.Next = next;
                 elementTail = next;
             }
-        }
+
         Expect("}");
         return Ast.CreateObjectLiteralNode(elementHead, position);
     }
-    
+
     private Ast? ArrayElement()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        if (!Check("..."))
-        {
-            return Expression();
-        }
-        
+        if (!Check("...")) return Expression();
+
         Expect("...");
         return Ast.CreateUnaryNode(AstType.AstSpread, Expression(false)!, position);
     }
@@ -297,7 +292,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             Expect("...");
             return Ast.CreateUnaryNode(AstType.AstSpread, Expression(false)!, position);
         }
-        
+
         var key = Terminal();
         if (key == null) return null;
         if (key is not { Type: AstType.AstName })
@@ -320,7 +315,8 @@ public class Parser(string path, string source) : Lexer(path, source)
                 var member = Terminal();
                 if (member == null) ErrorHandler.CompileError(Path, Source, "expects member", Lookahead.Position);
                 if (member is not { Type: AstType.AstName })
-                    ErrorHandler.CompileError(Path, Source, "a member must be a valid identifier/name", member!.Position);
+                    ErrorHandler.CompileError(Path, Source, "a member must be a valid identifier/name",
+                        member!.Position);
 
                 node = Ast.CreateMemberAccessNode(
                     node, member, node.Position
@@ -651,7 +647,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         {
             if (parameterTail is not { Type: AstType.AstName })
                 ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
-            
+
             argc++;
             while (Check(","))
             {
@@ -753,9 +749,9 @@ public class Parser(string path, string source) : Lexer(path, source)
                 ErrorHandler.CompileError(Path, Source, "expects property name", objectPosition);
             if (key is not { Type: AstType.AstName })
                 ErrorHandler.CompileError(Path, Source, "expects property name", objectPosition);
-            
+
             Expect(":");
-            
+
             var alias = Terminal();
             if (alias == null)
                 ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
@@ -773,19 +769,19 @@ public class Parser(string path, string source) : Lexer(path, source)
                     ErrorHandler.CompileError(Path, Source, "expects property name after comma", objectPosition);
                 if (key is not { Type: AstType.AstName })
                     ErrorHandler.CompileError(Path, Source, "expects property name after comma", objectPosition);
-                
+
                 Expect(":");
-                
+
                 alias = Terminal();
                 if (alias == null)
                     ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
                 if (alias is not { Type: AstType.AstName })
                     ErrorHandler.CompileError(Path, Source, "expects alias name", objectPosition);
-                
+
                 keyValuePairTail.Next = Ast.CreateKeyValuePairNode(key!, alias!, objectPosition);
                 keyValuePairTail = keyValuePairTail.Next;
             }
-            
+
             Expect("}");
             if (!Check("="))
                 ErrorHandler.CompileError(Path, Source, "missing initializer in destructuring declaration",
@@ -793,7 +789,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             Expect("=");
             var value = Expression();
             Expect(";");
-            
+
             return Ast.CreateVariableNode(typeOfVariable,
                 Ast.CreateInitializerNode(AstType.AstDestructureObjectInitializer, keyValuePairHead, value,
                     objectPosition), position);
