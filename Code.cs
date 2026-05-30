@@ -42,6 +42,15 @@ public class Code(string name, int argCount, bool isAsync)
         var index = Bytecode.Count;
         DebugLines.Add(new OpCodeDebug(moduleId, index, line));
     }
+    
+    public int AllocateJump(int value)
+    {
+        var current = Bytecode.Count;
+        Span<byte> buffer = stackalloc byte[4];
+        BinaryPrimitives.WriteInt32BigEndian(buffer, value);
+        Bytecode.AddRange(buffer);
+        return current;
+    }
 
     public void Emit(OpCode opcode)
     {

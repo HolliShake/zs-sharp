@@ -221,7 +221,7 @@ public sealed class ZsValue
     public static ZsValue? GetProperty(ZsValue zsValue, string propertyName)
     {
         if (zsValue.Ref is not Dictionary<string, ZsValue> props
-            || zsValue.Type != ValueType.Object)
+            || zsValue is not {Type:ValueType.Object or ValueType.ObjectLiteral or ValueType.Error})
             return null;
 
         if (props.TryGetValue(propertyName, out var own))

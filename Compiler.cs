@@ -491,7 +491,16 @@ public class Compiler : Parser
             Expr(code, table, expression);
         }
 
-        code.Emit(OpCode.Return);
+        var tryScope = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+        if (tryScope != null)
+        {
+            tryScope.AddReturnSignal(code.EmitJump(OpCode.Jump));
+        }
+        else
+        {
+            code.EmitLine(ModuleId, node.Position.Line);
+            code.Emit(OpCode.Return);
+        }
     }
 
     private void Function(Code code, SymbolTable table, Ast node)
@@ -584,10 +593,22 @@ public class Compiler : Parser
         }
 
         code.Label(toEndTry);
+        
+        var returnSignals = tryTable.GetReturnSignals()
+            .Concat(catchTable.GetReturnSignals())
+            .ToList();
 
-        // end catch, pop try
+        foreach (var jump in returnSignals)
+            code.Label(jump);
+        
+        // end try, pop try
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);
+
+        if (returnSignals.Count <= 0) return;
+        
+        code.EmitLine(ModuleId, position.Line);
+        code.Emit(OpCode.Return);
     }
 
     private void If(Code code, SymbolTable table, Ast node)

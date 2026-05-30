@@ -7,6 +7,7 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
     private readonly SymbolTable? _parent = parent;
     private readonly ScopeType _scopeType = scopeType;
     private readonly Dictionary<string, Symbol> _symbols = new();
+    private readonly List<int> _returnSignals = [];
 
     public bool AlreadyExists(string symbol)
     {
@@ -59,5 +60,27 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
     {
         Debug.Assert(!_symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
         _symbols[symbol] = new Symbol(symbol, offset, constant, position);
+    }
+
+    public SymbolTable? GetNearestParent(params ScopeType[] types)
+    {
+        var current = this;
+        while (current != null)
+        {
+            if (types.Contains(current._scopeType))
+                return current;
+            current = current._parent;
+        }
+        return null;
+    }
+    
+    public void AddReturnSignal(int offset)
+    {
+        _returnSignals.Add(offset);
+    }
+    
+    public IEnumerable<int> GetReturnSignals()
+    {
+        return _returnSignals;
     }
 }

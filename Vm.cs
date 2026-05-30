@@ -365,9 +365,16 @@ public class Vm
     private ZsValue DoCall(Frame frame, int arg)
     {
         var callable = frame.PopOperand();
-        var callableCode = callable.Code();
         var arguments = new ZsValue[arg];
         for (var i = 0; i < arg; i++) arguments[i] = frame.PopOperand();
+
+        if (ZsValue.IsInstanceOf(callable, ValueType.NativeFunction))
+        {
+            var nativeFunction = callable.NativeFunction();
+            return nativeFunction(this, arguments);
+        }
+        
+        var callableCode = callable.Code();
 
         var newCallFrame = new Frame(frame, callable, false, callableCode.IsAsync);
         for (var i = 0; i < arg; i++) newCallFrame.PushOperand(arguments[i]);
@@ -395,9 +402,30 @@ public class Vm
         var memberNameString = memberName.String();
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future) && zscript.Future.HasMethod(memberNameString))
             return zscript.Future.GetMethod(memberNameString)(this, arguments);
+        
+        var callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
+        if (callableProperty == null) return ZsValue.FromErrorMessage(Error, $"object has no attribute {memberNameString}", BuildTracebackFromFrame());
+        
+        if (ZsValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
+        {
+            var nativeFunction = callableProperty.NativeFunction();
+            return nativeFunction(this, arguments);
+        }
+        
+        var callablePropertyCode = callableProperty.Code();
 
-        return ZsValue.FromErrorMessage(Error, $"method not found {zsObject.GetZsType()}.{memberName}",
-            BuildTracebackFromFrame());
+        var newCallFrame = new Frame(frame, callableProperty, false, callablePropertyCode.IsAsync);
+        for (var i = 1; i <= arg; i++) newCallFrame.PushOperand(arguments[i]);
+        
+        // Set this
+        newCallFrame.SetEnvVar(0, zsObject);
+        
+        callablePropertyCode.MergeCaptureToEnvironment(newCallFrame);
+
+        return callablePropertyCode.ArgCount != arg
+            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
+                BuildTracebackFromFrame())
+            : Run(newCallFrame);
     }
 
     private void RaiseOrHandleException(Frame thrownByFrame, ZsValue errorValue)

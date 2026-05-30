@@ -4,6 +4,7 @@ public enum ValueType
 {
     Script,
     Function,
+    NativeFunction,
     Class,
     Error,
     Object,

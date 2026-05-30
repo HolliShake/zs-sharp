@@ -109,11 +109,27 @@ catcher();
 
 println(fact(5));
 
-println([1, 2, 3]);
+println([1, 2, 3, 4, 5]);
 
 println({
     Hello: "World",
     World: "Hello",
-    add: fn(a, b) { return a + b; }
+    add: fn(a, b) {
+        return a + b; 
+    }
 });
 
+
+fn test() {
+    try {
+        return "YEH!";
+        println("TRY");
+    } catch (err) {
+        print "CATCH";
+    }
+   
+    println("FINALLY");
+}
+
+
+println(test());
