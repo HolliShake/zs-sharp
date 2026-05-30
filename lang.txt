@@ -1,11 +1,12 @@
 
 
+
 fn println(a) async {
     print a;
 }
 
 fn willThrow() async {
-    2 + "fooc!";
+    2 + "focc!";
     println("HEHE!");
 }
 
@@ -108,11 +109,11 @@ catcher();
 
 println(fact(5));
 
-println([1,2,3]);
+println([1, 2, 3]);
 
 println({
     Hello: "World",
     World: "Hello",
-    add: fn(a,b) { return a + b; }
+    add: fn(a, b) { return a + b; }
 });
 

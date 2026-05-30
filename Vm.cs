@@ -69,7 +69,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() * b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() *
+                b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame())
@@ -85,7 +86,8 @@ public class Vm
 
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() / b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() /
+                b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame())
@@ -101,7 +103,8 @@ public class Vm
 
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() % b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() %
+                b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (%)",
                 BuildTracebackFromFrame())
@@ -114,7 +117,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() + b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() +
+                b.Number()),
             (ValueType.String, ValueType.String) => ZsValue.FromString(a.String() + b.String()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
@@ -128,7 +132,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() - b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() -
+                b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
                 BuildTracebackFromFrame())
@@ -141,7 +146,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() << b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() <<
+                b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<<)",
                 BuildTracebackFromFrame())
@@ -154,7 +160,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() >> b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() >>
+                b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>>)",
                 BuildTracebackFromFrame())
@@ -167,7 +174,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() < b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() < b.Number()
+                ? True
+                : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame())
@@ -180,7 +189,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() <= b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() <= b.Number()
+                ? True
+                : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
                 BuildTracebackFromFrame())
@@ -193,7 +204,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() > b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() > b.Number()
+                ? True
+                : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
                 BuildTracebackFromFrame())
@@ -206,7 +219,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() >= b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() >= b.Number()
+                ? True
+                : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
                 BuildTracebackFromFrame())
@@ -219,7 +234,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() == b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() == b.Number()
+                ? True
+                : False,
             _ => a.Ref == b.Ref || a == b ? True : False
         };
 
@@ -230,7 +247,9 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() != b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() != b.Number()
+                ? True
+                : False,
             _ => a.Ref != b.Ref || a != b ? True : False
         };
 
@@ -241,7 +260,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() & b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(
+                a.Int() & b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (&)",
                 BuildTracebackFromFrame())
@@ -254,7 +274,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() | b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(
+                a.Int() | b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (|)",
                 BuildTracebackFromFrame())
@@ -267,7 +288,8 @@ public class Vm
     {
         var res = (a.Type, b.Type) switch
         {
-            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() ^ b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(
+                a.Int() ^ b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (^)",
                 BuildTracebackFromFrame())
