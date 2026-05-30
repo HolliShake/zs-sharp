@@ -1,6 +1,5 @@
 
 
-
 fn println(a) async {
     print a;
 }
@@ -119,7 +118,6 @@ println({
     }
 });
 
-
 fn test() {
     try {
         return "YEH!";
@@ -127,9 +125,37 @@ fn test() {
     } catch (err) {
         print "CATCH";
     }
-   
     println("FINALLY");
 }
 
+const returnArray = fn() {
+    return [1, 2];
+};
+
+var x = 2, y = 3;
+var [xx, yy] = returnArray();
+try {
+    local { a: b, c: d, e: f } = {
+        a: "Dog",
+        c: "Cat"
+    };
+    print "b", b, "d", d; 
+} catch (err) {
+    print "CATCH EEEEE";
+}
+
+print "unpack", xx, yy;
+
+xx = 21;
+print "unpack", xx, yy;
+
+println(x);
 
 println(test());
+
+
+var g = 0;
+while (g < 10) {
+    println(g);
+    g = g + 1;
+}

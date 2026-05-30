@@ -7,6 +7,7 @@ namespace zscript;
 public class Vm
 {
     private readonly State _state;
+    public readonly ZsValue AttributeError;
     public readonly Queue<ZsValue> DeferredTasks = new();
     public readonly ZsValue Error;
     public readonly ZsValue False;
@@ -25,6 +26,7 @@ public class Vm
         _state = state;
         Object = ZsValue.CreateZsClass(null, "Object");
         Error = ZsValue.CreateZsClass(Object, "Error");
+        AttributeError = ZsValue.CreateZsClass(Error, "AttributeError");
         TypeError = ZsValue.CreateZsClass(Error, "TypeError");
         ZeroDivideError = ZsValue.CreateZsClass(Error, "ZeroDivideError");
         Future = ZsValue.CreateZsClass(Object, "Future");
@@ -307,6 +309,27 @@ public class Vm
         return ZsValue.FromArray(array);
     }
 
+    private void DoArrayUnpack(Frame frame, int size)
+    {
+        var array = frame.PopOperand();
+        if (!ZsValue.IsInstanceOf(array, ValueType.Array))
+        {
+            RaiseOrHandleException(frame,
+                ZsValue.FromErrorMessage(TypeError, "cannot unpack non-iterable", BuildTracebackFromFrame()));
+            return;
+        }
+
+        var sharpList = array.Array();
+        if (sharpList.Count < size)
+        {
+            RaiseOrHandleException(frame,
+                ZsValue.FromErrorMessage(TypeError, "not enough values to unpack", BuildTracebackFromFrame()));
+            return;
+        }
+
+        for (var i = 0; i < size; i++) frame.PushOperand(sharpList[i]);
+    }
+
     private ZsValue DoMakeObject(Frame frame, int size)
     {
         var dict = new Dictionary<string, ZsValue>();
@@ -362,6 +385,17 @@ public class Vm
         frame.SetEnvVar(address, val);
     }
 
+
+    private ZsValue DoGetAttr(Frame frame, string attr, bool pop)
+    {
+        var zsObject = frame.PopOperand();
+        var attribute = ZsValue.GetProperty(zsObject, attr);
+        if (attribute == null) frame.PopOperand();
+        return attribute
+               ?? ZsValue.FromErrorMessage(AttributeError, $"object has no attribute {attr}",
+                   BuildTracebackFromFrame());
+    }
+
     private ZsValue DoCall(Frame frame, int arg)
     {
         var callable = frame.PopOperand();
@@ -373,7 +407,7 @@ public class Vm
             var nativeFunction = callable.NativeFunction();
             return nativeFunction(this, arguments);
         }
-        
+
         var callableCode = callable.Code();
 
         var newCallFrame = new Frame(frame, callable, false, callableCode.IsAsync);
@@ -402,24 +436,26 @@ public class Vm
         var memberNameString = memberName.String();
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Future) && zscript.Future.HasMethod(memberNameString))
             return zscript.Future.GetMethod(memberNameString)(this, arguments);
-        
+
         var callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
-        if (callableProperty == null) return ZsValue.FromErrorMessage(Error, $"object has no attribute {memberNameString}", BuildTracebackFromFrame());
-        
+        if (callableProperty == null)
+            return ZsValue.FromErrorMessage(Error, $"object has no attribute {memberNameString}",
+                BuildTracebackFromFrame());
+
         if (ZsValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
         {
             var nativeFunction = callableProperty.NativeFunction();
             return nativeFunction(this, arguments);
         }
-        
+
         var callablePropertyCode = callableProperty.Code();
 
         var newCallFrame = new Frame(frame, callableProperty, false, callablePropertyCode.IsAsync);
         for (var i = 1; i <= arg; i++) newCallFrame.PushOperand(arguments[i]);
-        
+
         // Set this
         newCallFrame.SetEnvVar(0, zsObject);
-        
+
         callablePropertyCode.MergeCaptureToEnvironment(newCallFrame);
 
         return callablePropertyCode.ArgCount != arg
@@ -580,6 +616,13 @@ public class Vm
                     frame.PushOperand(arrayValue);
                     break;
                 }
+                case OpCode.ArrayUnpack:
+                {
+                    var size = ReadInt(frame);
+                    frame.Forward(4);
+                    DoArrayUnpack(frame, size);
+                    break;
+                }
                 case OpCode.MakeObject:
                 {
                     var size = ReadInt(frame);
@@ -602,6 +645,21 @@ public class Vm
                     var off = ReadInt(frame);
                     frame.Forward(4);
                     DoStoreName(frame, off);
+                    break;
+                }
+                case OpCode.GetAttr:
+                case OpCode.GetAttrOrPopDup:
+                {
+                    var attr = ReadString(frame);
+                    frame.Forward(attr.Length + 1);
+                    var attribute = DoGetAttr(frame, attr, opcode == OpCode.GetAttrOrPopDup);
+                    if (ZsValue.IsInstanceOf(attribute, "Error"))
+                    {
+                        RaiseOrHandleException(frame, attribute);
+                        break;
+                    }
+
+                    frame.PushOperand(attribute);
                     break;
                 }
                 case OpCode.Call:
@@ -947,6 +1005,7 @@ public class Vm
                     break;
                 }
                 case OpCode.Jump:
+                case OpCode.AbsJump:
                 {
                     var jmp = ReadInt(frame);
                     frame.JumpTo(jmp);
@@ -954,8 +1013,10 @@ public class Vm
                 }
                 case OpCode.Return:
                 {
-                    var count = frame.GetOperandCount();
-                    Debug.Assert(count == 1, $"{code.Name} -> frame.GetOperandCount()({count}) != 1");
+                    Debug.Assert(frame.GetOperandCount() == 1,
+                        $"{code.Name} -> frame.GetOperandCount()({frame.GetOperandCount()}) != 1");
+                    Debug.Assert(frame.GetTryTableCount() == 0,
+                        $"{code.Name} -> frame.GetTryTableCount()({frame.GetTryTableCount()}) != 0");
 
                     _currentFrame = _currentFrame.CallerFrame;
 

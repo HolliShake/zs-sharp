@@ -42,7 +42,12 @@ public class Code(string name, int argCount, bool isAsync)
         var index = Bytecode.Count;
         DebugLines.Add(new OpCodeDebug(moduleId, index, line));
     }
-    
+
+    public int GetCurrent()
+    {
+        return Bytecode.Count;
+    }
+
     public int AllocateJump(int value)
     {
         var current = Bytecode.Count;
@@ -81,6 +86,11 @@ public class Code(string name, int argCount, bool isAsync)
         strBytes.CopyTo(buffer);
         Bytecode.AddRange(buffer);
         Bytecode.Add(0);
+    }
+
+    public void EmitAbsoluteJump(OpCode opcode, int address)
+    {
+        Emit(opcode, address);
     }
 
     public int EmitJump(OpCode opcode)

@@ -602,9 +602,30 @@ public class Parser(string path, string source) : Lexer(path, source)
         return lhs;
     }
 
+    private Ast? SimpleAssign()
+    {
+        var lhs = Logical();
+
+        if (lhs == null) return null;
+
+        while (Check("="))
+        {
+            Debug.Assert(Lookahead != null, "Lookahead is null");
+            var opt = Lookahead.Value;
+            Expect(TokenType.Sym);
+
+            var rhs = Logical()
+                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
+
+            lhs = Ast.CreateBinaryOperationNode(AstType.AstAssign, lhs, rhs, lhs.Position);
+        }
+
+        return lhs;
+    }
+
     private Ast? Expression(bool nullable = true)
     {
-        var node = Logical();
+        var node = SimpleAssign();
         if (node != null) return node;
 
         if (nullable) return null;
@@ -621,6 +642,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check("local")) return VariableDeclaration("local");
         if (Check("const")) return VariableDeclaration("const");
         if (Check("try")) return TryCatch();
+        if (Check("while")) return While();
         if (Check("if")) return If();
         if (Check("switch")) return Switch();
         if (Check("{")) return Block();
@@ -966,6 +988,22 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect("}");
         return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
+    }
+
+    private Ast While()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("while");
+        Expect("(");
+        var condition = Expression();
+        if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
+        Expect(")");
+        var thenBranch = Statement();
+        if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects statement", Lookahead.Position);
+        return Ast.CreateWhileNode(
+            condition!, thenBranch!, position
+        );
     }
 
     private Ast If()

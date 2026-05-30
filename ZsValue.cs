@@ -151,6 +151,12 @@ public sealed class ZsValue
         return (string)Ref;
     }
 
+    public List<ZsValue> Array()
+    {
+        Debug.Assert(this is { Type: ValueType.Array, Ref: not null }, "Ref is not an array or is null.");
+        return (List<ZsValue>)Ref;
+    }
+
     // ── Type helpers ──────────────────────────────────────────────────────────
 
     public string GetZsType()
@@ -221,7 +227,7 @@ public sealed class ZsValue
     public static ZsValue? GetProperty(ZsValue zsValue, string propertyName)
     {
         if (zsValue.Ref is not Dictionary<string, ZsValue> props
-            || zsValue is not {Type:ValueType.Object or ValueType.ObjectLiteral or ValueType.Error})
+            || zsValue is not { Type: ValueType.Object or ValueType.ObjectLiteral or ValueType.Error })
             return null;
 
         if (props.TryGetValue(propertyName, out var own))

@@ -131,4 +131,9 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     {
         return _operands.Count;
     }
+
+    public int GetTryTableCount()
+    {
+        return TryCatchTable.Count;
+    }
 }

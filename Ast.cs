@@ -147,6 +147,15 @@ public class Ast
         };
     }
 
+    public static Ast CreateWhileNode(Ast condition, Ast thenBranch, Position position)
+    {
+        return new Ast(AstType.AstWhile, position)
+        {
+            A = condition,
+            B = thenBranch
+        };
+    }
+
     public static Ast CreateIfNode(Ast condition, Ast thenBranch, Ast? elseBranch, Position position)
     {
         return new Ast(AstType.AstIf, position)

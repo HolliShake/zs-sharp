@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace zscript;
@@ -401,6 +402,25 @@ public class Compiler : Parser
                 code.Label(jumpToNext);
                 break;
             }
+            case AstType.AstAssign:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.B);
+
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.DupTop);
+
+                var nameNode = node.A;
+                if (!table.SymbolExists(nameNode.Value))
+                    ErrorHandler.CompileError(Path, Source, "variable not found", nameNode.Position);
+                var symbol = table.Find(nameNode.Value);
+                if (symbol.Symbol.Constant)
+                    ErrorHandler.CompileError(Path, Source, "cannot assign to constant", nameNode.Position);
+
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(symbol.IsLocal ? OpCode.StoreLocal : OpCode.StoreName, symbol.Symbol.Offset);
+                break;
+            }
             default:
             {
                 ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
@@ -418,9 +438,29 @@ public class Compiler : Parser
                 Function(code, table, node);
                 break;
             }
+            case AstType.AstGlobalVar:
+            {
+                CompileVariable(true, false, code, table, node);
+                break;
+            }
+            case AstType.AstLocalVar:
+            {
+                CompileVariable(false, false, code, table, node);
+                break;
+            }
+            case AstType.AstConstVar:
+            {
+                CompileVariable(false, true, code, table, node);
+                break;
+            }
             case AstType.AstTryCatch:
             {
                 TryCatch(code, table, node);
+                break;
+            }
+            case AstType.AstWhile:
+            {
+                While(code, table, node);
                 break;
             }
             case AstType.AstIf:
@@ -441,6 +481,11 @@ public class Compiler : Parser
             case AstType.AstPrint:
             {
                 Print(code, table, node);
+                break;
+            }
+            case AstType.AstBreak:
+            {
+                Break(code, table, node);
                 break;
             }
             case AstType.AstReturn:
@@ -478,8 +523,29 @@ public class Compiler : Parser
         code.Emit(OpCode.Print, count);
     }
 
+    private void Break(Code code, SymbolTable table, Ast node)
+    {
+        var nearestLoop = table.GetNearestParent(ScopeType.Loop);
+        var nearestTry = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+
+        if (nearestLoop == null) ErrorHandler.CompileError(Path, Source, "Break outside loop", node.Position);
+
+        // is there a try scope between us and the loop?
+        var tryWrapsLoop = SymbolTable.IsAncestorOf(nearestTry, nearestLoop);
+
+        if (nearestTry != null && tryWrapsLoop)
+            // must PopTry before jumping out
+            nearestTry.AddBreakSignal(code.EmitJump(OpCode.Jump));
+        else
+            // loop and break are in the same try scope — plain jump is safe
+            nearestLoop?.AddBreakSignal(code.EmitJump(OpCode.Jump));
+    }
+
     private void Return(Code code, SymbolTable table, Ast node)
     {
+        var nearestFunction = table.GetNearestParent(ScopeType.Function);
+        if (nearestFunction == null) ErrorHandler.CompileError(Path, Source, "Return outside function", node.Position);
+
         var expression = node.A;
         if (expression == null)
         {
@@ -494,13 +560,12 @@ public class Compiler : Parser
         var tryScope = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
         if (tryScope != null)
         {
-            tryScope.AddReturnSignal(code.EmitJump(OpCode.Jump));
-        }
-        else
-        {
             code.EmitLine(ModuleId, node.Position.Line);
-            code.Emit(OpCode.Return);
+            code.Emit(OpCode.PopTry);
         }
+
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.Emit(OpCode.Return);
     }
 
     private void Function(Code code, SymbolTable table, Ast node)
@@ -553,6 +618,125 @@ public class Compiler : Parser
         code.Emit(OpCode.StoreName, functionAddress);
     }
 
+    private void CompileVariable(bool global, bool constant, Code code, SymbolTable table, Ast node)
+    {
+        if (global && !table.ScopeIs(ScopeType.Global))
+            ErrorHandler.CompileError(Path, Source, "variable must be in global scope", node.Position);
+        Debug.Assert(node is { A: not null }, "node.A is null");
+
+        var storeOpCode = global ? OpCode.StoreName : OpCode.StoreLocal;
+
+        var variableInitializer = node.A;
+        while (variableInitializer != null)
+        {
+            var nameNode = variableInitializer.A;
+            var valueNode = variableInitializer.B;
+
+            switch (variableInitializer.Type)
+            {
+                case AstType.AstVariableInitializer:
+                {
+                    if (valueNode == null)
+                    {
+                        code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                        code.Emit(OpCode.LoadNull);
+                    }
+                    else
+                    {
+                        Expr(code, table, valueNode);
+                    }
+
+                    var nameAddress = code.AllocateLocal();
+                    code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                    code.Emit(storeOpCode, nameAddress);
+
+                    // Register
+                    if (table.AlreadyExists(nameNode!.Value))
+                        ErrorHandler.CompileError(Path, Source, "variable already exists",
+                            variableInitializer.Position);
+
+                    table.Add(nameNode!.Value, nameAddress, constant, variableInitializer.Position);
+                    break;
+                }
+                case AstType.AstDestructureArrayInitializer:
+                {
+                    var size = 0;
+                    var head = nameNode;
+
+                    var addressOfVars = new List<int>();
+                    while (head != null)
+                    {
+                        var address = code.AllocateLocal();
+
+                        // Register
+                        if (table.AlreadyExists(head.Value))
+                            ErrorHandler.CompileError(Path, Source, "variable already exists", head.Position);
+
+                        table.Add(head.Value, address, constant, head.Position);
+
+                        addressOfVars.Add(address);
+
+                        ++size;
+                        head = head.Next;
+                    }
+
+                    Expr(code, table, valueNode!);
+
+                    code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                    code.Emit(OpCode.ArrayUnpack, size);
+
+                    addressOfVars.Reverse();
+                    foreach (var address in addressOfVars)
+                    {
+                        code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                        code.Emit(storeOpCode, address);
+                    }
+
+                    break;
+                }
+                case AstType.AstDestructureObjectInitializer:
+                {
+                    var keyValuePairHead = nameNode;
+
+                    Expr(code, table, valueNode!);
+
+                    while (keyValuePairHead != null)
+                    {
+                        // Duplicate value
+                        code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                        code.Emit(OpCode.DupTop);
+
+                        code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                        code.Emit(OpCode.GetAttrOrPopDup, keyValuePairHead.A!.Value);
+
+                        var address = code.AllocateLocal();
+
+                        // Register
+                        if (table.AlreadyExists(keyValuePairHead.B!.Value))
+                            ErrorHandler.CompileError(Path, Source, "variable already exists",
+                                keyValuePairHead.Position);
+                        table.Add(keyValuePairHead.B!.Value, address, constant, keyValuePairHead.Position);
+
+                        code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                        code.Emit(storeOpCode, address);
+
+                        keyValuePairHead = keyValuePairHead.Next;
+                    }
+
+                    // Pop duplicated value
+                    code.EmitLine(ModuleId, variableInitializer.Position.Line);
+                    code.Emit(OpCode.PopTop);
+
+                    break;
+                }
+                default:
+                    throw new InvalidEnumArgumentException("invalid value for initializer type");
+            }
+
+            variableInitializer = variableInitializer.Next;
+        }
+    }
+
     private void TryCatch(Code code, SymbolTable table, Ast node)
     {
         Debug.Assert(node is { C: not null }, "node.C is null");
@@ -593,22 +777,24 @@ public class Compiler : Parser
         }
 
         code.Label(toEndTry);
-        
-        var returnSignals = tryTable.GetReturnSignals()
-            .Concat(catchTable.GetReturnSignals())
-            .ToList();
 
-        foreach (var jump in returnSignals)
-            code.Label(jump);
-        
-        // end try, pop try
+        // Regular try/catch exit
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.PopTry);
+    }
 
-        if (returnSignals.Count <= 0) return;
-        
-        code.EmitLine(ModuleId, position.Line);
-        code.Emit(OpCode.Return);
+    private void While(Code code, SymbolTable table, Ast node)
+    {
+        Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+        var begin = code.GetCurrent();
+        Expr(code, table, node.A);
+        code.EmitLine(ModuleId, node.Position.Line);
+        var jumpToEndWhile = code.EmitJump(OpCode.PopJumpIfFalse);
+
+        Stmt(code, table, node.B);
+        code.EmitAbsoluteJump(OpCode.AbsJump, begin);
+
+        code.Label(jumpToEndWhile);
     }
 
     private void If(Code code, SymbolTable table, Ast node)

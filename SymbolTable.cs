@@ -4,10 +4,21 @@ namespace zscript;
 
 public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 {
+    private readonly List<int> _breakSignals = [];
     private readonly SymbolTable? _parent = parent;
+    private readonly List<int> _returnSignals = [];
     private readonly ScopeType _scopeType = scopeType;
     private readonly Dictionary<string, Symbol> _symbols = new();
-    private readonly List<int> _returnSignals = [];
+
+    public bool ScopeIs(ScopeType scopeType)
+    {
+        return _scopeType == scopeType;
+    }
+
+    public bool IsInside(ScopeType scopeType)
+    {
+        return ScopeIs(scopeType) || (_parent != null && _parent.IsInside(scopeType));
+    }
 
     public bool AlreadyExists(string symbol)
     {
@@ -62,6 +73,21 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         _symbols[symbol] = new Symbol(symbol, offset, constant, position);
     }
 
+    public static bool IsAncestorOf(SymbolTable? ancestor, SymbolTable? descendant)
+    {
+        if (ancestor == null || descendant == null) return false;
+        if (ancestor == descendant) return false;
+
+        var current = descendant._parent;
+        while (current != null)
+        {
+            if (current == ancestor) return true;
+            current = current._parent;
+        }
+
+        return false;
+    }
+
     public SymbolTable? GetNearestParent(params ScopeType[] types)
     {
         var current = this;
@@ -71,16 +97,27 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
                 return current;
             current = current._parent;
         }
+
         return null;
     }
-    
+
     public void AddReturnSignal(int offset)
     {
         _returnSignals.Add(offset);
     }
-    
+
+    public void AddBreakSignal(int offset)
+    {
+        _breakSignals.Add(offset);
+    }
+
     public IEnumerable<int> GetReturnSignals()
     {
         return _returnSignals;
+    }
+
+    public IEnumerable<int> GetBreakSignals()
+    {
+        return _breakSignals;
     }
 }
