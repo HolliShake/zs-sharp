@@ -67,10 +67,9 @@ public class Vm
 
     private ZsValue DoMul(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (int, int) => ZsValue.FromNumber(a.Int() * b.Int()),
-            (double or int, double or int) => ZsValue.FromNumber(a.Number() * b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() * b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame())
@@ -84,9 +83,9 @@ public class Vm
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(ZeroDivideError, "zero division error", BuildTracebackFromFrame());
 
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Number() / b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() / b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame())
@@ -100,9 +99,9 @@ public class Vm
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(ZeroDivideError, "zero division error", BuildTracebackFromFrame());
 
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Number() % b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() % b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (%)",
                 BuildTracebackFromFrame())
@@ -113,11 +112,10 @@ public class Vm
 
     private ZsValue DoAdd(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (int, int) => ZsValue.FromNumber(a.Int() + b.Int()),
-            (double or int, double or int) => ZsValue.FromNumber(a.Number() + b.Number()),
-            (string, string) => ZsValue.FromString(a.String() + b.String()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() + b.Number()),
+            (ValueType.String, ValueType.String) => ZsValue.FromString(a.String() + b.String()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
                 BuildTracebackFromFrame())
@@ -128,10 +126,9 @@ public class Vm
 
     private ZsValue DoSub(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (int, int) => ZsValue.FromInt(a.Int() - b.Int()),
-            (double or int, double or int) => ZsValue.FromNumber(a.Number() - b.Number()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Number() - b.Number()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
                 BuildTracebackFromFrame())
@@ -142,9 +139,9 @@ public class Vm
 
     private ZsValue DoLshift(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Int() << b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() << b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<<)",
                 BuildTracebackFromFrame())
@@ -155,9 +152,9 @@ public class Vm
 
     private ZsValue DoRshift(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Int() >> b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() >> b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>>)",
                 BuildTracebackFromFrame())
@@ -166,12 +163,11 @@ public class Vm
         return res;
     }
 
-
     private ZsValue DoLt(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() < b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() < b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame())
@@ -182,9 +178,9 @@ public class Vm
 
     private ZsValue DoLe(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() <= b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() <= b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
                 BuildTracebackFromFrame())
@@ -195,9 +191,9 @@ public class Vm
 
     private ZsValue DoGt(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() > b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() > b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
                 BuildTracebackFromFrame())
@@ -208,9 +204,9 @@ public class Vm
 
     private ZsValue DoGe(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() <= b.Number() ? True : False,
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() >= b.Number() ? True : False,
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
                 BuildTracebackFromFrame())
@@ -221,10 +217,10 @@ public class Vm
 
     private ZsValue DoEq(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() == b.Number() ? True : False,
-            _ => a.Value == b.Value || a == b ? True : False
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() == b.Number() ? True : False,
+            _ => a.Ref == b.Ref || a == b ? True : False
         };
 
         return res;
@@ -232,10 +228,10 @@ public class Vm
 
     private ZsValue DoNe(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => a.Number() != b.Number() ? True : False,
-            _ => a.Value != b.Value || a != b ? True : False
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number() != b.Number() ? True : False,
+            _ => a.Ref != b.Ref || a != b ? True : False
         };
 
         return res;
@@ -243,9 +239,9 @@ public class Vm
 
     private ZsValue DoAnd(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Int() & b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() & b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (&)",
                 BuildTracebackFromFrame())
@@ -256,9 +252,9 @@ public class Vm
 
     private ZsValue DoOr(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Int() | b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() | b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (|)",
                 BuildTracebackFromFrame())
@@ -269,9 +265,9 @@ public class Vm
 
     private ZsValue DoXor(ZsValue a, ZsValue b)
     {
-        var res = (a.Value, b.Value) switch
+        var res = (a.Type, b.Type) switch
         {
-            (double or int, double or int) => ZsValue.FromNumber(a.Int() ^ b.Int()),
+            (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => ZsValue.FromNumber(a.Int() ^ b.Int()),
             _ => ZsValue.FromErrorMessage(TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (^)",
                 BuildTracebackFromFrame())

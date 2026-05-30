@@ -4,10 +4,36 @@ using System.Text;
 namespace zscript;
 
 
-public class ZsValue(ValueType type, object value)
+public class ZsValue
 {
-    public ValueType Type { get; } = type;
-    public object Value { get; } = value;
+    public ValueType Type { get; }
+    private double Num { get; }
+    private bool Bit { get; }
+    public object? Ref { get; }
+
+    private ZsValue(ValueType type, double number)
+    {
+        Type = type;
+        Num  = number;
+        Bit = false;
+        Ref  = null;
+    }
+    
+    private ZsValue(ValueType type, bool boolean)
+    {
+        Type = type;
+        Num  = 0;
+        Bit = boolean;
+        Ref  = null;
+    }
+    
+    private ZsValue(ValueType type, object reference)
+    {
+        Type = type;
+        Num  = 0;
+        Bit  = false;
+        Ref  = reference;
+    }
 
     // ── Factories ────────────────────────────────────────────────────────────
 
@@ -86,7 +112,7 @@ public class ZsValue(ValueType type, object value)
 
     public static ZsValue FromErrorMessage(ZsValue zsErrorClass, string errorMessage, string traceback)
     {
-        Debug.Assert(IsExtensionOf(zsErrorClass, "Error"), "Value is not error class.");
+        Debug.Assert(IsExtensionOf(zsErrorClass, "Error"), "Ref is not error class.");
         return CreateZsObject(zsErrorClass, new Dictionary<string, ZsValue>([
             new KeyValuePair<string, ZsValue>("message", FromString(errorMessage)),
             new KeyValuePair<string, ZsValue>("traceback", FromString(traceback))
@@ -102,73 +128,48 @@ public class ZsValue(ValueType type, object value)
 
     public Code Code()
     {
-        Debug.Assert(Type is ValueType.Script or ValueType.Function, "Value is not code.");
-        return (Code)Value;
+        Debug.Assert(this is {Type:ValueType.Script or ValueType.Function, Ref: not null }, "Ref is not a code or is null.");
+        return (Code)Ref;
     }
 
     public Func<Vm, ZsValue[], ZsValue> NativeFunction()
     {
-        return (Func<Vm, ZsValue[], ZsValue>)Value;
+        return (Func<Vm, ZsValue[], ZsValue>)Ref!;
     }
 
     public Future Future()
     {
-        Debug.Assert(Type is ValueType.Future, "Value is not a future.");
-        return (Future)Value;
+        Debug.Assert(this is { Type:ValueType.Future, Ref:not null }, "Ref is not a future or is null.");
+        return (Future)Ref;
     }
 
     public int Int()
     {
-        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
-        return Value switch
-        {
-            int i => i,
-            double d => (int)d,
-            _ => 0
-        };
+        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Object is not a number.");
+        return (int)Num;
     }
 
     public long Long()
     {
-        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
-        return Value switch
-        {
-            int i => i,
-            double d => (long)d,
-            _ => 0
-        };
+        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Object is not a number.");
+        return (long)Num;
     }
 
     public double Number()
     {
-        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Value is not a number.");
-        return Value switch
-        {
-            int i => i,
-            double d => d,
-            _ => 0
-        };
+        Debug.Assert(Type is ValueType.Number or ValueType.Int, "Object is not a number.");
+        return Num;
     }
 
     public bool Bool()
     {
-        return Value switch
-        {
-            Code c => c != null!,
-            Dictionary<string, ZsValue> d => d.Count > 0,
-            Future f => f is { State: FutureState.Fulfill } or { State: FutureState.Pending },
-            int i => i != 0,
-            double d => d != 0,
-            bool b => b,
-            string s => !string.IsNullOrEmpty(s),
-            _ => false
-        };
+        return Num != 0 || Ref != null || Bit;
     }
 
     public string String()
     {
-        Debug.Assert(Type == ValueType.String, "Value is not a string.");
-        return (string)Value;
+        Debug.Assert(this is { Type:ValueType.String, Ref:not null }, "Ref is not a string or is null.");
+        return (string)Ref;
     }
 
     // ── Type helpers ─────────────────────────────────────────────────────────
@@ -194,10 +195,10 @@ public class ZsValue(ValueType type, object value)
 
     private static string GetInternalType(ZsValue zsValue)
     {
-        return zsValue is { Type: ValueType.Object, Value: Dictionary<string, ZsValue> objectProps }
+        return zsValue is { Type: ValueType.Object, Ref: Dictionary<string, ZsValue> objectProps }
                && objectProps.TryGetValue("constructor", out var ctor)
-               && ctor is { Type: ValueType.Class, Value: Dictionary<string, ZsValue?> classProps }
-            ? classProps.GetValueOrDefault("type")?.Value as string ?? "object"
+               && ctor is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> classProps }
+            ? classProps.GetValueOrDefault("type")?.Ref as string ?? "object"
             : "object";
     }
 
@@ -210,16 +211,16 @@ public class ZsValue(ValueType type, object value)
 
     public static bool IsInstanceOf(ZsValue zsValue, string className)
     {
-        if (zsValue is not { Type: ValueType.Object, Value: Dictionary<string, ZsValue> objectProps })
+        if (zsValue is not { Type: ValueType.Object, Ref: Dictionary<string, ZsValue> objectProps })
             return false;
 
         if (!objectProps.TryGetValue("constructor", out var current) ||
             current is not { Type: ValueType.Class })
             return false;
 
-        while (current is { Type: ValueType.Class, Value: Dictionary<string, ZsValue?> classProps })
+        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> classProps })
         {
-            if (classProps.GetValueOrDefault("type")?.Value is string typeName && typeName == className)
+            if (classProps.GetValueOrDefault("type")?.Ref is string typeName && typeName == className)
                 return true;
 
             current = classProps.GetValueOrDefault("base");
@@ -233,10 +234,10 @@ public class ZsValue(ValueType type, object value)
         var current = zsValue;
 
         // The loop now checks the target class first, then traverses up the base chain
-        while (current is { Type: ValueType.Class, Value: Dictionary<string, ZsValue?> classProps })
+        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> classProps })
         {
             // 1. Check if the current class matches the target name
-            if (classProps.GetValueOrDefault("type")?.Value is string typeName && typeName == className)
+            if (classProps.GetValueOrDefault("type")?.Ref is string typeName && typeName == className)
                 return true;
 
             // 2. Move to the parent class
@@ -250,7 +251,7 @@ public class ZsValue(ValueType type, object value)
 
     public static ZsValue? GetProperty(ZsValue zsValue, string propertyName)
     {
-        if (zsValue is not { Type: ValueType.Object, Value: Dictionary<string, ZsValue> objectProps })
+        if (zsValue is not { Type: ValueType.Object, Ref: Dictionary<string, ZsValue> objectProps })
             return null;
 
         if (objectProps.TryGetValue(propertyName, out var ownValue))
@@ -259,7 +260,7 @@ public class ZsValue(ValueType type, object value)
         if (!objectProps.TryGetValue("constructor", out var current))
             return null;
 
-        while (current is { Type: ValueType.Class, Value: Dictionary<string, ZsValue?> classProps })
+        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> classProps })
         {
             if (classProps.TryGetValue(propertyName, out var classValue) && classValue is not null)
                 return classValue;
@@ -276,14 +277,20 @@ public class ZsValue(ValueType type, object value)
     {
         return Type switch
         {
+            ValueType.Script => "[script]",
+            ValueType.Class => "[class]",
             ValueType.Function => "[function]",
             ValueType.Object when IsInstanceOf(this, "Error") => FormatError(),
-            ValueType.Object => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, false),
-            ValueType.ObjectLiteral => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Value, true),
-            ValueType.Array => ConvertArrayToJsonFormat((List<ZsValue>)Value),
+            ValueType.Object when Ref != null => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Ref, false),
+            ValueType.ObjectLiteral when Ref != null => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Ref, true),
+            ValueType.Array when Ref != null => ConvertArrayToJsonFormat((List<ZsValue>)Ref),
             ValueType.Future => FormatFuture(),
+            ValueType.Int => Convert.ToString(Int()),
+            ValueType.Number => Convert.ToString(Number(), System.Globalization.CultureInfo.InvariantCulture),
+            ValueType.Bool => Bool() ? "true" : "false",
             ValueType.Null => "null",
-            _ => $"{Value}"
+            ValueType.String when Ref != null => (string)Ref,
+            _ => throw new InvalidOperationException()
         };
     }
 
@@ -294,8 +301,7 @@ public class ZsValue(ValueType type, object value)
         var rep = fut.State switch
         {
             FutureState.Pending => "Pending",
-            FutureState.Rejected => fut.Result!.ToString(),
-            FutureState.Fulfill => fut.Result!.ToString(),
+            FutureState.Fulfill or FutureState.Rejected => fut.Result!.ToString(),
             _ => throw new InvalidOperationException()
         };
         return "Future { " + rep + " }";
@@ -304,9 +310,9 @@ public class ZsValue(ValueType type, object value)
     private string FormatError()
     {
         Debug.Assert(IsInstanceOf(this, "Error"), "Object is not an error");
-        var props = (Dictionary<string, ZsValue>)Value;
-        var message = props.GetValueOrDefault("message")?.Value as string ?? "unknown error";
-        var traceback = props.GetValueOrDefault("traceback")?.Value as string ?? "";
+        var props = (Dictionary<string, ZsValue>)Ref!;
+        var message = props.GetValueOrDefault("message")?.Ref as string ?? "unknown error";
+        var traceback = props.GetValueOrDefault("traceback")?.Ref as string ?? "";
         return $"{GetZsType()}: {message}{Environment.NewLine}{traceback}";
     }
 
@@ -315,17 +321,17 @@ public class ZsValue(ValueType type, object value)
         return value.Type switch
         {
             ValueType.Function => "[function]",
-            ValueType.Object when value.Value is Dictionary<string, ZsValue> props
+            ValueType.Object when value.Ref is Dictionary<string, ZsValue> props
                 => ConvertDictToJsonFormat(value.GetZsType(), props, false, depth),
-            ValueType.ObjectLiteral when value.Value is Dictionary<string, ZsValue> props
+            ValueType.ObjectLiteral when value.Ref is Dictionary<string, ZsValue> props
                 => ConvertDictToJsonFormat(value.GetZsType(), props, true, depth),
-            ValueType.Array when value.Value is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
-            ValueType.Class when value.Value is Dictionary<string, ZsValue?> classProps
-                => $"[class {classProps.GetValueOrDefault("type")?.Value as string ?? "?"}]",
-            ValueType.Number => Convert.ToString(value.Value) ?? "null",
-            ValueType.String => $"'{value.Value as string}'",
+            ValueType.Array when value.Ref is List<ZsValue> array => ConvertArrayToJsonFormat(array, depth),
+            ValueType.Class when value.Ref is Dictionary<string, ZsValue?> classProps
+                => $"[class {classProps.GetValueOrDefault("type")?.Ref as string ?? "?"}]",
+            ValueType.Int or ValueType.Number => Convert.ToString(value.Num, System.Globalization.CultureInfo.InvariantCulture),
+            ValueType.String => $"'{value.Ref as string}'",
             ValueType.Null => "null",
-            _ => $"{value.Value}"
+            _ => throw new InvalidOperationException()
         };
     }
 
@@ -334,8 +340,8 @@ public class ZsValue(ValueType type, object value)
         if (array.Count == 0)
             return "[]";
 
-        var indent = new string(' ', (depth + 1) * 2);
-        var closingIndent = new string(' ', (depth + 1) * 2);
+        var indent = new string(' ', (depth) * 2);
+        var closingIndent = new string(' ', (depth) * 2);
         var sb = new StringBuilder();
 
         sb.Append('[');
@@ -343,7 +349,7 @@ public class ZsValue(ValueType type, object value)
         var first = true;
         foreach (var item in array)
         {
-            if (!first) sb.Append(',');
+            if (!first) sb.Append(", ");
             first = false;
 
             sb.Append(indent)

@@ -36,7 +36,7 @@ public class State
 
     public int SaveStr(string value)
     {
-        var existingIndex = Constants.FindIndex(x => x.Type == ValueType.Number && x.Value.Equals(value));
+        var existingIndex = Constants.FindIndex(x => x.Type == ValueType.String && x.Ref!.Equals(value));
         if (existingIndex != -1) return existingIndex;
 
         var index = Constants.Count;
