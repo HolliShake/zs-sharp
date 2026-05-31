@@ -14,6 +14,7 @@
     public static readonly string Try = "try";
     public static readonly string Catch = "catch";
     public static readonly string If = "if";
+    public static readonly string Else = "else";
     public static readonly string Switch = "switch";
     public static readonly string Case = "case";
     public static readonly string Default = "default";
@@ -22,6 +23,7 @@
     public static readonly string Do = "do";
     public static readonly string Break = "break";
     public static readonly string Print = "print";
+    public static readonly string Continue = "continue";
     public static readonly string True = "true";
     public static readonly string False = "false";
     public static readonly string Null = "null";
@@ -33,8 +35,8 @@
     public static readonly HashSet<string> All =
     [
         Class, Constructor, Base, Fn, Async, Await, Return,
-        Var, Local, Const, Try, Catch, If, Switch, Case,
-        Default, For, While, Do, Break, Print, True, False,
+        Var, Local, Const, Try, Catch, If, Else, Switch, Case,
+        Default, For, While, Do, Break, Print, Continue, True, False,
         Null, Is, Not
     ];
 

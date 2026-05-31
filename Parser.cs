@@ -13,7 +13,7 @@ public class Parser(string path, string source) : Lexer(path, source)
 
     private bool Check(string value)
     {
-        return (Check(TokenType.Idn) || Check(TokenType.Key) || Check(TokenType.Sym)) &&
+        return (Check(TokenType.Key) || Check(TokenType.Sym)) &&
                Lookahead != null && Lookahead.Value == value;
     }
 
@@ -70,16 +70,15 @@ public class Parser(string path, string source) : Lexer(path, source)
                 Expect(TokenType.Str);
                 return strNode;
             }
-            default:
-                return null;
+            default: return null;
         }
     }
 
     private Ast? Group()
     {
-        if (Check("fn"))
+        if (Check(Keyword.Fn))
             return FunctionExpression();
-        if (Check("switch"))
+        if (Check(Keyword.Switch))
             return SwitchExpression();
         if (Check("["))
             return ArrayLiteral();
@@ -100,7 +99,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("fn");
+        Expect(Keyword.Fn);
         Expect("(");
         var argc = 0;
         var parameterHead = Terminal();
@@ -129,9 +128,9 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect(")");
 
-        var asynchronous = Check("async");
+        var asynchronous = Check(Keyword.Async);
 
-        if (asynchronous) Expect("async");
+        if (asynchronous) Expect(Keyword.Async);
 
         Expect("{");
         var bodyHead = Statement();
@@ -155,7 +154,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
 
-        Expect("switch");
+        Expect(Keyword.Switch);
         Expect("(");
 
         var condition = Expression();
@@ -637,19 +636,19 @@ public class Parser(string path, string source) : Lexer(path, source)
 
     private Ast? Statement()
     {
-        if (Check("fn")) return Function();
-        if (Check("var")) return VariableDeclaration("var");
-        if (Check("local")) return VariableDeclaration("local");
-        if (Check("const")) return VariableDeclaration("const");
-        if (Check("try")) return TryCatch();
-        if (Check("while")) return While();
-        if (Check("if")) return If();
-        if (Check("switch")) return Switch();
+        if (Check(Keyword.Fn)) return Function();
+        if (Check(Keyword.Var)) return VariableDeclaration(Keyword.Var);
+        if (Check(Keyword.Local)) return VariableDeclaration(Keyword.Local);
+        if (Check(Keyword.Const)) return VariableDeclaration(Keyword.Const);
+        if (Check(Keyword.Try)) return TryCatch();
+        if (Check(Keyword.While)) return While();
+        if (Check(Keyword.If)) return If();
+        if (Check(Keyword.Switch)) return Switch();
         if (Check("{")) return Block();
-        if (Check("print")) return Print();
-        if (Check("continue")) return Continue();
-        if (Check("break")) return Break();
-        if (Check("return")) return Return();
+        if (Check(Keyword.Print)) return Print();
+        if (Check(Keyword.Continue)) return Continue();
+        if (Check(Keyword.Break)) return Break();
+        if (Check(Keyword.Return)) return Return();
         return ExpressionStatement();
     }
 
@@ -657,7 +656,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("fn");
+        Expect(Keyword.Fn);
         var func = Terminal();
         if (func == null) ErrorHandler.CompileError(Path, Source, "expects function name", Lookahead.Position);
         if (func is not { Type: AstType.AstName })
@@ -690,9 +689,9 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect(")");
 
-        var asynchronous = Check("async");
+        var asynchronous = Check(Keyword.Async);
 
-        if (asynchronous) Expect("async");
+        if (asynchronous) Expect(Keyword.Async);
 
         Expect("{");
         var bodyHead = Statement();
@@ -873,7 +872,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
 
-        Expect("switch");
+        Expect(Keyword.Switch);
         Expect("(");
 
         var condition = Expression();
@@ -890,7 +889,7 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         // Process all cases
         // Process all cases
-        while (Check("case") || Check("default"))
+        while (Check(Keyword.Case) || Check(Keyword.Default))
         {
             if (hasDefault)
                 ErrorHandler.CompileError(Path, Source,
@@ -899,24 +898,24 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             Ast? caseCondition = null;
 
-            if (Check("default") && !hasDefault)
+            if (Check(Keyword.Default) && !hasDefault)
             {
-                Expect("default");
+                Expect(Keyword.Default);
                 Expect(":");
                 hasDefault = true;
             }
             else
             {
-                Expect("case");
+                Expect(Keyword.Case);
                 caseCondition = Expression();
                 var tailCaseCondition = caseCondition!;
                 if (caseCondition == null)
                     ErrorHandler.CompileError(Path, Source, "Expected case condition expression.", Lookahead.Position);
                 Expect(":");
 
-                while (Check("case"))
+                while (Check(Keyword.Case))
                 {
-                    Expect("case");
+                    Expect(Keyword.Case);
                     var nextCaseCondition = Expression();
                     if (nextCaseCondition == null)
                         ErrorHandler.CompileError(Path, Source, "Expected case condition expression.",
@@ -956,7 +955,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("try");
+        Expect(Keyword.Try);
         Expect("{");
         var tryHead = Statement();
         var tryTail = tryHead;
@@ -968,7 +967,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         }
 
         Expect("}");
-        Expect("catch");
+        Expect(Keyword.Catch);
         Expect("(");
         var errorVar = Terminal();
         if (errorVar == null)
@@ -994,7 +993,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("while");
+        Expect(Keyword.While);
         Expect("(");
         var condition = Expression();
         if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
@@ -1010,7 +1009,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("if");
+        Expect(Keyword.If);
         Expect("(");
         var condition = Expression();
         if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
@@ -1018,12 +1017,12 @@ public class Parser(string path, string source) : Lexer(path, source)
         var thenBranch = Statement();
         if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects then branch", Lookahead.Position);
         Ast? elseBranch = null;
-        if (!Check("else"))
+        if (!Check(Keyword.Else))
             return Ast.CreateIfNode(
                 condition!, thenBranch!, elseBranch, position
             );
 
-        Expect("else");
+        Expect(Keyword.Else);
         elseBranch = Statement();
         if (elseBranch == null) ErrorHandler.CompileError(Path, Source, "expects else branch", Lookahead.Position);
 
@@ -1054,7 +1053,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("print");
+        Expect(Keyword.Print);
         var argumentHead = Expression(false);
         var argumentTail = argumentHead;
         if (argumentTail is not null)
@@ -1077,7 +1076,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("continue");
+        Expect(Keyword.Continue);
         Expect(";");
         return Ast.CreateBreakNode(position);
     }
@@ -1086,7 +1085,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("break");
+        Expect(Keyword.Break);
         Expect(";");
         return Ast.CreateBreakNode(position);
     }
@@ -1095,7 +1094,7 @@ public class Parser(string path, string source) : Lexer(path, source)
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
-        Expect("return");
+        Expect(Keyword.Return);
         var expr = Expression();
         Expect(";");
         return Ast.CreateReturnNode(expr, position);
