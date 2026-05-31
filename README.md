@@ -1,33 +1,96 @@
 # zscript
 
-A lightweight scripting language and interpreter implemented in C# (.NET 8).
-Designed for embedding, scripting, and experimenting with language features.
+> A lightweight scripting language and interpreter implemented in C# (.NET 8), designed for embedding, scripting, and experimenting with language design.
+
+[![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com)
+[![Language](https://img.shields.io/badge/language-C%23-239120?style=flat-square&logo=csharp)](https://github.com/HolliShake/zs-sharp)
+[![AOT](https://img.shields.io/badge/publish-AOT-blue?style=flat-square)](https://github.com/HolliShake/zs-sharp/blob/main/zscript.csproj)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Commits](https://img.shields.io/badge/commits-41-orange?style=flat-square)](https://github.com/HolliShake/zs-sharp/commits/main)
+
+---
 
 ## Features
 
-- Custom scripting language with async/await-like syntax
-- Arithmetic, function calls, and error handling
-- Test harness and CLI for running scripts
-- Example language file (`lang.txt`) included
+- **Async functions** with `await` — coroutine-style async execution
+- **Promise chaining** via `->then()` and `->error()` on any async call
+- **First-class functions** — anonymous functions (`fn(...)`) as values and arguments
+- **Destructuring** — array and object unpacking into local bindings
+- **Switch expressions** — pattern-matching expressions that yield a value
+- **Error handling** — `try`/`catch` blocks, including across `await` boundaries
+- **Data types** — arrays `[...]`, objects `{...}`, numbers, strings, booleans
+- **Loops** — `while` loops with full expression support
+- **Closures** — functions capture their enclosing scope
+- **Embeddable** — clean C# core designed to be hosted in other applications
+
+---
 
 ## Example
 
 ```zscript
-fn println(a) async {
-    print ">>", a;
-}
-
 fn add(a, b) async {
-    print "waiting...", await println(a + b + 10);
-    await println("Hola!");
-    return 1;
+    return a + b;
 }
 
-add(323, 413)
-    ->then(callback)
-    ->then(callback)
-    ->then(callback);
+// Promise chaining with ->then() and ->error()
+add(0, 1)
+    ->then(fn(data) {
+        return data + 1;
+    })
+    ->then(fn(data) {
+        return data * 2;
+    })
+    ->then(cb);
+
+add(0, "foccer")
+    ->error(fn(data) {
+        print "THEN";
+    })
+    ->error(cbError);
 ```
+
+### Try/Catch across async boundaries
+
+```zscript
+fn willThrow() async {
+    2 + "focc!";
+}
+
+fn caller() async {
+    try {
+        await willThrow();
+    } catch (err) {
+        print "caught:", err;
+    }
+}
+
+caller();
+```
+
+### Switch expression
+
+```zscript
+println(switch (val) {
+    0 => "zero",
+    1 => "one",
+    _ => "other"
+});
+```
+
+### Destructuring
+
+```zscript
+const returnArray = fn() {
+    return [1, 2];
+};
+
+var [x, y] = returnArray();
+
+local { a: b, c: d } = { a: "Dog", c: "Cat" };
+print b, d;
+```
+
+---
 
 ## Usage
 
@@ -40,26 +103,175 @@ dotnet run -- -r path/to/script.zs
 
 ### CLI Options
 
-- `-r, --run <path>`: Run a zscript source file
-- `-t, --test`: Run the internal test suite
-- `-h, --help`: Show help
+| Flag | Description |
+|------|-------------|
+| `-r, --run <path>` | Run a zscript source file |
+| `-t, --test` | Run the internal test suite |
+| `-h, --help` | Show help |
+
+---
 
 ## Build & Publish
 
-To build and publish a self-contained binary:
+To publish a self-contained binary (AOT-compiled):
 
 ```sh
 dotnet publish -c Release
 ```
 
+> AOT publishing is enabled via `<PublishAot>true</PublishAot>` in the project file.
+
+---
+
 ## Project Structure
 
-- `Program.cs`: CLI entry point
-- `Vm.cs`: Virtual machine/interpreter
-- `Compiler.cs`, `Parser.cs`, `Lexer.cs`: Language frontend
-- `lang.txt`: Example script
+The interpreter is implemented as a classic pipeline:
+
+```
+Source (.zs)
+    │
+    ▼
+Lexer.cs          — tokenizes source into a stream of Token/TokenType
+    │
+    ▼
+Parser.cs         — builds an AST (Ast.cs / AstType.cs)
+    │
+    ▼
+Compiler.cs       — emits bytecode (OpCode.cs / Code.cs)
+    │
+    ▼
+Vm.cs             — executes bytecode via stack frames (Frame.cs)
+```
+
+### All source files
+
+| File | Role |
+|------|------|
+| `Program.cs` | CLI entry point |
+| `Lexer.cs` | Tokenizer |
+| `Token.cs`, `TokenType.cs` | Token model |
+| `Parser.cs` | AST construction |
+| `Ast.cs`, `AstType.cs` | AST node types |
+| `Compiler.cs` | Bytecode emitter |
+| `OpCode.cs`, `OpCodeDebug.cs` | Instruction set |
+| `Code.cs` | Compiled code object |
+| `Vm.cs` | Virtual machine / interpreter |
+| `Frame.cs` | Call-stack frame |
+| `Future.cs`, `FutureState.cs` | Async promise model |
+| `Cell.cs` | Closure cell (captured variable) |
+| `ZsValue.cs`, `ValueType.cs` | Runtime value types |
+| `Symbol.cs`, `SymbolTable.cs` | Name resolution |
+| `ScopeType.cs`, `LookupDetail.cs` | Scope metadata |
+| `State.cs` | VM state |
+| `TryBlock.cs` | Exception-handling frame |
+| `ErrorHandler.cs` | Error dispatch |
+| `ZsArithmeticError.cs`, `ZsCompileError.cs` | Error types |
+| `IBuiltin.cs` | Builtin function interface |
+| `Position.cs` | Source position tracking |
+| `lang.txt` | Example zscript program |
+| `test.js` | Test harness (JavaScript) |
+| `zscript.csproj` | Project file (net8.0, AOT) |
+
+---
+
+## Language Syntax Summary
+
+### Comments
+```zscript
+// line comment
+
+/* block
+   comment */
+```
+
+### Variables
+```zscript
+var x = 10;
+const y = 20;
+local z = 30;     // block-scoped
+```
+
+### Functions
+```zscript
+fn add(a, b) {
+    return a + b;
+}
+
+// anonymous
+var double = fn(x) { return x * 2; };
+
+// async
+fn fetch(url) async {
+    return await request(url);
+}
+```
+
+### Control flow
+```zscript
+if (cond) { ... } else { ... }
+
+while (g < 10) { g = g + 1; }
+
+switch (val) {
+    case 1:
+    case 2: { println("1 or 2"); }
+    default: println("other");
+}
+```
+
+### Switch expression
+```zscript
+var label = switch (n) {
+    0 => "zero",
+    1 => "one",
+    _ => "other"
+};
+```
+
+### Arrays and objects
+```zscript
+var arr = [1, 2, 3, 4, 5];
+var obj = {
+    Hello: "World",
+    add: fn(a, b) { return a + b; }
+};
+```
+
+### Destructuring
+```zscript
+var [a, b] = someArray();
+local { key: alias } = someObject();
+```
+
+### Async / Await
+```zscript
+fn doWork() async {
+    var result = await someAsyncFn();
+    return result;
+}
+```
+
+### Promise chaining
+```zscript
+asyncFn()
+    ->then(fn(data) { return data + 1; })
+    ->then(callback)
+    ->error(errorHandler);
+```
+
+### Error handling
+```zscript
+try {
+    await riskyFn();
+} catch (err) {
+    print "Error:", err;
+}
+```
+
+---
 
 ## License
 
-MIT License  
-Copyright (c) 2026 Philipp Andrew Redondo
+MIT License — Copyright © 2026 Philipp Andrew Redondo
+
+See [LICENSE](LICENSE) for full text.

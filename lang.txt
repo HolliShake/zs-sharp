@@ -159,3 +159,18 @@ while (g < 10) {
     println(g);
     g = g + 1;
 }
+
+const counter = fn() {
+    local i = 0;
+    return fn() {
+        i = i + 1;
+        return i;
+    };
+};
+
+
+const c = counter();
+println(c());
+println(c());
+println(c());
+
