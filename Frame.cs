@@ -17,6 +17,22 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public ZsValue? PendingError;
     public bool Suspended { get; private set; }
 
+    public void Dispose()
+    {
+        _operands.Clear();
+        TryCatchTable.Clear();
+        Future = null;
+        Pc = 0;
+        PendingError = null;
+        Suspended = false;
+        for (var i = 0; i < Environment.Length; i++)
+        {
+            if (Environment[i].IsRef) continue;
+            Environment[i].Value = null;
+            Environment[i] = null!;
+        }
+    }
+
     private static Cell[] BuildEnvironment(Code code)
     {
         var env = new Cell[code.LocalCount];
@@ -132,21 +148,5 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public int GetTryTableCount()
     {
         return TryCatchTable.Count;
-    }
-
-    public void Dispose()
-    {
-        _operands.Clear();
-        TryCatchTable.Clear();
-        Future = null;
-        Pc = 0;
-        PendingError = null;
-        Suspended = false;
-        for (var i = 0; i < Environment.Length; i++)
-        {
-            if (Environment[i].IsRef) continue;
-            Environment[i].Value = null;
-            Environment[i] = null!;
-        }
     }
 }

@@ -11,11 +11,23 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
 
     public List<(int Depth, int Address, int Destination)> Captures = [];
     public List<OpCodeDebug> DebugLines = [];
-    public string Name { get; private set; } = name;
+    public string Name { get; } = name;
     public int ArgCount { get; private set; } = argCount;
     public bool IsAsync { get; private set; } = isAsync;
 
     public int LocalCount { get; private set; }
+
+    public void Dispose()
+    {
+        Bytecode.Clear();
+        Captures.Clear();
+        CapturedCells.Clear();
+        DebugLines.Clear();
+        // Name = string.Empty;
+        ArgCount = 0;
+        IsAsync = false;
+        LocalCount = 0;
+    }
 
     public Code Clone()
     {
@@ -120,17 +132,5 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
     public void MergeCaptureToEnvironment(Frame frame)
     {
         foreach (var (key, cell) in CapturedCells) frame.Environment[key] = cell;
-    }
-
-    public void Dispose()
-    {
-        Bytecode.Clear();
-        Captures.Clear();
-        CapturedCells.Clear();
-        DebugLines.Clear();
-        // Name = string.Empty;
-        ArgCount = 0;
-        IsAsync = false;
-        LocalCount = 0;
     }
 }

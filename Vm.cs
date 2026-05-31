@@ -35,6 +35,12 @@ public class Vm : IDisposable
         CurrentFrame = null;
     }
 
+    public void Dispose()
+    {
+        DeferredTasks.Clear();
+        PendingTasks.Clear();
+    }
+
     private int ReadInt(Frame frame)
     {
         var code = frame.FunctionValue.Code();
@@ -1199,11 +1205,5 @@ public class Vm : IDisposable
                 }
             }
         }
-    }
-
-    public void Dispose()
-    {
-        DeferredTasks.Clear();
-        PendingTasks.Clear();
     }
 }

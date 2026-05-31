@@ -2,7 +2,7 @@ namespace zscript;
 
 public class Cell(ZsValue? value)
 {
-    private int _refCount = 0;
+    private int _refCount;
     public ZsValue? Value = value;
 
     public bool IsRef => _refCount > 0;

@@ -31,6 +31,25 @@ public class Ast : IDisposable
         IntArg1 = 0;
     }
 
+    public void Dispose()
+    {
+        Flag0 = false;
+        Flag1 = false;
+        IntArg0 = 0;
+        IntArg1 = 0;
+        Value = string.Empty;
+        A?.Dispose();
+        B?.Dispose();
+        C?.Dispose();
+        D?.Dispose();
+        Next?.Dispose();
+        A = null;
+        B = null;
+        C = null;
+        D = null;
+        Next = null;
+    }
+
     public static Ast CreateTerminalNode(AstType type, string value, Position position)
     {
         return new Ast(type, position)
@@ -233,24 +252,5 @@ public class Ast : IDisposable
         {
             A = bodyHead
         };
-    }
-
-    public void Dispose()
-    {
-        Flag0 = false;
-        Flag1 = false;
-        IntArg0 = 0;
-        IntArg1 = 0;
-        Value = string.Empty;
-        A?.Dispose();
-        B?.Dispose();
-        C?.Dispose();
-        D?.Dispose();
-        Next?.Dispose();
-        A = null;
-        B = null;
-        C = null;
-        D = null;
-        Next = null;
     }
 }

@@ -9,6 +9,15 @@ public class State : IDisposable
     public readonly Dictionary<string, ZsValue?> LoadedModules = new();
     public readonly List<string> ModuleNames = [];
 
+    public void Dispose()
+    {
+        foreach (var code in Codes) code.Dispose();
+        _dirStack.Clear();
+        Constants.Clear();
+        Codes.Clear();
+        LoadedModules.Clear();
+    }
+
     public void PushDir(string dir)
     {
         _dirStack.Push(dir);
@@ -67,14 +76,5 @@ public class State : IDisposable
         var address = Codes.Count;
         Codes.Add(code);
         return address;
-    }
-
-    public void Dispose()
-    {
-        foreach (var code in Codes) code.Dispose();
-        _dirStack.Clear();
-        Constants.Clear();
-        Codes.Clear();
-        LoadedModules.Clear();
     }
 }

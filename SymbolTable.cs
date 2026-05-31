@@ -6,7 +6,6 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 {
     private readonly List<int> _breakSignals = [];
     private readonly SymbolTable? _parent = parent;
-    private readonly List<int> _returnSignals = [];
     private readonly ScopeType _scopeType = scopeType;
     public readonly Dictionary<string, Symbol> Symbols = new();
 
@@ -118,20 +117,11 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         return null;
     }
 
-    public void AddReturnSignal(int offset)
-    {
-        _returnSignals.Add(offset);
-    }
-
     public void AddBreakSignal(int offset)
     {
         _breakSignals.Add(offset);
     }
 
-    public IEnumerable<int> GetReturnSignals()
-    {
-        return _returnSignals;
-    }
 
     public IEnumerable<int> GetBreakSignals()
     {
