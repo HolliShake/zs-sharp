@@ -6,7 +6,8 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     private readonly List<ZsValue> _fullFillReactions = [];
     private readonly List<ZsValue> _rejectReactions = [];
 
-    public Future(FutureState initialState, Frame frame, ZsValue zsValue) : this(initialState, frame)
+    public Future(FutureState initialState, Frame frame, ZsValue zsValue)
+        : this(initialState, frame)
     {
         Result = zsValue;
     }
@@ -27,7 +28,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         {
             "then" => FutureThenMethod,
             "error" => FutureErrorMethod,
-            _ => throw new NotImplementedException($"method {methodName} not implemented")
+            _ => throw new NotImplementedException($"method {methodName} not implemented"),
         };
     }
 
@@ -36,7 +37,8 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         State = FutureState.Fulfill;
         Result = zsValue;
 
-        if (queue == null) return;
+        if (queue == null)
+            return;
 
         foreach (var reaction in _fullFillReactions)
         {
@@ -58,7 +60,8 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
 
         // null means "record the rejection silently — MainLoop will notify listeners
         // at the correct time, after any synchronous error/continue code has run."
-        if (queue == null) return;
+        if (queue == null)
+            return;
 
         foreach (var reaction in _rejectReactions)
         {
@@ -83,7 +86,11 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     private static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2)
-            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
+            return ZsValue.FromErrorMessage(
+                vm.Error,
+                "arguments must be 2",
+                vm.BuildTracebackFromFrame()
+            );
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -105,8 +112,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
             case FutureState.Rejected:
             {
                 // Handled by Error handler
-                newPromise.Future()
-                    .Reject(thisArgFut.Result!, vm.PendingTasks);
+                newPromise.Future().Reject(thisArgFut.Result!, vm.PendingTasks);
                 break;
             }
             case FutureState.Pending:
@@ -122,7 +128,11 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     private static ZsValue FutureErrorMethod(Vm vm, ZsValue[] arguments)
     {
         if (arguments.Length != 2)
-            return ZsValue.FromErrorMessage(vm.Error, "arguments must be 2", vm.BuildTracebackFromFrame());
+            return ZsValue.FromErrorMessage(
+                vm.Error,
+                "arguments must be 2",
+                vm.BuildTracebackFromFrame()
+            );
 
         var thisArg = arguments[0];
         var thisArgFut = thisArg.Future();
@@ -136,8 +146,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         {
             case FutureState.Fulfill:
             {
-                newPromise.Future()
-                    .FullFill(thisArgFut.Result!, vm.PendingTasks);
+                newPromise.Future().FullFill(thisArgFut.Result!, vm.PendingTasks);
 
                 break;
             }
