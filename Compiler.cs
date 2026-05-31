@@ -87,7 +87,7 @@ public class Compiler : Parser
                     var val = elementHead.B;
                     Expr(code, table, val!);
                     var index = State.SaveStr(key!.Value);
-                    code.EmitLine(ModuleId, key!.Position.Line);
+                    code.EmitLine(ModuleId, key.Position.Line);
                     code.Emit(OpCode.LoadConst, index);
                     elementHead = elementHead.Next;
                     ++count;
@@ -695,7 +695,7 @@ public class Compiler : Parser
                         ErrorHandler.CompileError(Path, Source, "variable already exists",
                             variableInitializer.Position);
 
-                    table.Add(nameNode!.Value, nameAddress, constant, variableInitializer.Position);
+                    table.Add(nameNode.Value, nameAddress, constant, variableInitializer.Position);
                     break;
                 }
                 case AstType.AstDestructureArrayInitializer:
@@ -769,8 +769,7 @@ public class Compiler : Parser
 
                     break;
                 }
-                default:
-                    throw new InvalidEnumArgumentException("invalid value for initializer type");
+                default: throw new InvalidEnumArgumentException("invalid value for initializer type");
             }
 
             variableInitializer = variableInitializer.Next;
@@ -947,9 +946,8 @@ public class Compiler : Parser
 
         foreach (var (key, val) in globalTable.Symbols)
         {
-            var symbol = globalTable.Find(key);
-            code.EmitLine(ModuleId, symbol.Symbol.Position.Line);
-            code.Emit(OpCode.LoadLocal, symbol.Symbol.Offset);
+            code.EmitLine(ModuleId, val.Position.Line);
+            code.Emit(OpCode.LoadLocal, val.Offset);
 
             code.EmitLine(ModuleId, position.Line);
             var address = State.SaveStr(key);

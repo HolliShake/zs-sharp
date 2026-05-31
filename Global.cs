@@ -8,9 +8,9 @@ public static class Global
     {
         // 1. Validate arguments
         if (args.Length != 1)
-            return ZsValue.FromErrorMessage(vm.Error, "import expects 1 argument", vm.BuildTracebackFromFrame());
+            return ZsValue.FromErrorMessage(vm.ErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
         if (!ZsValue.IsInstanceOf(args[0], ValueType.String))
-            return ZsValue.FromErrorMessage(vm.TypeError, "import expects a string", vm.BuildTracebackFromFrame());
+            return ZsValue.FromErrorMessage(vm.TypeErrorClass, "import expects a string", vm.BuildTracebackFromFrame());
 
         var moduleQualifiedPath = args[0].String();
         var cwd = vm.State.PeekDir();
@@ -21,7 +21,7 @@ public static class Global
 
         // 3. Check if the file actually exists
         if (!File.Exists(moduleFilePath))
-            return ZsValue.FromErrorMessage(vm.Error, $"Module not found: {moduleFilePath}",
+            return ZsValue.FromErrorMessage(vm.ErrorClass, $"Module not found: {moduleFilePath}",
                 vm.BuildTracebackFromFrame());
 
         // 4. Cache & CIRCULAR IMPORT Check
@@ -30,7 +30,7 @@ public static class Global
             // If the module is in the cache but is 'null', it means we are currently inside its vm.Run() execution!
             if (cachedModule == null)
                 return ZsValue.FromErrorMessage(
-                    vm.Error,
+                    vm.ErrorClass,
                     $"Circular import detected. '{moduleQualifiedPath}' is already being loaded.",
                     vm.BuildTracebackFromFrame()
                 );
@@ -40,7 +40,8 @@ public static class Global
         // 5. Get the directory
         var moduleDir = Path.GetDirectoryName(moduleFilePath);
         if (moduleDir == null)
-            return ZsValue.FromErrorMessage(vm.Error, "Failed to get module directory", vm.BuildTracebackFromFrame());
+            return ZsValue.FromErrorMessage(vm.ErrorClass, "Failed to get module directory",
+                vm.BuildTracebackFromFrame());
 
         vm.State.PushDir(moduleDir);
 
@@ -67,7 +68,7 @@ public static class Global
         }
         catch (Exception ex)
         {
-            return ZsValue.FromErrorMessage(vm.Error, $"Failed to import module: {ex.Message}",
+            return ZsValue.FromErrorMessage(vm.ErrorClass, $"Failed to import module: {ex.Message}",
                 vm.BuildTracebackFromFrame());
         }
         finally
@@ -93,7 +94,7 @@ public static class Global
 
         Console.Write(sb.ToString());
 
-        return vm.Null;
+        return vm.NullSingleton;
     }
 
     public static ZsValue Println(Vm vm, ZsValue[] args)
@@ -107,7 +108,7 @@ public static class Global
 
         Console.WriteLine(sb.ToString());
 
-        return vm.Null;
+        return vm.NullSingleton;
     }
 
     public static ZsValue Scan(Vm vm, ZsValue[] args)
@@ -116,9 +117,33 @@ public static class Global
         return ZsValue.FromString(Console.ReadLine() ?? "Something went wrong.");
     }
 
+    public static ZsValue OsWin(Vm vm, ZsValue[] args)
+    {
+        return OperatingSystem.IsWindows() ? vm.TrueSingleton : vm.FalseSingleton;
+    }
+
+    public static ZsValue OsMac(Vm vm, ZsValue[] args)
+    {
+        return OperatingSystem.IsMacOS() ? vm.TrueSingleton : vm.FalseSingleton;
+    }
+
+    public static ZsValue OsLinux(Vm vm, ZsValue[] args)
+    {
+        return OperatingSystem.IsLinux() ? vm.TrueSingleton : vm.FalseSingleton;
+    }
+
+    public static ZsValue GetOsType(Vm vm, ZsValue[] args)
+    {
+        if (OperatingSystem.IsWindows()) return ZsValue.FromString("windows");
+        if (OperatingSystem.IsMacOS()) return ZsValue.FromString("macos");
+        if (OperatingSystem.IsLinux()) ZsValue.FromString("linux");
+
+        return ZsValue.FromString("unknown");
+    }
+
     public static ZsValue BuildMath(Vm instanceOfVm)
     {
-        var mathClass = ZsValue.CreateZsClass(instanceOfVm.Object, "Math");
+        var mathClass = ZsValue.CreateZsClass(instanceOfVm.ObjectClass, "Math");
 
         // --- HELPER FUNCTIONS ---
         // These drastically reduce boilerplate while maintaining strict type checking
@@ -129,10 +154,10 @@ public static class Global
             return ZsValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects 1 argument",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 1 argument",
                         vm.BuildTracebackFromFrame());
                 if (!ZsValue.IsInstanceOf(args[0], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects a number",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a number",
                         vm.BuildTracebackFromFrame());
 
                 return ZsValue.FromNumber(func(args[0].Number()));
@@ -144,11 +169,11 @@ public static class Global
             return ZsValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 2)
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects 2 arguments",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 2 arguments",
                         vm.BuildTracebackFromFrame());
                 if (!ZsValue.IsInstanceOf(args[0], ValueType.Number) ||
                     !ZsValue.IsInstanceOf(args[1], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects numbers",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
                         vm.BuildTracebackFromFrame());
 
                 return ZsValue.FromNumber(func(args[0].Number(), args[1].Number()));
@@ -160,12 +185,12 @@ public static class Global
             return ZsValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 3)
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects 3 arguments",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 3 arguments",
                         vm.BuildTracebackFromFrame());
                 if (!ZsValue.IsInstanceOf(args[0], ValueType.Number) ||
                     !ZsValue.IsInstanceOf(args[1], ValueType.Number) ||
                     !ZsValue.IsInstanceOf(args[2], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeError, $"{name} expects numbers",
+                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
                         vm.BuildTracebackFromFrame());
 
                 return ZsValue.FromNumber(func(args[0].Number(), args[1].Number(), args[2].Number()));

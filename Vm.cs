@@ -6,38 +6,38 @@ namespace zscript;
 
 public class Vm : IDisposable
 {
-    public readonly ZsValue AttributeError;
-    public readonly Queue<ZsValue> DeferredTasks = new();
-    public readonly ZsValue Error;
-    public readonly ZsValue False;
-    public readonly ZsValue Future;
-    public readonly ZsValue Null;
-    public readonly ZsValue Object;
+    private readonly ZsValue _attributeErrorClass;
+    private readonly Queue<ZsValue> _deferredTasks = new();
+    private readonly ZsValue _zeroDivideErrorClass;
+    public readonly ZsValue ErrorClass;
+    public readonly ZsValue FalseSingleton;
+    public readonly ZsValue FutureClass;
+    public readonly ZsValue NullSingleton;
+    public readonly ZsValue ObjectClass;
     public readonly Queue<ZsValue> PendingTasks = new();
     public readonly State State;
-    public readonly ZsValue True;
-    public readonly ZsValue TypeError;
-    public readonly ZsValue ZeroDivideError;
+    public readonly ZsValue TrueSingleton;
+    public readonly ZsValue TypeErrorClass;
     public Frame? CurrentFrame;
 
     public Vm(State state)
     {
         State = state;
-        Object = ZsValue.CreateZsClass(null, "Object");
-        Error = ZsValue.CreateZsClass(Object, "Error");
-        AttributeError = ZsValue.CreateZsClass(Error, "AttributeError");
-        TypeError = ZsValue.CreateZsClass(Error, "TypeError");
-        ZeroDivideError = ZsValue.CreateZsClass(Error, "ZeroDivideError");
-        Future = ZsValue.CreateZsClass(Object, "Future");
-        Null = ZsValue.CreateNull();
-        True = ZsValue.FromBool(true);
-        False = ZsValue.FromBool(false);
+        ObjectClass = ZsValue.CreateZsClass(null, "Object");
+        ErrorClass = ZsValue.CreateZsClass(ObjectClass, "Error");
+        _attributeErrorClass = ZsValue.CreateZsClass(ErrorClass, "AttributeError");
+        TypeErrorClass = ZsValue.CreateZsClass(ErrorClass, "TypeError");
+        _zeroDivideErrorClass = ZsValue.CreateZsClass(ErrorClass, "ZeroDivideError");
+        FutureClass = ZsValue.CreateZsClass(ObjectClass, "Future");
+        NullSingleton = ZsValue.CreateNull();
+        TrueSingleton = ZsValue.FromBool(true);
+        FalseSingleton = ZsValue.FromBool(false);
         CurrentFrame = null;
     }
 
     public void Dispose()
     {
-        DeferredTasks.Clear();
+        _deferredTasks.Clear();
         PendingTasks.Clear();
     }
 
@@ -81,7 +81,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Number() * b.Number()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame()
             )
@@ -94,7 +94,7 @@ public class Vm : IDisposable
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(
-                ZeroDivideError,
+                _zeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
             );
@@ -104,7 +104,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Number() / b.Number()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame()
             )
@@ -117,7 +117,7 @@ public class Vm : IDisposable
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ZsValue.FromErrorMessage(
-                ZeroDivideError,
+                _zeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
             );
@@ -127,7 +127,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Number() % b.Number()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (%)",
                 BuildTracebackFromFrame()
             )
@@ -144,7 +144,7 @@ public class Vm : IDisposable
                 ZsValue.FromNumber(a.Number() + b.Number()),
             (ValueType.String, ValueType.String) => ZsValue.FromString(a.String() + b.String()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
                 BuildTracebackFromFrame()
             )
@@ -160,7 +160,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Number() - b.Number()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
                 BuildTracebackFromFrame()
             )
@@ -176,7 +176,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Int() << b.Int()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<<)",
                 BuildTracebackFromFrame()
             )
@@ -192,7 +192,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Int() >> b.Int()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>>)",
                 BuildTracebackFromFrame()
             )
@@ -207,10 +207,10 @@ public class Vm : IDisposable
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 < b.Number()
-                    ? True
-                    : False,
+                    ? TrueSingleton
+                    : FalseSingleton,
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame()
             )
@@ -225,10 +225,10 @@ public class Vm : IDisposable
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 <= b.Number()
-                    ? True
-                    : False,
+                    ? TrueSingleton
+                    : FalseSingleton,
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
                 BuildTracebackFromFrame()
             )
@@ -243,10 +243,10 @@ public class Vm : IDisposable
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 > b.Number()
-                    ? True
-                    : False,
+                    ? TrueSingleton
+                    : FalseSingleton,
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
                 BuildTracebackFromFrame()
             )
@@ -261,10 +261,10 @@ public class Vm : IDisposable
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 >= b.Number()
-                    ? True
-                    : False,
+                    ? TrueSingleton
+                    : FalseSingleton,
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
                 BuildTracebackFromFrame()
             )
@@ -277,11 +277,12 @@ public class Vm : IDisposable
     {
         var res = (a.Type, b.Type) switch
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 == b.Number()
-                    ? True
-                    : False,
-            _ => a.Ref == b.Ref || a == b ? True : False
+                    ? TrueSingleton
+                    : FalseSingleton,
+            _ => a.Ref == b.Ref || a == b ? TrueSingleton : FalseSingleton
         };
 
         return res;
@@ -291,11 +292,12 @@ public class Vm : IDisposable
     {
         var res = (a.Type, b.Type) switch
         {
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
                 != b.Number()
-                    ? True
-                    : False,
-            _ => a.Ref != b.Ref || a != b ? True : False
+                    ? TrueSingleton
+                    : FalseSingleton,
+            _ => a.Ref != b.Ref || a != b ? TrueSingleton : FalseSingleton
         };
 
         return res;
@@ -308,7 +310,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Int() & b.Int()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (&)",
                 BuildTracebackFromFrame()
             )
@@ -324,7 +326,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Int() | b.Int()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (|)",
                 BuildTracebackFromFrame()
             )
@@ -340,7 +342,7 @@ public class Vm : IDisposable
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
                 ZsValue.FromNumber(a.Int() ^ b.Int()),
             _ => ZsValue.FromErrorMessage(
-                TypeError,
+                TypeErrorClass,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (^)",
                 BuildTracebackFromFrame()
             )
@@ -366,7 +368,7 @@ public class Vm : IDisposable
             RaiseOrHandleException(
                 frame,
                 ZsValue.FromErrorMessage(
-                    TypeError,
+                    TypeErrorClass,
                     "cannot unpack non-iterable",
                     BuildTracebackFromFrame()
                 )
@@ -380,7 +382,7 @@ public class Vm : IDisposable
             RaiseOrHandleException(
                 frame,
                 ZsValue.FromErrorMessage(
-                    TypeError,
+                    TypeErrorClass,
                     "not enough values to unpack",
                     BuildTracebackFromFrame()
                 )
@@ -403,7 +405,7 @@ public class Vm : IDisposable
         }
 
         return ZsValue.CreateZsObjectLiteral(
-            Object,
+            ObjectClass,
             dict.Reverse().ToDictionary(x => x.Key, x => x.Value)
         );
     }
@@ -458,11 +460,11 @@ public class Vm : IDisposable
     {
         var zsObject = frame.PopOperand();
         var attribute = ZsValue.GetProperty(zsObject, attr);
-        if (attribute == null)
+        if (attribute == null && pop)
             frame.PopOperand();
         return attribute
                ?? ZsValue.FromErrorMessage(
-                   AttributeError,
+                   _attributeErrorClass,
                    $"object has no attribute {attr}",
                    BuildTracebackFromFrame()
                );
@@ -492,7 +494,7 @@ public class Vm : IDisposable
 
         return callableCode.ArgCount != arg
             ? ZsValue.FromErrorMessage(
-                Error,
+                ErrorClass,
                 $"{callableCode.Name}: arg mismatch {callableCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
             )
@@ -515,14 +517,14 @@ public class Vm : IDisposable
         var memberNameString = memberName.String();
         if (
             ZsValue.IsInstanceOf(zsObject, ValueType.Future)
-            && zscript.Future.HasMethod(memberNameString)
+            && Future.HasMethod(memberNameString)
         )
-            return zscript.Future.GetMethod(memberNameString)(this, arguments);
+            return Future.GetMethod(memberNameString)(this, arguments);
 
         var callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
         if (callableProperty == null)
             return ZsValue.FromErrorMessage(
-                Error,
+                ErrorClass,
                 $"object has no attribute {memberNameString}",
                 BuildTracebackFromFrame()
             );
@@ -547,7 +549,7 @@ public class Vm : IDisposable
 
         return callablePropertyCode.ArgCount != arg
             ? ZsValue.FromErrorMessage(
-                Error,
+                ErrorClass,
                 $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
             )
@@ -676,7 +678,7 @@ public class Vm : IDisposable
                         RaiseOrHandleException(
                             frame,
                             ZsValue.FromErrorMessage(
-                                Error,
+                                ErrorClass,
                                 "referenced before assignment",
                                 BuildTracebackFromFrame()
                             )
@@ -703,7 +705,7 @@ public class Vm : IDisposable
                 }
                 case OpCode.LoadNull:
                 {
-                    frame.PushOperand(Null);
+                    frame.PushOperand(NullSingleton);
                     break;
                 }
                 case OpCode.MakeArray:
@@ -1150,7 +1152,7 @@ public class Vm : IDisposable
                             .FullFill(frame.PopOperand(), frame.IsCallback ? null : PendingTasks);
 
                         if (frame.IsCallback)
-                            DeferredTasks.Enqueue(zsFuture);
+                            _deferredTasks.Enqueue(zsFuture);
 
                         return zsFuture;
                     }
@@ -1177,11 +1179,11 @@ public class Vm : IDisposable
 
         Run(globalFrame);
 
-        while (PendingTasks.Count > 0 || DeferredTasks.Count > 0)
+        while (PendingTasks.Count > 0 || _deferredTasks.Count > 0)
         {
             if (PendingTasks.Count == 0)
-                while (DeferredTasks.Count > 0)
-                    PendingTasks.Enqueue(DeferredTasks.Dequeue());
+                while (_deferredTasks.Count > 0)
+                    PendingTasks.Enqueue(_deferredTasks.Dequeue());
 
             var nextTask = PendingTasks.Dequeue();
             var futureInstance = nextTask.Future();

@@ -5,13 +5,13 @@ namespace zscript;
 public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous) : IDisposable
 {
     private readonly Stack<ZsValue> _operands = [];
+    private readonly Stack<TryBlock> _tryCatchTable = [];
     public readonly bool Asynchronous = asynchronous;
     public readonly Frame? CallerFrame = callerFrame;
     public readonly int CodeLen = functionValue.Code().Bytecode.Count;
     public readonly Cell[] Environment = BuildEnvironment(functionValue.Code());
     public readonly ZsValue FunctionValue = functionValue;
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
-    public readonly Stack<TryBlock> TryCatchTable = [];
     public ZsValue? Future;
     public int Pc;
     public ZsValue? PendingError;
@@ -20,7 +20,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public void Dispose()
     {
         _operands.Clear();
-        TryCatchTable.Clear();
+        _tryCatchTable.Clear();
         Future = null;
         Pc = 0;
         PendingError = null;
@@ -102,22 +102,22 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
 
     public void PushTryTable(TryBlock tryBlock)
     {
-        TryCatchTable.Push(tryBlock);
+        _tryCatchTable.Push(tryBlock);
     }
 
     public TryBlock PopTryTable()
     {
-        return TryCatchTable.Pop();
+        return _tryCatchTable.Pop();
     }
 
     public TryBlock PeekTryTable()
     {
-        return TryCatchTable.Peek();
+        return _tryCatchTable.Peek();
     }
 
     public bool HasTryHandler()
     {
-        return TryCatchTable.Count > 0;
+        return _tryCatchTable.Count > 0;
     }
 
     public void Terminate()
@@ -147,6 +147,6 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
 
     public int GetTryTableCount()
     {
-        return TryCatchTable.Count;
+        return _tryCatchTable.Count;
     }
 }

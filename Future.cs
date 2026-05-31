@@ -87,7 +87,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     {
         if (arguments.Length != 2)
             return ZsValue.FromErrorMessage(
-                vm.Error,
+                vm.ErrorClass,
                 "arguments must be 2",
                 vm.BuildTracebackFromFrame()
             );
@@ -130,7 +130,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
     {
         if (arguments.Length != 2)
             return ZsValue.FromErrorMessage(
-                vm.Error,
+                vm.ErrorClass,
                 "arguments must be 2",
                 vm.BuildTracebackFromFrame()
             );

@@ -108,7 +108,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (parameterTail != null)
         {
             if (parameterTail is not { Type: AstType.AstName })
-                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail.Position);
 
             argc++;
             while (Check(","))
@@ -670,7 +670,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (parameterTail != null)
         {
             if (parameterTail is not { Type: AstType.AstName })
-                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail!.Position);
+                ErrorHandler.CompileError(Path, Source, "expects parameter name", parameterTail.Position);
 
             argc++;
             while (Check(","))
@@ -866,8 +866,6 @@ public class Parser(string path, string source) : Lexer(path, source)
 
             return Ast.CreateVariableNode(typeOfVariable, variableInit, position);
         }
-
-        throw new NotImplementedException();
     }
 
     private Ast Switch()

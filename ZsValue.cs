@@ -204,7 +204,7 @@ public sealed class ZsValue
                && WalkClassChain(ctor, className);
     }
 
-    public static bool IsExtensionOf(ZsValue zsValue, string className)
+    private static bool IsExtensionOf(ZsValue zsValue, string className)
     {
         return WalkClassChain(zsValue, className);
     }

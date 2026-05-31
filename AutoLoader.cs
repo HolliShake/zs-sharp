@@ -9,11 +9,15 @@ public class AutoLoader
     {
         _autoLoads =
         [
-            new AutoLoad(0, "Math", vm => Global.BuildMath(vm)),
-            new AutoLoad(1, "import", vm => ZsValue.FromNativeFunction(Global.Import)),
-            new AutoLoad(2, "print", vm => ZsValue.FromNativeFunction(Global.Print)),
-            new AutoLoad(3, "println", vm => ZsValue.FromNativeFunction(Global.Println)),
-            new AutoLoad(4, "scan", vm => ZsValue.FromNativeFunction(Global.Scan))
+            new AutoLoad(0, "Math", Global.BuildMath),
+            new AutoLoad(1, "import", _ => ZsValue.FromNativeFunction(Global.Import)),
+            new AutoLoad(2, "print", _ => ZsValue.FromNativeFunction(Global.Print)),
+            new AutoLoad(3, "println", _ => ZsValue.FromNativeFunction(Global.Println)),
+            new AutoLoad(4, "scan", _ => ZsValue.FromNativeFunction(Global.Scan)),
+            new AutoLoad(5, "isWindows", _ => ZsValue.FromNativeFunction(Global.OsWin)),
+            new AutoLoad(6, "isMac", _ => ZsValue.FromNativeFunction(Global.OsMac)),
+            new AutoLoad(7, "isLinux", _ => ZsValue.FromNativeFunction(Global.OsLinux)),
+            new AutoLoad(8, "getOsType", _ => ZsValue.FromNativeFunction(Global.GetOsType))
         ];
 
         InjectedCount = _autoLoads.Count;
