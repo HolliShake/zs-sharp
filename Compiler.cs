@@ -969,7 +969,7 @@ public class Compiler : Parser
     {
         var ast = Parse();
         var val = Program(ast, true);
-        ast.Dereference();
+        ast.Dispose();
         return val;
     }
 
@@ -977,7 +977,7 @@ public class Compiler : Parser
     {
         var ast = Parse();
         var val = Program(ast, false);
-        ast.Dereference();
+        ast.Dispose();
         return val;
     }
 }

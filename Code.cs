@@ -4,16 +4,16 @@ using System.Text;
 
 namespace zscript;
 
-public class Code(string name, int argCount, bool isAsync)
+public class Code(string name, int argCount, bool isAsync) : IDisposable
 {
     public List<byte> Bytecode = [];
     public Dictionary<int, Cell> CapturedCells = [];
 
     public List<(int Depth, int Address, int Destination)> Captures = [];
     public List<OpCodeDebug> DebugLines = [];
-    public string Name { get; } = name;
-    public int ArgCount { get; } = argCount;
-    public bool IsAsync { get; } = isAsync;
+    public string Name { get; private set; } = name;
+    public int ArgCount { get; private set; } = argCount;
+    public bool IsAsync { get; private set; } = isAsync;
 
     public int LocalCount { get; private set; }
 
@@ -120,5 +120,17 @@ public class Code(string name, int argCount, bool isAsync)
     public void MergeCaptureToEnvironment(Frame frame)
     {
         foreach (var (key, cell) in CapturedCells) frame.Environment[key] = cell;
+    }
+
+    public void Dispose()
+    {
+        Bytecode.Clear();
+        Captures.Clear();
+        CapturedCells.Clear();
+        DebugLines.Clear();
+        // Name = string.Empty;
+        ArgCount = 0;
+        IsAsync = false;
+        LocalCount = 0;
     }
 }

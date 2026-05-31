@@ -2,7 +2,7 @@ using System.Text;
 
 namespace zscript;
 
-public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
+public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous) : IDisposable
 {
     private readonly Stack<ZsValue> _operands = [];
     public readonly bool Asynchronous = asynchronous;
@@ -142,7 +142,6 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         Pc = 0;
         PendingError = null;
         Suspended = false;
-
         for (var i = 0; i < Environment.Length; i++)
         {
             if (Environment[i].IsRef) continue;

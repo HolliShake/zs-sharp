@@ -1,6 +1,6 @@
 namespace zscript;
 
-public class Ast
+public class Ast : IDisposable
 {
     public readonly Position Position;
     public readonly AstType Type;
@@ -235,18 +235,18 @@ public class Ast
         };
     }
 
-    public void Dereference()
+    public void Dispose()
     {
         Flag0 = false;
         Flag1 = false;
         IntArg0 = 0;
         IntArg1 = 0;
         Value = string.Empty;
-        A?.Dereference();
-        B?.Dereference();
-        C?.Dereference();
-        D?.Dereference();
-        Next?.Dereference();
+        A?.Dispose();
+        B?.Dispose();
+        C?.Dispose();
+        D?.Dispose();
+        Next?.Dispose();
         A = null;
         B = null;
         C = null;
