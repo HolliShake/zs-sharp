@@ -5,7 +5,6 @@ namespace zscript;
 public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous)
 {
     private readonly Stack<ZsValue> _operands = [];
-
     public readonly bool Asynchronous = asynchronous;
     public readonly Frame? CallerFrame = callerFrame;
     public readonly int CodeLen = functionValue.Code().Bytecode.Count;
@@ -14,10 +13,8 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
     public readonly Stack<TryBlock> TryCatchTable = [];
     public ZsValue? Future;
-    public bool IsFaulted;
     public int Pc;
     public ZsValue? PendingError;
-
     public bool Suspended { get; private set; }
 
     private static Cell[] BuildEnvironment(Code code)
@@ -135,5 +132,22 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
     public int GetTryTableCount()
     {
         return TryCatchTable.Count;
+    }
+
+    public void Dispose()
+    {
+        _operands.Clear();
+        TryCatchTable.Clear();
+        Future = null;
+        Pc = 0;
+        PendingError = null;
+        Suspended = false;
+
+        for (var i = 0; i < Environment.Length; i++)
+        {
+            if (Environment[i].IsRef) continue;
+            Environment[i].Value = null;
+            Environment[i] = null!;
+        }
     }
 }

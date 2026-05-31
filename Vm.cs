@@ -425,6 +425,7 @@ public class Vm
                 );
 
             var capturedVariable = currentFrame.Environment[address];
+            capturedVariable.IncRef();
             codeObject.CapturedCells[destination] = capturedVariable;
         }
 
@@ -1148,7 +1149,9 @@ public class Vm
                         return zsFuture;
                     }
 
-                    return frame.PopOperand();
+                    var value = frame.PopOperand();
+                    frame.Dispose();
+                    return value;
                 }
                 default:
                 {
