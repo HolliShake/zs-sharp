@@ -6,7 +6,6 @@ namespace zscript;
 
 public class Vm
 {
-    public readonly State State;
     public readonly ZsValue AttributeError;
     public readonly Queue<ZsValue> DeferredTasks = new();
     public readonly ZsValue Error;
@@ -15,6 +14,7 @@ public class Vm
     public readonly ZsValue Null;
     public readonly ZsValue Object;
     public readonly Queue<ZsValue> PendingTasks = new();
+    public readonly State State;
     public readonly ZsValue True;
     public readonly ZsValue TypeError;
     public readonly ZsValue ZeroDivideError;
