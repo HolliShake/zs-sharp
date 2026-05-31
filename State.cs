@@ -1,6 +1,6 @@
 namespace zscript;
 
-public class State
+public class State : IDisposable
 {
     private readonly Stack<string> _dirStack = new();
     public readonly AutoLoader AutoLoader = new();
@@ -67,5 +67,14 @@ public class State
         var address = Codes.Count;
         Codes.Add(code);
         return address;
+    }
+
+    public void Dispose()
+    {
+        foreach (var code in Codes) code.Dispose();
+        _dirStack.Clear();
+        Constants.Clear();
+        Codes.Clear();
+        LoadedModules.Clear();
     }
 }

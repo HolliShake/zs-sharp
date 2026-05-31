@@ -68,6 +68,9 @@ public static class Program
 
         var vm = new Vm(state);
         vm.MainLoop(script);
+        vm.Dispose();
+
+        state.Dispose();
     }
 
     private static void RunTestSuite()

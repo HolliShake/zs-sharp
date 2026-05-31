@@ -4,7 +4,7 @@ using System.Text;
 
 namespace zscript;
 
-public class Vm
+public class Vm : IDisposable
 {
     public readonly ZsValue AttributeError;
     public readonly Queue<ZsValue> DeferredTasks = new();
@@ -1199,5 +1199,11 @@ public class Vm
                 }
             }
         }
+    }
+
+    public void Dispose()
+    {
+        DeferredTasks.Clear();
+        PendingTasks.Clear();
     }
 }
