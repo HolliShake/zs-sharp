@@ -150,7 +150,6 @@ println(x);
 
 println(test());
 
-
 var g = 0;
 while (g < 10) {
     println(g);
@@ -196,5 +195,6 @@ try {
     print "CATCH";
 }
 
-const a = scan(">>");
-println(a);
+const { Add: myAdd } = import("./lang.obi");
+
+println(myAdd(1, 1000));

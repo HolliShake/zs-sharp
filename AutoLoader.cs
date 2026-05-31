@@ -9,9 +9,10 @@ public class AutoLoader
     {
         _autoLoads =
         [
-            new AutoLoad(0, "print", ZsValue.FromNativeFunction(Global.Print)),
-            new AutoLoad(1, "println", ZsValue.FromNativeFunction(Global.Println)),
-            new AutoLoad(2, "scan", ZsValue.FromNativeFunction(Global.Scan))
+            new AutoLoad(0, "import", ZsValue.FromNativeFunction(Global.Import)),
+            new AutoLoad(1, "print", ZsValue.FromNativeFunction(Global.Print)),
+            new AutoLoad(2, "println", ZsValue.FromNativeFunction(Global.Println)),
+            new AutoLoad(3, "scan", ZsValue.FromNativeFunction(Global.Scan))
         ];
 
         InjectedCount = _autoLoads.Count;

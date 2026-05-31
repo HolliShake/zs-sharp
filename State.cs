@@ -2,10 +2,27 @@ namespace zscript;
 
 public class State
 {
+    private readonly Stack<string> _dirStack = new();
     public readonly AutoLoader AutoLoader = new();
+    public readonly Dictionary<string, ZsValue> LoadedModules = new();
     public readonly List<Code> Codes = [];
     public readonly List<ZsValue> Constants = [];
     public readonly List<string> ModuleNames = [];
+
+    public void PushDir(string dir)
+    {
+        _dirStack.Push(dir);
+    }
+
+    public string PeekDir()
+    {
+        return _dirStack.Peek();
+    }
+
+    public string PopDir()
+    {
+        return _dirStack.Pop();
+    }
 
     public int RegisterModuleName(string moduleName)
     {

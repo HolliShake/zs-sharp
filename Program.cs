@@ -58,10 +58,12 @@ public static class Program
             return;
         }
 
-        var source = File.ReadAllText(path);
+        var absPath = Path.GetFullPath(path);
+        var source = File.ReadAllText(absPath);
         var state = new State();
+        state.PushDir(Path.GetDirectoryName(absPath) ?? ".");
 
-        var compiler = new Compiler(state, path, source);
+        var compiler = new Compiler(state, absPath, source);
         var script = compiler.Compile();
 
         var vm = new Vm(state);

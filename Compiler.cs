@@ -85,10 +85,10 @@ public class Compiler : Parser
                 {
                     var key = elementHead.A;
                     var val = elementHead.B;
+                    Expr(code, table, val!);
                     var index = State.SaveStr(key!.Value);
                     code.EmitLine(ModuleId, key!.Position.Line);
                     code.Emit(OpCode.LoadConst, index);
-                    Expr(code, table, val!);
                     elementHead = elementHead.Next;
                     ++count;
                 }
@@ -918,7 +918,7 @@ public class Compiler : Parser
         }
     }
 
-    private ZsValue Program(Ast node)
+    private ZsValue Program(Ast node, bool asModule)
     {
         var code = new Code("main", 0, false);
         var globalTable = new SymbolTable(ScopeType.Global, null);
@@ -936,18 +936,47 @@ public class Compiler : Parser
             bodyHead = bodyHead.Next;
         }
 
+        if (!asModule)
+        {
+            code.EmitLine(ModuleId, position.Line);
+            code.Emit(OpCode.LoadNull);
+            code.EmitLine(ModuleId, position.Line);
+            code.Emit(OpCode.Return);
+            return ZsValue.FromCodeToScript(code);
+        }
+
+        foreach (var (key, val) in globalTable.Symbols)
+        {
+            var symbol = globalTable.Find(key);
+            code.EmitLine(ModuleId, symbol.Symbol.Position.Line);
+            code.Emit(OpCode.LoadLocal, symbol.Symbol.Offset);
+
+            code.EmitLine(ModuleId, position.Line);
+            var address = State.SaveStr(key);
+            code.Emit(OpCode.LoadConst, address);
+        }
+
         code.EmitLine(ModuleId, position.Line);
-        code.Emit(OpCode.LoadNull);
+        code.Emit(OpCode.MakeObject, globalTable.Symbols.Count);
+
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.Return);
 
         return ZsValue.FromCodeToScript(code);
     }
 
+    public ZsValue CompileAsModule()
+    {
+        var ast = Parse();
+        var val = Program(ast, true);
+        ast.Dereference();
+        return val;
+    }
+
     public ZsValue Compile()
     {
         var ast = Parse();
-        var val = Program(ast);
+        var val = Program(ast, false);
         ast.Dereference();
         return val;
     }

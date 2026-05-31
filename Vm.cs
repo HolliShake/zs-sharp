@@ -6,7 +6,7 @@ namespace zscript;
 
 public class Vm
 {
-    private readonly State _state;
+    public readonly State State;
     public readonly ZsValue AttributeError;
     public readonly Queue<ZsValue> DeferredTasks = new();
     public readonly ZsValue Error;
@@ -18,12 +18,11 @@ public class Vm
     public readonly ZsValue True;
     public readonly ZsValue TypeError;
     public readonly ZsValue ZeroDivideError;
-    private ZsValue? _currentError;
-    private Frame? _currentFrame;
+    public Frame? CurrentFrame;
 
     public Vm(State state)
     {
-        _state = state;
+        State = state;
         Object = ZsValue.CreateZsClass(null, "Object");
         Error = ZsValue.CreateZsClass(Object, "Error");
         AttributeError = ZsValue.CreateZsClass(Error, "AttributeError");
@@ -33,8 +32,7 @@ public class Vm
         Null = ZsValue.CreateNull();
         True = ZsValue.FromBool(true);
         False = ZsValue.FromBool(false);
-        _currentFrame = null;
-        _currentError = null;
+        CurrentFrame = null;
     }
 
     private int ReadInt(Frame frame)
@@ -80,7 +78,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -103,7 +101,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -126,7 +124,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (%)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -143,7 +141,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -159,7 +157,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -175,7 +173,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<<)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -191,7 +189,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>>)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -202,14 +200,14 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            < b.Number()
-                ? True
-                : False,
+                < b.Number()
+                    ? True
+                    : False,
             _ => ZsValue.FromErrorMessage(
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -220,14 +218,14 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            <= b.Number()
-                ? True
-                : False,
+                <= b.Number()
+                    ? True
+                    : False,
             _ => ZsValue.FromErrorMessage(
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -238,14 +236,14 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            > b.Number()
-                ? True
-                : False,
+                > b.Number()
+                    ? True
+                    : False,
             _ => ZsValue.FromErrorMessage(
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -256,14 +254,14 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            >= b.Number()
-                ? True
-                : False,
+                >= b.Number()
+                    ? True
+                    : False,
             _ => ZsValue.FromErrorMessage(
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -274,10 +272,10 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            == b.Number()
-                ? True
-                : False,
-            _ => a.Ref == b.Ref || a == b ? True : False,
+                == b.Number()
+                    ? True
+                    : False,
+            _ => a.Ref == b.Ref || a == b ? True : False
         };
 
         return res;
@@ -288,10 +286,10 @@ public class Vm
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) => a.Number()
-            != b.Number()
-                ? True
-                : False,
-            _ => a.Ref != b.Ref || a != b ? True : False,
+                != b.Number()
+                    ? True
+                    : False,
+            _ => a.Ref != b.Ref || a != b ? True : False
         };
 
         return res;
@@ -307,7 +305,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (&)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -323,7 +321,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (|)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -339,7 +337,7 @@ public class Vm
                 TypeError,
                 $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (^)",
                 BuildTracebackFromFrame()
-            ),
+            )
         };
 
         return res;
@@ -393,8 +391,8 @@ public class Vm
         var dict = new Dictionary<string, ZsValue>();
         for (var i = 0; i < size; i++)
         {
-            var val = frame.PopOperand();
             var key = frame.PopOperand().ToString();
+            var val = frame.PopOperand();
             dict[key] = val;
         }
 
@@ -406,7 +404,7 @@ public class Vm
 
     private ZsValue DoLoadFunction(Frame callerFrame, int off)
     {
-        var codeObjectTemplate = _state.Codes[off];
+        var codeObjectTemplate = State.Codes[off];
         var codeObject = codeObjectTemplate.Clone();
         var function = ZsValue.FromCodeToFunction(codeObject);
 
@@ -456,11 +454,11 @@ public class Vm
         if (attribute == null)
             frame.PopOperand();
         return attribute
-            ?? ZsValue.FromErrorMessage(
-                AttributeError,
-                $"object has no attribute {attr}",
-                BuildTracebackFromFrame()
-            );
+               ?? ZsValue.FromErrorMessage(
+                   AttributeError,
+                   $"object has no attribute {attr}",
+                   BuildTracebackFromFrame()
+               );
     }
 
     private ZsValue DoCall(Frame frame, int arg)
@@ -579,7 +577,7 @@ public class Vm
 
                 PendingTasks.Enqueue(zsFuture);
 
-                _currentFrame = current.CallerFrame;
+                CurrentFrame = current.CallerFrame;
                 return;
             }
 
@@ -587,7 +585,6 @@ public class Vm
             current = current.CallerFrame;
         }
 
-        _currentError = errorValue;
         Console.WriteLine($"[VM Fatal] Uncaught Exception: {errorValue}");
         PendingTasks.Clear();
     }
@@ -624,12 +621,12 @@ public class Vm
     {
         var sites = new Queue<string>();
 
-        var currentFrame = _currentFrame;
+        var currentFrame = CurrentFrame;
         while (currentFrame != null)
         {
             var code = currentFrame.FunctionValue.Code();
             var tracebackLine = GetLine(code.DebugLines, currentFrame.Pc);
-            var moduleName = _state.ModuleNames[tracebackLine.ModuleId];
+            var moduleName = State.ModuleNames[tracebackLine.ModuleId];
             sites.Enqueue($"    at [{moduleName}:{code.Name}:{tracebackLine.Line}]");
             currentFrame = currentFrame.CallerFrame;
         }
@@ -639,7 +636,7 @@ public class Vm
 
     public ZsValue Run(Frame frame)
     {
-        _currentFrame = frame;
+        CurrentFrame = frame;
         var code = frame.FunctionValue.Code();
 
         if (frame.PendingError != null)
@@ -685,7 +682,7 @@ public class Vm
                 {
                     var off = ReadInt(frame);
                     frame.Forward(4);
-                    frame.PushOperand(_state.Constants[off]);
+                    frame.PushOperand(State.Constants[off]);
                     break;
                 }
                 case OpCode.LoadString:
@@ -1128,7 +1125,7 @@ public class Vm
                         $"{code.Name} -> frame.GetTryTableCount()({frame.GetTryTableCount()}) != 0"
                     );
 
-                    _currentFrame = _currentFrame.CallerFrame;
+                    CurrentFrame = CurrentFrame.CallerFrame;
 
                     if (frame.Asynchronous || frame.Future != null)
                     {
@@ -1165,7 +1162,7 @@ public class Vm
     public void MainLoop(ZsValue globalCodeObject)
     {
         var globalFrame = new Frame(null, globalCodeObject, true, false);
-        _state.AutoLoader.InjectObject(globalFrame);
+        State.AutoLoader.InjectObject(globalFrame);
 
         Run(globalFrame);
 

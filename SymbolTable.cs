@@ -8,7 +8,7 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
     private readonly SymbolTable? _parent = parent;
     private readonly List<int> _returnSignals = [];
     private readonly ScopeType _scopeType = scopeType;
-    private readonly Dictionary<string, Symbol> _symbols = new();
+    public readonly Dictionary<string, Symbol> Symbols = new();
 
     public bool ScopeIs(ScopeType scopeType)
     {
@@ -22,7 +22,7 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 
     public bool AlreadyExists(string symbol)
     {
-        return _symbols.ContainsKey(symbol);
+        return Symbols.ContainsKey(symbol);
     }
 
     public bool SymbolExists(string symbol, ScopeType? boundary = null)
@@ -54,7 +54,7 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 
         while (current != null)
         {
-            if (current._symbols.TryGetValue(symbol, out var found))
+            if (current.Symbols.TryGetValue(symbol, out var found))
                 return new LookupDetail(found, depth, isLocalToFunction);
 
             if (isLocalToFunction && current._scopeType == boundary) isLocalToFunction = false;
@@ -69,8 +69,8 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 
     public void Add(string symbol, int offset, bool constant, Position position)
     {
-        Debug.Assert(!_symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
-        _symbols[symbol] = new Symbol(symbol, offset, constant, position);
+        Debug.Assert(!Symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
+        Symbols[symbol] = new Symbol(symbol, offset, constant, position);
     }
 
     public static bool IsAncestorOf(SymbolTable? ancestor, SymbolTable? descendant)

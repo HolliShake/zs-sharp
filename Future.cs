@@ -28,7 +28,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         {
             "then" => FutureThenMethod,
             "error" => FutureErrorMethod,
-            _ => throw new NotImplementedException($"method {methodName} not implemented"),
+            _ => throw new NotImplementedException($"method {methodName} not implemented")
         };
     }
 
@@ -120,6 +120,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
                 thisArgFut.AddListener(newPromise);
                 break;
             }
+            default: throw new NotImplementedException();
         }
 
         return newPromise;
@@ -162,6 +163,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
                 thisArgFut.AddListener(newPromise);
                 break;
             }
+            default: throw new NotImplementedException();
         }
 
         return newPromise;
