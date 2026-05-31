@@ -9,24 +9,24 @@ public class Global
         var sb = new StringBuilder();
         for (var i = 0; i < args.Length; i++)
         {
-            sb.Append(args[i].ToString());
+            sb.Append(args[i]);
             if (i < args.Length - 1) sb.Append(' ');
         }
-        
+
         Console.Write(sb.ToString());
 
         return vm.Null;
     }
-    
+
     public static ZsValue Println(Vm vm, ZsValue[] args)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < args.Length; i++)
         {
-            sb.Append(args[i].ToString());
+            sb.Append(args[i]);
             if (i < args.Length - 1) sb.Append(' ');
         }
-        
+
         Console.WriteLine(sb.ToString());
 
         return vm.Null;

@@ -1074,7 +1074,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect(";");
         return Ast.CreatePrintNode(argumentHead!, position);
     }
-    
+
     private Ast Continue()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
@@ -1083,7 +1083,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         Expect(";");
         return Ast.CreateBreakNode(position);
     }
-    
+
     private Ast Break()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");

@@ -546,16 +546,15 @@ public class Compiler : Parser
                 }
             }
          */
-        
+
         if (loopWrapsTry)
         {
             var depth = SymbolTable.Depth(nearestLoop, tryScope);
-            Console.WriteLine($"Depth of loop: {depth}");
             // We need to pop the try scope.
             code.EmitLine(ModuleId, node.Position.Line);
             if (depth == 1) code.Emit(OpCode.PopTry);
             else code.Emit(OpCode.PopNTry, depth);
-            
+
             // Jump
             code.EmitLine(ModuleId, node.Position.Line);
             nearestLoop?.AddBreakSignal(code.EmitJump(OpCode.Jump));
@@ -596,7 +595,7 @@ public class Compiler : Parser
                 rest of unreachable codes...
             }
          */
-        
+
         if (tryScope != null)
         {
             code.EmitLine(ModuleId, node.Position.Line);
@@ -614,6 +613,8 @@ public class Compiler : Parser
         var locals = new SymbolTable(ScopeType.Function, table);
 
         var functionAddress = code.AllocateLocal();
+        if (table.SymbolExists(node.A.Value))
+            ErrorHandler.CompileError(Path, Source, "function already exists", node.Position);
         table.Add(node.A.Value, functionAddress, false, node.Position);
 
         var position = node.Position;
@@ -922,6 +923,9 @@ public class Compiler : Parser
         var code = new Code("main", 0, false);
         var globalTable = new SymbolTable(ScopeType.Global, null);
 
+        code.SetLocalCount(State.AutoLoader.InjectedCount);
+        State.AutoLoader.InjectSymbol(globalTable);
+
         var position = node.Position;
 
         var bodyHead = node.A;
@@ -943,6 +947,8 @@ public class Compiler : Parser
     public ZsValue Compile()
     {
         var ast = Parse();
-        return Program(ast);
+        var val = Program(ast);
+        ast.Dereference();
+        return val;
     }
 }

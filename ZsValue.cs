@@ -68,7 +68,7 @@ public sealed class ZsValue
 
     public static ZsValue FromNativeFunction(Func<Vm, ZsValue[], ZsValue> impl)
     {
-        return new ZsValue(ValueType.Null, reference: impl);
+        return new ZsValue(ValueType.NativeFunction, reference: impl);
     }
 
     public static ZsValue CreateZsClass(ZsValue? baseClass, string type)
@@ -255,6 +255,7 @@ public sealed class ZsValue
             ValueType.Script when Ref is not null => "[script]",
             ValueType.Class when Ref is not null => "[class]",
             ValueType.Function when Ref is not null => "[function]",
+            ValueType.NativeFunction when Ref is not null => "[native function]",
             ValueType.Error when Ref is not null => FormatError(),
             ValueType.Object when Ref is not null
                 => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Ref, false),
@@ -298,6 +299,7 @@ public sealed class ZsValue
         {
             ValueType.Script => "[script]",
             ValueType.Function => "[function]",
+            ValueType.NativeFunction => "[native function]",
             ValueType.Object when value.Ref is Dictionary<string, ZsValue> op
                 => ConvertDictToJsonFormat(value.GetZsType(), op, false, depth),
             ValueType.ObjectLiteral when value.Ref is Dictionary<string, ZsValue> op

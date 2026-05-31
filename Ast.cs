@@ -200,12 +200,12 @@ public class Ast
             A = parameterHead
         };
     }
-    
+
     public static Ast CreateContinueNode(Position position)
     {
         return new Ast(AstType.AstContinue, position);
     }
-    
+
     public static Ast CreateBreakNode(Position position)
     {
         return new Ast(AstType.AstBreak, position);
@@ -233,5 +233,24 @@ public class Ast
         {
             A = bodyHead
         };
+    }
+
+    public void Dereference()
+    {
+        Flag0 = false;
+        Flag1 = false;
+        IntArg0 = 0;
+        IntArg1 = 0;
+        Value = string.Empty;
+        A?.Dereference();
+        B?.Dereference();
+        C?.Dereference();
+        D?.Dereference();
+        Next?.Dereference();
+        A = null;
+        B = null;
+        C = null;
+        D = null;
+        Next = null;
     }
 }

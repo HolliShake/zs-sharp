@@ -416,7 +416,7 @@ public class Vm
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
         return callableCode.ArgCount != arg
-            ? ZsValue.FromErrorMessage(Error, $"arg mismatch {callableCode.ArgCount} != {arg}",
+            ? ZsValue.FromErrorMessage(Error, $"{callableCode.Name}: arg mismatch {callableCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame())
             : Run(newCallFrame);
     }
@@ -972,7 +972,7 @@ public class Vm
                 {
                     var size = ReadInt(frame);
                     frame.Forward(4);
-                    for (var i = 0;i < size; i++) frame.PopTryTable();
+                    for (var i = 0; i < size; i++) frame.PopTryTable();
                     break;
                 }
                 case OpCode.JumpIfFalseOrPop:
@@ -1058,7 +1058,10 @@ public class Vm
 
     public void MainLoop(ZsValue globalCodeObject)
     {
-        Run(new Frame(null, globalCodeObject, false, false));
+        var globalFrame = new Frame(null, globalCodeObject, true, false);
+        _state.AutoLoader.InjectObject(globalFrame);
+
+        Run(globalFrame);
 
         while (PendingTasks.Count > 0 || DeferredTasks.Count > 0)
         {

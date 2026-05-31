@@ -1,6 +1,7 @@
 # zscript
 
-> A lightweight scripting language and interpreter implemented in C# (.NET 8), designed for embedding, scripting, and experimenting with language design.
+> A lightweight scripting language and interpreter implemented in C# (.NET 8), designed for embedding, scripting, and
+> experimenting with language design.
 
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com)
 [![Language](https://img.shields.io/badge/language-C%23-239120?style=flat-square&logo=csharp)](https://github.com/HolliShake/zs-sharp)
@@ -103,11 +104,11 @@ dotnet run -- -r path/to/script.zs
 
 ### CLI Options
 
-| Flag | Description |
-|------|-------------|
-| `-r, --run <path>` | Run a zscript source file |
-| `-t, --test` | Run the internal test suite |
-| `-h, --help` | Show help |
+| Flag               | Description                 |
+|--------------------|-----------------------------|
+| `-r, --run <path>` | Run a zscript source file   |
+| `-t, --test`       | Run the internal test suite |
+| `-h, --help`       | Show help                   |
 
 ---
 
@@ -145,38 +146,39 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 
 ### All source files
 
-| File | Role |
-|------|------|
-| `Program.cs` | CLI entry point |
-| `Lexer.cs` | Tokenizer |
-| `Token.cs`, `TokenType.cs` | Token model |
-| `Parser.cs` | AST construction |
-| `Ast.cs`, `AstType.cs` | AST node types |
-| `Compiler.cs` | Bytecode emitter |
-| `OpCode.cs`, `OpCodeDebug.cs` | Instruction set |
-| `Code.cs` | Compiled code object |
-| `Vm.cs` | Virtual machine / interpreter |
-| `Frame.cs` | Call-stack frame |
-| `Future.cs`, `FutureState.cs` | Async promise model |
-| `Cell.cs` | Closure cell (captured variable) |
-| `ZsValue.cs`, `ValueType.cs` | Runtime value types |
-| `Symbol.cs`, `SymbolTable.cs` | Name resolution |
-| `ScopeType.cs`, `LookupDetail.cs` | Scope metadata |
-| `State.cs` | VM state |
-| `TryBlock.cs` | Exception-handling frame |
-| `ErrorHandler.cs` | Error dispatch |
-| `ZsArithmeticError.cs`, `ZsCompileError.cs` | Error types |
-| `IBuiltin.cs` | Builtin function interface |
-| `Position.cs` | Source position tracking |
-| `lang.txt` | Example zscript program |
-| `test.js` | Test harness (JavaScript) |
-| `zscript.csproj` | Project file (net8.0, AOT) |
+| File                                        | Role                             |
+|---------------------------------------------|----------------------------------|
+| `Program.cs`                                | CLI entry point                  |
+| `Lexer.cs`                                  | Tokenizer                        |
+| `Token.cs`, `TokenType.cs`                  | Token model                      |
+| `Parser.cs`                                 | AST construction                 |
+| `Ast.cs`, `AstType.cs`                      | AST node types                   |
+| `Compiler.cs`                               | Bytecode emitter                 |
+| `OpCode.cs`, `OpCodeDebug.cs`               | Instruction set                  |
+| `Code.cs`                                   | Compiled code object             |
+| `Vm.cs`                                     | Virtual machine / interpreter    |
+| `Frame.cs`                                  | Call-stack frame                 |
+| `Future.cs`, `FutureState.cs`               | Async promise model              |
+| `Cell.cs`                                   | Closure cell (captured variable) |
+| `ZsValue.cs`, `ValueType.cs`                | Runtime value types              |
+| `Symbol.cs`, `SymbolTable.cs`               | Name resolution                  |
+| `ScopeType.cs`, `LookupDetail.cs`           | Scope metadata                   |
+| `State.cs`                                  | VM state                         |
+| `TryBlock.cs`                               | Exception-handling frame         |
+| `ErrorHandler.cs`                           | Error dispatch                   |
+| `ZsArithmeticError.cs`, `ZsCompileError.cs` | Error types                      |
+| `IBuiltin.cs`                               | Builtin function interface       |
+| `Position.cs`                               | Source position tracking         |
+| `lang.txt`                                  | Example zscript program          |
+| `test.js`                                   | Test harness (JavaScript)        |
+| `zscript.csproj`                            | Project file (net8.0, AOT)       |
 
 ---
 
 ## Language Syntax Summary
 
 ### Comments
+
 ```zscript
 // line comment
 
@@ -185,6 +187,7 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 ```
 
 ### Variables
+
 ```zscript
 var x = 10;
 const y = 20;
@@ -192,6 +195,7 @@ local z = 30;     // block-scoped
 ```
 
 ### Functions
+
 ```zscript
 fn add(a, b) {
     return a + b;
@@ -207,6 +211,7 @@ fn fetch(url) async {
 ```
 
 ### Control flow
+
 ```zscript
 if (cond) { ... } else { ... }
 
@@ -220,6 +225,7 @@ switch (val) {
 ```
 
 ### Switch expression
+
 ```zscript
 var label = switch (n) {
     0 => "zero",
@@ -229,6 +235,7 @@ var label = switch (n) {
 ```
 
 ### Arrays and objects
+
 ```zscript
 var arr = [1, 2, 3, 4, 5];
 var obj = {
@@ -238,12 +245,14 @@ var obj = {
 ```
 
 ### Destructuring
+
 ```zscript
 var [a, b] = someArray();
 local { key: alias } = someObject();
 ```
 
 ### Async / Await
+
 ```zscript
 fn doWork() async {
     var result = await someAsyncFn();
@@ -252,6 +261,7 @@ fn doWork() async {
 ```
 
 ### Promise chaining
+
 ```zscript
 asyncFn()
     ->then(fn(data) { return data + 1; })
@@ -260,6 +270,7 @@ asyncFn()
 ```
 
 ### Error handling
+
 ```zscript
 try {
     await riskyFn();

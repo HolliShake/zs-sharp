@@ -2,6 +2,7 @@ namespace zscript;
 
 public enum AstType
 {
+    AstNone,
     AstName,
     AstInt,
     AstNumber,

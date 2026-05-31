@@ -1,8 +1,5 @@
 
 
-fn println(a) async {
-    print a;
-}
 
 fn willThrow() async {
     2 + "focc!";
@@ -198,3 +195,6 @@ try {
 } catch (err) {
     print "CATCH";
 }
+
+const a = scan(">>");
+println(a);

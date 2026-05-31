@@ -2,6 +2,7 @@ namespace zscript;
 
 public enum ScopeType
 {
+    Builtin,
     Global,
     Function,
     Block,

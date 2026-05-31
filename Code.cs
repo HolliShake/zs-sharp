@@ -37,6 +37,11 @@ public class Code(string name, int argCount, bool isAsync)
         return LocalCount++;
     }
 
+    public void SetLocalCount(int count)
+    {
+        LocalCount = count;
+    }
+
     public void EmitLine(int moduleId, int line)
     {
         var index = Bytecode.Count;

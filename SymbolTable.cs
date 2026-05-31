@@ -89,7 +89,7 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
     }
 
     public static int Depth(SymbolTable? stopPoint, SymbolTable? startPoint)
-    {   
+    {
         if (stopPoint == null || startPoint == null) return -1;
         if (stopPoint == startPoint) return 0;
 

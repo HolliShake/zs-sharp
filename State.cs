@@ -3,7 +3,6 @@ namespace zscript;
 public class State
 {
     public readonly AutoLoader AutoLoader = new();
-    public readonly 
     public readonly List<Code> Codes = [];
     public readonly List<ZsValue> Constants = [];
     public readonly List<string> ModuleNames = [];
