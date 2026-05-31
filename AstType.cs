@@ -56,6 +56,7 @@ public enum AstType
     AstCase,
     AstBlock,
     AstPrint,
+    AstContinue,
     AstBreak,
     AstReturn,
     AstExpressionStatement,

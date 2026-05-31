@@ -647,6 +647,8 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check("switch")) return Switch();
         if (Check("{")) return Block();
         if (Check("print")) return Print();
+        if (Check("continue")) return Continue();
+        if (Check("break")) return Break();
         if (Check("return")) return Return();
         return ExpressionStatement();
     }
@@ -1071,6 +1073,24 @@ public class Parser(string path, string source) : Lexer(path, source)
 
         Expect(";");
         return Ast.CreatePrintNode(argumentHead!, position);
+    }
+    
+    private Ast Continue()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("continue");
+        Expect(";");
+        return Ast.CreateBreakNode(position);
+    }
+    
+    private Ast Break()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect("break");
+        Expect(";");
+        return Ast.CreateBreakNode(position);
     }
 
     private Ast Return()

@@ -174,3 +174,27 @@ println(c());
 println(c());
 println(c());
 
+
+(fn(param) {
+    println(param);
+})("Hello World!");
+
+try {
+    local x = 2;
+    while (x < 10) {
+        try {
+            try {
+                println(x);
+                if (x == 5)
+                    break;
+                x = x + 1;
+            } catch (err) {
+                print "CATCH";
+            }
+        } catch (err) {
+            print "CATCH";
+        }
+    }
+} catch (err) {
+    print "CATCH";
+}

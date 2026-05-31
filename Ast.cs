@@ -200,6 +200,16 @@ public class Ast
             A = parameterHead
         };
     }
+    
+    public static Ast CreateContinueNode(Position position)
+    {
+        return new Ast(AstType.AstContinue, position);
+    }
+    
+    public static Ast CreateBreakNode(Position position)
+    {
+        return new Ast(AstType.AstBreak, position);
+    }
 
     public static Ast CreateReturnNode(Ast? expression, Position position)
     {

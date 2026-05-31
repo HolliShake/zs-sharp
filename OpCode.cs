@@ -39,6 +39,7 @@ public enum OpCode : byte
     PopTop,
     SetupTry,
     PopTry,
+    PopNTry,
     Jump,
     AbsJump,
     JumpIfFalseOrPop,

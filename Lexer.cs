@@ -25,6 +25,7 @@ public class Lexer(string path, string source)
         "for",
         "while",
         "do",
+        "break",
         "print",
         "true",
         "false",

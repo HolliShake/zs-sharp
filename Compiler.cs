@@ -526,19 +526,46 @@ public class Compiler : Parser
     private void Break(Code code, SymbolTable table, Ast node)
     {
         var nearestLoop = table.GetNearestParent(ScopeType.Loop);
-        var nearestTry = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+        if (nearestLoop == null) ErrorHandler.CompileError(Path, Source, "break outside loop", node.Position);
 
-        if (nearestLoop == null) ErrorHandler.CompileError(Path, Source, "Break outside loop", node.Position);
-
-        // is there a try scope between us and the loop?
-        var tryWrapsLoop = SymbolTable.IsAncestorOf(nearestTry, nearestLoop);
-
-        if (nearestTry != null && tryWrapsLoop)
-            // must PopTry before jumping out
-            nearestTry.AddBreakSignal(code.EmitJump(OpCode.Jump));
-        else
-            // loop and break are in the same try scope — plain jump is safe
+        var tryScope = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+        var loopWrapsTry = SymbolTable.IsAncestorOf(nearestLoop, tryScope);
+        /*
+            // loop wraps try, where loop is for, while or do
+            loop () {
+                try {
+                    try {
+                        break;
+                        rest of codes...
+                    } catch (err) {
+                        break;
+                        rest of codes...
+                    }
+                } catch (err) {
+                    rest of codes...
+                }
+            }
+         */
+        
+        if (loopWrapsTry)
+        {
+            var depth = SymbolTable.Depth(nearestLoop, tryScope);
+            Console.WriteLine($"Depth of loop: {depth}");
+            // We need to pop the try scope.
+            code.EmitLine(ModuleId, node.Position.Line);
+            if (depth == 1) code.Emit(OpCode.PopTry);
+            else code.Emit(OpCode.PopNTry, depth);
+            
+            // Jump
+            code.EmitLine(ModuleId, node.Position.Line);
             nearestLoop?.AddBreakSignal(code.EmitJump(OpCode.Jump));
+        }
+        else
+        {
+            // Safe
+            code.EmitLine(ModuleId, node.Position.Line);
+            nearestLoop?.AddBreakSignal(code.EmitJump(OpCode.Jump));
+        }
     }
 
     private void Return(Code code, SymbolTable table, Ast node)
@@ -558,6 +585,18 @@ public class Compiler : Parser
         }
 
         var tryScope = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+        /*
+            try {
+                reachable codes
+                return;
+                rest of unreachable codes...
+            } catch (err) {
+                reachable codes
+                return;
+                rest of unreachable codes...
+            }
+         */
+        
         if (tryScope != null)
         {
             code.EmitLine(ModuleId, node.Position.Line);
@@ -786,15 +825,18 @@ public class Compiler : Parser
     private void While(Code code, SymbolTable table, Ast node)
     {
         Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+        var loopTable = new SymbolTable(ScopeType.Loop, table);
         var begin = code.GetCurrent();
-        Expr(code, table, node.A);
+        Expr(code, loopTable, node.A);
         code.EmitLine(ModuleId, node.Position.Line);
         var jumpToEndWhile = code.EmitJump(OpCode.PopJumpIfFalse);
 
-        Stmt(code, table, node.B);
+        Stmt(code, loopTable, node.B);
         code.EmitAbsoluteJump(OpCode.AbsJump, begin);
 
         code.Label(jumpToEndWhile);
+
+        foreach (var breakSignal in loopTable.GetBreakSignals()) code.Label(breakSignal);
     }
 
     private void If(Code code, SymbolTable table, Ast node)

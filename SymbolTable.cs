@@ -88,6 +88,23 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         return false;
     }
 
+    public static int Depth(SymbolTable? stopPoint, SymbolTable? startPoint)
+    {   
+        if (stopPoint == null || startPoint == null) return -1;
+        if (stopPoint == startPoint) return 0;
+
+        var current = startPoint._parent;
+        var depth = 0;
+        while (current != null)
+        {
+            if (current._scopeType == stopPoint._scopeType) return depth;
+            current = current._parent;
+            ++depth;
+        }
+
+        return depth;
+    }
+
     public SymbolTable? GetNearestParent(params ScopeType[] types)
     {
         var current = this;

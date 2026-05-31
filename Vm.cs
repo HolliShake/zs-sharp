@@ -968,6 +968,13 @@ public class Vm
                     frame.PopTryTable();
                     break;
                 }
+                case OpCode.PopNTry:
+                {
+                    var size = ReadInt(frame);
+                    frame.Forward(4);
+                    for (var i = 0;i < size; i++) frame.PopTryTable();
+                    break;
+                }
                 case OpCode.JumpIfFalseOrPop:
                 {
                     var jmp = ReadInt(frame);
