@@ -1,6 +1,6 @@
-﻿const mod = import("./lang.txt");
+﻿
 
-println("From Obi!!!", mod);
+println("From Obi!!!");
 
 const Add = fn(a, b) {
     return a + b;

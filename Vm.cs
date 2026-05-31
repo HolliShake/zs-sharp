@@ -471,7 +471,8 @@ public class Vm
         if (ZsValue.IsInstanceOf(callable, ValueType.NativeFunction))
         {
             var nativeFunction = callable.NativeFunction();
-            return nativeFunction(this, arguments);
+            var reversed = arguments.Reverse().ToArray();
+            return nativeFunction(this, reversed);
         }
 
         var callableCode = callable.Code();
@@ -522,7 +523,8 @@ public class Vm
         if (ZsValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
         {
             var nativeFunction = callableProperty.NativeFunction();
-            return nativeFunction(this, arguments);
+            var removedThis = arguments.Skip(1).Reverse().ToArray();
+            return nativeFunction(this, removedThis);
         }
 
         var callablePropertyCode = callableProperty.Code();
@@ -1162,7 +1164,7 @@ public class Vm
     public void MainLoop(ZsValue globalCodeObject)
     {
         var globalFrame = new Frame(null, globalCodeObject, true, false);
-        State.AutoLoader.InjectObject(globalFrame);
+        State.AutoLoader.InjectObject(this, globalFrame);
 
         Run(globalFrame);
 

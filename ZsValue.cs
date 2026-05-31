@@ -182,7 +182,7 @@ public sealed class ZsValue
     {
         return v.Ref is Dictionary<string, ZsValue> props
                && props.TryGetValue("constructor", out var ctor)
-               && ctor?.Ref is Dictionary<string, ZsValue?> cp
+               && ctor.Ref is Dictionary<string, ZsValue?> cp
             ? cp.GetValueOrDefault("type")?.Ref as string ?? "object"
             : "object";
     }

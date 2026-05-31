@@ -9,10 +9,11 @@ public class AutoLoader
     {
         _autoLoads =
         [
-            new AutoLoad(0, "import", ZsValue.FromNativeFunction(Global.Import)),
-            new AutoLoad(1, "print", ZsValue.FromNativeFunction(Global.Print)),
-            new AutoLoad(2, "println", ZsValue.FromNativeFunction(Global.Println)),
-            new AutoLoad(3, "scan", ZsValue.FromNativeFunction(Global.Scan))
+            new AutoLoad(0, "Math", (Vm vm) => Global.BuildMath(vm)),
+            new AutoLoad(1, "import", (Vm vm) => ZsValue.FromNativeFunction(Global.Import)),
+            new AutoLoad(2, "print", (Vm vm) => ZsValue.FromNativeFunction(Global.Print)),
+            new AutoLoad(3, "println", (Vm vm) => ZsValue.FromNativeFunction(Global.Println)),
+            new AutoLoad(4, "scan", (Vm vm) => ZsValue.FromNativeFunction(Global.Scan))
         ];
 
         InjectedCount = _autoLoads.Count;
@@ -24,16 +25,16 @@ public class AutoLoader
 
     public void InjectSymbol(SymbolTable symbolTable)
     {
-        foreach (var autoLoad in _autoLoads)
+        foreach (var (address, name) in _autoLoads.ToDictionary(x => x.Address, x => x.Name))
         {
-            if (symbolTable.AlreadyExists(autoLoad.Name)) throw new Exception("Autoload already exists");
-            symbolTable.Add(autoLoad.Name, autoLoad.Address, true, new Position(1, 1));
+            if (symbolTable.AlreadyExists(name)) throw new Exception($"Autoload {name} already exists");
+            symbolTable.Add(name, address, true, new Position(1, 1));
         }
     }
 
-    public void InjectObject(Frame frame)
+    public void InjectObject(Vm vm, Frame frame)
     {
         foreach (var autoLoad in _autoLoads)
-            frame.SetEnvVar(autoLoad.Address, autoLoad.Value);
+            frame.SetEnvVar(autoLoad.Address, autoLoad.Callback(vm));
     }
 }

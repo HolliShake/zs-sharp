@@ -6,7 +6,7 @@ public class State
     public readonly AutoLoader AutoLoader = new();
     public readonly List<Code> Codes = [];
     public readonly List<ZsValue> Constants = [];
-    public readonly Dictionary<string, ZsValue> LoadedModules = new();
+    public readonly Dictionary<string, ZsValue?> LoadedModules = new();
     public readonly List<string> ModuleNames = [];
 
     public void PushDir(string dir)

@@ -197,4 +197,4 @@ try {
 
 const { Add: myAdd } = import("./lang.obi");
 
-println(myAdd(1, 1000));
+println(myAdd(1, 1000), Math, Math->PI);
