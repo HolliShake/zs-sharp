@@ -4,36 +4,6 @@ namespace zscript;
 
 public class Lexer(string path, string source)
 {
-    private static readonly HashSet<string> Keywords =
-    [
-        "class",
-        "constructor",
-        "base",
-        "fn",
-        "async",
-        "await",
-        "return",
-        "var",
-        "local",
-        "const",
-        "try",
-        "catch",
-        "if",
-        "switch",
-        "case",
-        "default",
-        "for",
-        "while",
-        "do",
-        "break",
-        "print",
-        "true",
-        "false",
-        "null",
-        "is",
-        "not"
-    ];
-
     protected readonly string Path = path;
     protected readonly string Source = source;
     private int _colm = 1;
@@ -150,7 +120,7 @@ public class Lexer(string path, string source)
         }
 
         var name = Source[startPos.._indx];
-        var type = Keywords.Contains(name) ? TokenType.Key : TokenType.Idn;
+        var type = Keyword.IsKeyword(name) ? TokenType.Key : TokenType.Idn;
         return new Token(type, name, new Position(startLine, startColumn));
     }
 
