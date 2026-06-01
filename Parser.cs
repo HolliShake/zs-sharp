@@ -70,7 +70,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 Expect(TokenType.Str);
                 return strNode;
             }
-            default: return null;
+            default: throw new NotImplementedException($"Unexpected token type {Lookahead.Type}.");
         }
     }
 
