@@ -215,4 +215,9 @@ while (i < callbacks->length()) {
 }
 
 
-callbacks[1000];
+
+var items = [];
+
+items->push(1,2,3);
+
+println(items);
