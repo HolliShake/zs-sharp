@@ -212,7 +212,7 @@ public class Compiler : Parser
                 var argsHead = node.B;
                 var argc = 0;
 
-                if (callable is { Type:AstType.AstMemberAccess or AstType.AstIndex}) Expr(code, table, callable.A!);
+                if (callable is { Type: AstType.AstMemberAccess or AstType.AstIndex }) Expr(code, table, callable.A!);
 
                 while (argsHead != null)
                 {
@@ -224,10 +224,13 @@ public class Compiler : Parser
                 var isMethodCall = callable is { Type: AstType.AstMemberAccess or AstType.AstIndex };
                 if (isMethodCall)
                 {
-                    code.EmitLine(ModuleId, callable.B!.Position.Line);
-                    if (callable.Type == AstType.AstMemberAccess) 
+
+                    if (callable.Type == AstType.AstMemberAccess)
+                    {
+                        code.EmitLine(ModuleId, callable.B!.Position.Line);
                         code.Emit(OpCode.LoadString, callable.B!.Value);
-                    else 
+                    }
+                    else
                         Expr(code, table, callable.B);
                     code.EmitLine(ModuleId, callable.B!.Position.Line);
                     code.Emit(OpCode.CallMethod, argc);

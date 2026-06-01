@@ -200,9 +200,19 @@ println(myAdd(1, 1000), Math, Math->PI, [1,200,3][1]);
 
 
 var callbacks = [
-    fn() {
-        println("from callback!");
+    fn(index) {
+        println("from callback", index);
+    },
+    fn(index) {
+        println("from callback", index);
     }
 ];
 
-callbacks[0]();
+var i = 0;
+while (i < callbacks->length()) {
+    callbacks[i](i);
+    i = i + 1;
+}
+
+
+callbacks[1000];

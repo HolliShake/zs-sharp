@@ -41,7 +41,7 @@
     ];
 
     /// <summary>
-    /// Quick helper for your Lexer/Scanner to check if an identifier is a reserved keyword.
+    ///     Quick helper for your Lexer/Scanner to check if an identifier is a reserved keyword.
     /// </summary>
     public static bool IsKeyword(string identifier)
     {

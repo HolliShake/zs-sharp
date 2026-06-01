@@ -6,9 +6,9 @@ namespace zscript;
 
 public class Vm : IDisposable
 {
-    private readonly ZsValue _indexErrorClass;
     private readonly ZsValue _attributeErrorClass;
     private readonly Queue<ZsValue> _deferredTasks = new();
+    private readonly ZsValue _indexErrorClass;
     private readonly ZsValue _zeroDivideErrorClass;
     public readonly ZsValue ErrorClass;
     public readonly ZsValue FalseSingleton;
@@ -471,13 +471,14 @@ public class Vm : IDisposable
                    BuildTracebackFromFrame()
                );
     }
-    
+
     private ZsValue DoGetIndex(Frame frame)
     {
         var index = frame.PopOperand();
         var zsObject = frame.PopOperand();
 
-        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array) && (ZsValue.IsInstanceOf(index, ValueType.Int) || ZsValue.IsInstanceOf(index, ValueType.Number)))
+        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array) && (ZsValue.IsInstanceOf(index, ValueType.Int) ||
+                                                                ZsValue.IsInstanceOf(index, ValueType.Number)))
         {
             var indexValue = index.Int();
             var arr = zsObject.Array();
@@ -486,6 +487,7 @@ public class Vm : IDisposable
                 ? arr[indexValue]
                 : ZsValue.FromErrorMessage(_indexErrorClass, "index out of bounds", BuildTracebackFromFrame());
         }
+
         if (ZsValue.IsInstanceOf(zsObject, "Object"))
         {
             var attr = zsObject.String();
@@ -497,10 +499,10 @@ public class Vm : IDisposable
                        BuildTracebackFromFrame()
                    );
         }
-        
+
         return ZsValue.FromErrorMessage(
             _attributeErrorClass,
-            $"value cannot be indexed",
+            "value cannot be indexed",
             BuildTracebackFromFrame()
         );
     }
@@ -550,13 +552,18 @@ public class Vm : IDisposable
         frame.PopOperand();
 
         var memberNameString = memberName.ToString();
-        
+
         if (
             ZsValue.IsInstanceOf(zsObject, ValueType.Future)
             && Future.HasMethod(memberNameString)
         )
             return Future.GetMethod(memberNameString)(this, arguments);
-        
+        else if (
+            ZsValue.IsInstanceOf(zsObject, ValueType.Array)
+            && Array.HasMethod(memberNameString)
+        )
+            return Array.GetMethod(memberNameString)(this, arguments);
+
         ZsValue? callableProperty = null;
 
         if (ZsValue.IsInstanceOf(zsObject, ValueType.Array))
@@ -572,8 +579,8 @@ public class Vm : IDisposable
         {
             callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
         }
-        
-        
+
+
         if (callableProperty == null)
             return ZsValue.FromErrorMessage(
                 ErrorClass,
@@ -822,6 +829,7 @@ public class Vm : IDisposable
                         RaiseOrHandleException(frame, index);
                         break;
                     }
+
                     frame.PushOperand(index);
                     break;
                 }
