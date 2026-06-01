@@ -197,6 +197,14 @@ public class Compiler : Parser
                 code.Emit(OpCode.GetAttr, node.B.Value);
                 break;
             }
+            case AstType.AstIndex:
+            {
+                Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+                Expr(code, table, node.A);
+                Expr(code, table, node.B);
+                code.Emit(OpCode.GetIndex);
+                break;
+            }
             case AstType.AstFunctionCall:
             {
                 Debug.Assert(node is { A: not null }, "node.A is null");
@@ -204,7 +212,7 @@ public class Compiler : Parser
                 var argsHead = node.B;
                 var argc = 0;
 
-                if (callable.Type == AstType.AstMemberAccess) Expr(code, table, callable.A!);
+                if (callable is { Type:AstType.AstMemberAccess or AstType.AstIndex}) Expr(code, table, callable.A!);
 
                 while (argsHead != null)
                 {
@@ -213,11 +221,14 @@ public class Compiler : Parser
                     ++argc;
                 }
 
-                var isMethodCall = callable.Type == AstType.AstMemberAccess;
+                var isMethodCall = callable is { Type: AstType.AstMemberAccess or AstType.AstIndex };
                 if (isMethodCall)
                 {
                     code.EmitLine(ModuleId, callable.B!.Position.Line);
-                    code.Emit(OpCode.LoadString, callable.B!.Value);
+                    if (callable.Type == AstType.AstMemberAccess) 
+                        code.Emit(OpCode.LoadString, callable.B!.Value);
+                    else 
+                        Expr(code, table, callable.B);
                     code.EmitLine(ModuleId, callable.B!.Position.Line);
                     code.Emit(OpCode.CallMethod, argc);
                 }

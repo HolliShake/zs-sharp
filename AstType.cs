@@ -12,6 +12,7 @@ public enum AstType
     AstArrayLiteral,
     AstObjectLiteral,
     AstMemberAccess,
+    AstIndex,
     AstFunctionCall,
     AstAwait,
     AstSpread,

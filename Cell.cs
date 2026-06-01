@@ -14,6 +14,7 @@ public class Cell(ZsValue? value)
 
     public void DecRef()
     {
+        if (_refCount == 0) return;
         _refCount--;
     }
 }

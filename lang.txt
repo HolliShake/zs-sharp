@@ -1,6 +1,5 @@
 
 
-
 fn willThrow() async {
     2 + "focc!";
     println("HEHE!");
@@ -197,4 +196,13 @@ try {
 
 const { Add: myAdd } = import("./lang.obi");
 
-println(myAdd(1, 1000), Math, Math->PI);
+println(myAdd(1, 1000), Math, Math->PI, [1,200,3][1]);
+
+
+var callbacks = [
+    fn() {
+        println("from callback!");
+    }
+];
+
+callbacks[0]();

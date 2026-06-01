@@ -6,6 +6,7 @@ namespace zscript;
 
 public class Vm : IDisposable
 {
+    private readonly ZsValue _indexErrorClass;
     private readonly ZsValue _attributeErrorClass;
     private readonly Queue<ZsValue> _deferredTasks = new();
     private readonly ZsValue _zeroDivideErrorClass;
@@ -28,6 +29,7 @@ public class Vm : IDisposable
         _attributeErrorClass = ZsValue.CreateZsClass(ErrorClass, "AttributeError");
         TypeErrorClass = ZsValue.CreateZsClass(ErrorClass, "TypeError");
         _zeroDivideErrorClass = ZsValue.CreateZsClass(ErrorClass, "ZeroDivideError");
+        _indexErrorClass = ZsValue.CreateZsClass(ErrorClass, "IndexError");
         FutureClass = ZsValue.CreateZsClass(ObjectClass, "Future");
         NullSingleton = ZsValue.CreateNull();
         TrueSingleton = ZsValue.FromBool(true);
@@ -469,6 +471,39 @@ public class Vm : IDisposable
                    BuildTracebackFromFrame()
                );
     }
+    
+    private ZsValue DoGetIndex(Frame frame)
+    {
+        var index = frame.PopOperand();
+        var zsObject = frame.PopOperand();
+
+        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array) && (ZsValue.IsInstanceOf(index, ValueType.Int) || ZsValue.IsInstanceOf(index, ValueType.Number)))
+        {
+            var indexValue = index.Int();
+            var arr = zsObject.Array();
+            var len = arr.Count;
+            return indexValue >= 0 && indexValue < len
+                ? arr[indexValue]
+                : ZsValue.FromErrorMessage(_indexErrorClass, "index out of bounds", BuildTracebackFromFrame());
+        }
+        if (ZsValue.IsInstanceOf(zsObject, "Object"))
+        {
+            var attr = zsObject.String();
+            var attribute = ZsValue.GetProperty(zsObject, attr);
+            return attribute
+                   ?? ZsValue.FromErrorMessage(
+                       _attributeErrorClass,
+                       $"value has no attribute {attr}",
+                       BuildTracebackFromFrame()
+                   );
+        }
+        
+        return ZsValue.FromErrorMessage(
+            _attributeErrorClass,
+            $"value cannot be indexed",
+            BuildTracebackFromFrame()
+        );
+    }
 
     private ZsValue DoCall(Frame frame, int arg)
     {
@@ -514,14 +549,31 @@ public class Vm : IDisposable
         // Pop this
         frame.PopOperand();
 
-        var memberNameString = memberName.String();
+        var memberNameString = memberName.ToString();
+        
         if (
             ZsValue.IsInstanceOf(zsObject, ValueType.Future)
             && Future.HasMethod(memberNameString)
         )
             return Future.GetMethod(memberNameString)(this, arguments);
+        
+        ZsValue? callableProperty = null;
 
-        var callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
+        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array))
+        {
+            var indexValue = memberName.Int();
+            var arr = zsObject.Array();
+            var len = arr.Count;
+            callableProperty ??= indexValue >= 0 && indexValue < len
+                ? arr[indexValue]
+                : callableProperty;
+        }
+        else if (ZsValue.IsInstanceOf(zsObject, "Object"))
+        {
+            callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
+        }
+        
+        
         if (callableProperty == null)
             return ZsValue.FromErrorMessage(
                 ErrorClass,
@@ -760,6 +812,17 @@ public class Vm : IDisposable
                     }
 
                     frame.PushOperand(attribute);
+                    break;
+                }
+                case OpCode.GetIndex:
+                {
+                    var index = DoGetIndex(frame);
+                    if (ZsValue.IsInstanceOf(index, "Error"))
+                    {
+                        RaiseOrHandleException(frame, index);
+                        break;
+                    }
+                    frame.PushOperand(index);
                     break;
                 }
                 case OpCode.Call:

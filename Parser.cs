@@ -70,7 +70,7 @@ public class Parser(string path, string source) : Lexer(path, source)
                 Expect(TokenType.Str);
                 return strNode;
             }
-            default: throw new NotImplementedException($"Unexpected token type {Lookahead.Type}.");
+            default: return null;
         }
     }
 
@@ -307,7 +307,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         var node = Group();
         if (node == null) return node;
 
-        while (Check("->") || Check("("))
+        while (Check("->") || Check("[") || Check("("))
             if (Check("->"))
             {
                 Expect("->");
@@ -320,6 +320,13 @@ public class Parser(string path, string source) : Lexer(path, source)
                 node = Ast.CreateMemberAccessNode(
                     node, member, node.Position
                 );
+            }
+            else if (Check("["))
+            {
+                Expect("[");
+                var index = Expression(false);
+                Expect("]");
+                node = Ast.CreateIndexNode(node, index!, node.Position);
             }
             else if (Check("("))
             {

@@ -83,6 +83,15 @@ public class Ast : IDisposable
         };
     }
 
+    public static Ast CreateIndexNode(Ast indexable, Ast index, Position position)
+    {
+        return new Ast(AstType.AstIndex, position)
+        {
+            A = indexable,
+            B = index
+        };
+    }
+
     public static Ast CreateFunctionCallNode(Ast callable, Ast? argumentHead, Position position)
     {
         return new Ast(AstType.AstFunctionCall, position)

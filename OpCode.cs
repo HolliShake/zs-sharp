@@ -16,6 +16,7 @@ public enum OpCode : byte
     Print,
     GetAttr,
     GetAttrOrPopDup,
+    GetIndex,
     Call,
     CallMethod,
     Await,
