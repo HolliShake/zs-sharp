@@ -2,13 +2,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
-public sealed class ZsValue
+public sealed class ObValue
 {
     // ── Single constructor ────────────────────────────────────────────────────
 
-    private ZsValue(ValueType type, double num = 0d, object? reference = null)
+    private ObValue(ValueType type, double num = 0d, object? reference = null)
     {
         Type = type;
         Num = num;
@@ -21,84 +21,84 @@ public sealed class ZsValue
 
     // ── Factories ─────────────────────────────────────────────────────────────
 
-    public static ZsValue FromArray(List<ZsValue> values)
+    public static ObValue FromArray(List<ObValue> values)
     {
-        return new ZsValue(ValueType.Array, reference: values);
+        return new ObValue(ValueType.Array, reference: values);
     }
 
-    public static ZsValue FromCodeToScript(Code code)
+    public static ObValue FromCodeToScript(Code code)
     {
-        return new ZsValue(ValueType.Script, reference: code);
+        return new ObValue(ValueType.Script, reference: code);
     }
 
-    public static ZsValue FromCodeToFunction(Code code)
+    public static ObValue FromCodeToFunction(Code code)
     {
-        return new ZsValue(ValueType.Function, reference: code);
+        return new ObValue(ValueType.Function, reference: code);
     }
 
-    public static ZsValue FromInt(int value)
+    public static ObValue FromInt(int value)
     {
-        return new ZsValue(ValueType.Int, value);
+        return new ObValue(ValueType.Int, value);
     }
 
-    public static ZsValue FromNumber(double value)
+    public static ObValue FromNumber(double value)
     {
-        return new ZsValue(ValueType.Number, value);
+        return new ObValue(ValueType.Number, value);
     }
 
-    public static ZsValue FromBool(bool value)
+    public static ObValue FromBool(bool value)
     {
-        return new ZsValue(ValueType.Bool, value ? 1d : 0d);
+        return new ObValue(ValueType.Bool, value ? 1d : 0d);
     }
 
-    public static ZsValue FromString(string value)
+    public static ObValue FromString(string value)
     {
-        return new ZsValue(ValueType.String, reference: value);
+        return new ObValue(ValueType.String, reference: value);
     }
 
-    public static ZsValue FromFuture(Future future)
+    public static ObValue FromFuture(Future future)
     {
-        return new ZsValue(ValueType.Future, reference: future);
+        return new ObValue(ValueType.Future, reference: future);
     }
 
-    public static ZsValue CreateNull()
+    public static ObValue CreateNull()
     {
-        return new ZsValue(ValueType.Null);
+        return new ObValue(ValueType.Null);
     }
 
-    public static ZsValue FromNativeFunction(Func<Vm, ZsValue[], ZsValue> impl)
+    public static ObValue FromNativeFunction(Func<Vm, ObValue[], ObValue> impl)
     {
-        return new ZsValue(ValueType.NativeFunction, reference: impl);
+        return new ObValue(ValueType.NativeFunction, reference: impl);
     }
 
-    public static ZsValue CreateZsClass(ZsValue? baseClass, string type)
+    public static ObValue CreateObClass(ObValue? baseClass, string type)
     {
         Debug.Assert(baseClass is null or { Type: ValueType.Class }, "Parent is not a class.");
-        return new ZsValue(ValueType.Class, reference: new Dictionary<string, ZsValue?>
+        return new ObValue(ValueType.Class, reference: new Dictionary<string, ObValue?>
         {
             ["base"] = baseClass,
             ["type"] = FromString(type)
         });
     }
 
-    public static ZsValue CreateZsObject(
-        ValueType type, ZsValue zsClass, Dictionary<string, ZsValue> properties)
+    public static ObValue CreateObObject(
+        ValueType type, ObValue zsClass, Dictionary<string, ObValue> properties)
     {
         Debug.Assert(zsClass.Type == ValueType.Class, "Parent is not a class.");
-        return new ZsValue(type, reference: BuildProps(zsClass, properties));
+        return new ObValue(type, reference: BuildProps(zsClass, properties));
     }
 
-    public static ZsValue CreateZsObjectLiteral(
-        ZsValue zsClass, Dictionary<string, ZsValue> properties)
+    public static ObValue CreateObObjectLiteral(
+        ObValue zsClass, Dictionary<string, ObValue> properties)
     {
         Debug.Assert(zsClass.Type == ValueType.Class, "Parent is not a class.");
-        return new ZsValue(ValueType.ObjectLiteral, reference: BuildProps(zsClass, properties));
+        return new ObValue(ValueType.ObjectLiteral, reference: BuildProps(zsClass, properties));
     }
 
-    public static ZsValue FromErrorMessage(ZsValue zsErrorClass, string errorMessage, string traceback)
+    public static ObValue FromErrorMessage(ObValue zsErrorClass, string errorMessage, string traceback)
     {
         Debug.Assert(IsExtensionOf(zsErrorClass, "Error"), "Ref is not error class.");
-        return CreateZsObject(ValueType.Error, zsErrorClass, new Dictionary<string, ZsValue>
+        return CreateObObject(ValueType.Error, zsErrorClass, new Dictionary<string, ObValue>
         {
             ["message"] = FromString(errorMessage),
             ["traceback"] = FromString(traceback)
@@ -114,9 +114,9 @@ public sealed class ZsValue
         return (Code)Ref;
     }
 
-    public Func<Vm, ZsValue[], ZsValue> NativeFunction()
+    public Func<Vm, ObValue[], ObValue> NativeFunction()
     {
-        return (Func<Vm, ZsValue[], ZsValue>)Ref!;
+        return (Func<Vm, ObValue[], ObValue>)Ref!;
     }
 
     public Future Future()
@@ -151,15 +151,15 @@ public sealed class ZsValue
         return (string)Ref;
     }
 
-    public List<ZsValue> Array()
+    public List<ObValue> Array()
     {
         Debug.Assert(this is { Type: ValueType.Array, Ref: not null }, "Ref is not an array or is null.");
-        return (List<ZsValue>)Ref;
+        return (List<ObValue>)Ref;
     }
 
     // ── Type helpers ──────────────────────────────────────────────────────────
 
-    public string GetZsType()
+    public string GetObType()
     {
         return Type switch
         {
@@ -175,30 +175,30 @@ public sealed class ZsValue
             ValueType.Null => "null",
             ValueType.Error or
                 ValueType.ObjectLiteral or
-                ValueType.Object => GetInternalType(this),
+                ValueType.Object when IsInstanceOf(this, "Object") => GetInternalType(this),
             _ => throw new InvalidSwitchValueException($"type {Type} not implemented")
         };
     }
 
-    private static string GetInternalType(ZsValue v)
+    private static string GetInternalType(ObValue v)
     {
-        return v.Ref is Dictionary<string, ZsValue> props
+        return v.Ref is Dictionary<string, ObValue> props
                && props.TryGetValue("constructor", out var ctor)
-               && ctor.Ref is Dictionary<string, ZsValue?> cp
+               && ctor.Ref is Dictionary<string, ObValue?> cp
             ? cp.GetValueOrDefault("type")?.Ref as string ?? "object"
             : "object";
     }
 
     // ── Instance / Extension checks ───────────────────────────────────────────
 
-    public static bool IsInstanceOf(ZsValue zsValue, ValueType type)
+    public static bool IsInstanceOf(ObValue zsValue, ValueType type)
     {
         return zsValue.Type == type;
     }
 
-    public static bool IsInstanceOf(ZsValue zsValue, string className)
+    public static bool IsInstanceOf(ObValue zsValue, string className)
     {
-        if (zsValue.Ref is not Dictionary<string, ZsValue> props
+        if (zsValue.Ref is not Dictionary<string, ObValue> props
             || zsValue.Type is not (ValueType.Object or ValueType.ObjectLiteral or ValueType.Error))
             return false;
 
@@ -206,15 +206,15 @@ public sealed class ZsValue
                && WalkClassChain(ctor, className);
     }
 
-    private static bool IsExtensionOf(ZsValue zsValue, string className)
+    private static bool IsExtensionOf(ObValue zsValue, string className)
     {
         return WalkClassChain(zsValue, className);
     }
 
     // shared chain walk — avoids duplicating the while loop
-    private static bool WalkClassChain(ZsValue? current, string targetName)
+    private static bool WalkClassChain(ObValue? current, string targetName)
     {
-        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> cp })
+        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ObValue?> cp })
         {
             if (cp.GetValueOrDefault("type")?.Ref is string name && name == targetName)
                 return true;
@@ -226,9 +226,9 @@ public sealed class ZsValue
 
     // ── Property access ───────────────────────────────────────────────────────
 
-    public static ZsValue? GetProperty(ZsValue zsValue, string propertyName)
+    public static ObValue? GetProperty(ObValue zsValue, string propertyName)
     {
-        if (zsValue.Ref is not Dictionary<string, ZsValue> props
+        if (zsValue.Ref is not Dictionary<string, ObValue> props
             || zsValue is not { Type: ValueType.Object or ValueType.ObjectLiteral or ValueType.Error })
             return null;
 
@@ -238,7 +238,7 @@ public sealed class ZsValue
         if (!props.TryGetValue("constructor", out var current))
             return null;
 
-        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ZsValue?> cp })
+        while (current is { Type: ValueType.Class, Ref: Dictionary<string, ObValue?> cp })
         {
             if (cp.TryGetValue(propertyName, out var classVal) && classVal is not null)
                 return classVal;
@@ -260,10 +260,10 @@ public sealed class ZsValue
             ValueType.NativeFunction when Ref is not null => "[native function]",
             ValueType.Error when Ref is not null => FormatError(),
             ValueType.Object when Ref is not null
-                => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Ref, false),
+                => ConvertDictToJsonFormat(GetObType(), (Dictionary<string, ObValue>)Ref, false),
             ValueType.ObjectLiteral when Ref is not null
-                => ConvertDictToJsonFormat(GetZsType(), (Dictionary<string, ZsValue>)Ref, true),
-            ValueType.Array when Ref is not null => ConvertArrayToJsonFormat((List<ZsValue>)Ref),
+                => ConvertDictToJsonFormat(GetObType(), (Dictionary<string, ObValue>)Ref, true),
+            ValueType.Array when Ref is not null => ConvertArrayToJsonFormat((List<ObValue>)Ref),
             ValueType.Future when Ref is not null => FormatFuture(),
             ValueType.Int => ((int)Num).ToString(),
             ValueType.Number => Num.ToString(CultureInfo.InvariantCulture),
@@ -289,26 +289,26 @@ public sealed class ZsValue
 
     private string FormatError()
     {
-        var props = (Dictionary<string, ZsValue>)Ref!;
+        var props = (Dictionary<string, ObValue>)Ref!;
         var message = props.GetValueOrDefault("message")?.Ref as string ?? "unknown error";
         var traceback = props.GetValueOrDefault("traceback")?.Ref as string ?? "";
-        return $"{GetZsType()}: {message}{Environment.NewLine}{traceback}";
+        return $"{GetObType()}: {message}{Environment.NewLine}{traceback}";
     }
 
-    private string FormatValue(ZsValue value, int depth = 0)
+    private string FormatValue(ObValue value, int depth = 0)
     {
         return value.Type switch
         {
             ValueType.Script => "[script]",
             ValueType.Function => "[function]",
             ValueType.NativeFunction => "[native function]",
-            ValueType.Object when value.Ref is Dictionary<string, ZsValue> op
-                => ConvertDictToJsonFormat(value.GetZsType(), op, false, depth),
-            ValueType.ObjectLiteral when value.Ref is Dictionary<string, ZsValue> op
-                => ConvertDictToJsonFormat(value.GetZsType(), op, true, depth),
-            ValueType.Array when value.Ref is List<ZsValue> arr
+            ValueType.Object when value.Ref is Dictionary<string, ObValue> op
+                => ConvertDictToJsonFormat(value.GetObType(), op, false, depth),
+            ValueType.ObjectLiteral when value.Ref is Dictionary<string, ObValue> op
+                => ConvertDictToJsonFormat(value.GetObType(), op, true, depth),
+            ValueType.Array when value.Ref is List<ObValue> arr
                 => ConvertArrayToJsonFormat(arr, depth),
-            ValueType.Class when value.Ref is Dictionary<string, ZsValue?> cp
+            ValueType.Class when value.Ref is Dictionary<string, ObValue?> cp
                 => $"[class {cp.GetValueOrDefault("type")?.Ref as string ?? "?"}]",
             ValueType.Int or ValueType.Number
                 => value.Num.ToString(CultureInfo.InvariantCulture),
@@ -318,7 +318,7 @@ public sealed class ZsValue
         };
     }
 
-    private string ConvertArrayToJsonFormat(List<ZsValue> array, int depth = 0)
+    private string ConvertArrayToJsonFormat(List<ObValue> array, int depth = 0)
     {
         if (array.Count == 0) return "[]";
 
@@ -338,7 +338,7 @@ public sealed class ZsValue
     }
 
     private string ConvertDictToJsonFormat(
-        string typePrefix, Dictionary<string, ZsValue> dict, bool literal, int depth = 0)
+        string typePrefix, Dictionary<string, ObValue> dict, bool literal, int depth = 0)
     {
         var prefix = literal || typePrefix.Length == 0 ? "" : $"{typePrefix} ";
         var indent = Indent(depth + 1);
@@ -369,10 +369,10 @@ public sealed class ZsValue
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private static Dictionary<string, ZsValue> BuildProps(
-        ZsValue zsClass, Dictionary<string, ZsValue> properties)
+    private static Dictionary<string, ObValue> BuildProps(
+        ObValue zsClass, Dictionary<string, ObValue> properties)
     {
-        var result = new Dictionary<string, ZsValue>(properties.Count + 1)
+        var result = new Dictionary<string, ObValue>(properties.Count + 1)
         {
             ["constructor"] = zsClass
         };

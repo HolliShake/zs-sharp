@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
 public class Code(string name, int argCount, bool isAsync) : IDisposable
 {

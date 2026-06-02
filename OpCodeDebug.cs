@@ -1,4 +1,4 @@
-namespace zscript;
+namespace obiwan;
 
 public class OpCodeDebug(int moduleId, int index, int line)
 {

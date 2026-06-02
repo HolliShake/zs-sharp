@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
 public static class ErrorHandler
 {
@@ -52,6 +52,6 @@ public static class ErrorHandler
         }
 
         // 6. Flush the entire buffer to stderr in a single I/O call
-        throw new ZsCompileError(buffer.ToString());
+        throw new ObiwanCompileError(buffer.ToString());
     }
 }

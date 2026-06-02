@@ -1,9 +1,9 @@
-namespace zscript;
+namespace obiwan;
 
-public class Cell(ZsValue? value)
+public class Cell(ObValue? value)
 {
     private int _refCount;
-    public ZsValue? Value = value;
+    public ObValue? Value = value;
 
     public bool IsRef => _refCount > 0;
 

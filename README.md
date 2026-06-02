@@ -1,11 +1,11 @@
-# zscript
+# obiwan
 
 > A lightweight scripting language and interpreter implemented in C# (.NET 8), designed for embedding, scripting, and
 > experimenting with language design.
 
 [![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)](https://dotnet.microsoft.com)
 [![Language](https://img.shields.io/badge/language-C%23-239120?style=flat-square&logo=csharp)](https://github.com/HolliShake/zs-sharp)
-[![AOT](https://img.shields.io/badge/publish-AOT-blue?style=flat-square)](https://github.com/HolliShake/zs-sharp/blob/main/zscript.csproj)
+[![AOT](https://img.shields.io/badge/publish-AOT-blue?style=flat-square)](https://github.com/HolliShake/zs-sharp/blob/main/obiwan.csproj)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 [![Commits](https://img.shields.io/badge/commits-41-orange?style=flat-square)](https://github.com/HolliShake/zs-sharp/commits/main)
 
@@ -28,7 +28,7 @@
 
 ## Example
 
-```zscript
+```obiwan
 fn add(a, b) async {
     return a + b;
 }
@@ -52,7 +52,7 @@ add(0, "foccer")
 
 ### Try/Catch across async boundaries
 
-```zscript
+```obiwan
 fn willThrow() async {
     2 + "focc!";
 }
@@ -70,7 +70,7 @@ caller();
 
 ### Switch expression
 
-```zscript
+```obiwan
 println(switch (val) {
     0 => "zero",
     1 => "one",
@@ -80,7 +80,7 @@ println(switch (val) {
 
 ### Destructuring
 
-```zscript
+```obiwan
 const returnArray = fn() {
     return [1, 2];
 };
@@ -99,14 +99,14 @@ Build and run with .NET 8:
 
 ```sh
 dotnet build
-dotnet run -- -r path/to/script.zs
+dotnet run -- -r path/to/script.obi
 ```
 
 ### CLI Options
 
 | Flag               | Description                 |
 |--------------------|-----------------------------|
-| `-r, --run <path>` | Run a zscript source file   |
+| `-r, --run <path>` | Run an obiwan source file  |
 | `-t, --test`       | Run the internal test suite |
 | `-h, --help`       | Show help                   |
 
@@ -129,7 +129,7 @@ dotnet publish -c Release
 The interpreter is implemented as a classic pipeline:
 
 ```
-Source (.zs)
+Source (.obi)
     │
     ▼
 Lexer.cs          — tokenizes source into a stream of Token/TokenType
@@ -160,18 +160,18 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 | `Frame.cs`                                  | Call-stack frame                 |
 | `Future.cs`, `FutureState.cs`               | Async promise model              |
 | `Cell.cs`                                   | Closure cell (captured variable) |
-| `ZsValue.cs`, `ValueType.cs`                | Runtime value types              |
+| `ObiwanValue.cs`, `ValueType.cs`            | Runtime value types              |
 | `Symbol.cs`, `SymbolTable.cs`               | Name resolution                  |
 | `ScopeType.cs`, `LookupDetail.cs`           | Scope metadata                   |
 | `State.cs`                                  | VM state                         |
 | `TryBlock.cs`                               | Exception-handling frame         |
 | `ErrorHandler.cs`                           | Error dispatch                   |
-| `ZsArithmeticError.cs`, `ZsCompileError.cs` | Error types                      |
+| `InvalidSwitchValueException.cs`, `ObiwanCompileError.cs` | Error types              |
 | `IBuiltin.cs`                               | Builtin function interface       |
 | `Position.cs`                               | Source position tracking         |
-| `lang.txt`                                  | Example zscript program          |
+| `tests/lang.obi`, `tests/import.obi`        | Example obiwan programs          |
 | `test.js`                                   | Test harness (JavaScript)        |
-| `zscript.csproj`                            | Project file (net8.0, AOT)       |
+| `obiwan.csproj`                             | Project file (net8.0, AOT)       |
 
 ---
 
@@ -179,7 +179,7 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 
 ### Comments
 
-```zscript
+```obiwan
 // line comment
 
 /* block
@@ -188,7 +188,7 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 
 ### Variables
 
-```zscript
+```obiwan
 var x = 10;
 const y = 20;
 local z = 30;     // block-scoped
@@ -196,7 +196,7 @@ local z = 30;     // block-scoped
 
 ### Functions
 
-```zscript
+```obiwan
 fn add(a, b) {
     return a + b;
 }
@@ -212,7 +212,7 @@ fn fetch(url) async {
 
 ### Control flow
 
-```zscript
+```obiwan
 if (cond) { ... } else { ... }
 
 while (g < 10) { g = g + 1; }
@@ -226,7 +226,7 @@ switch (val) {
 
 ### Switch expression
 
-```zscript
+```obiwan
 var label = switch (n) {
     0 => "zero",
     1 => "one",
@@ -236,7 +236,7 @@ var label = switch (n) {
 
 ### Arrays and objects
 
-```zscript
+```obiwan
 var arr = [1, 2, 3, 4, 5];
 var obj = {
     Hello: "World",
@@ -246,14 +246,14 @@ var obj = {
 
 ### Destructuring
 
-```zscript
+```obiwan
 var [a, b] = someArray();
 local { key: alias } = someObject();
 ```
 
 ### Async / Await
 
-```zscript
+```obiwan
 fn doWork() async {
     var result = await someAsyncFn();
     return result;
@@ -262,7 +262,7 @@ fn doWork() async {
 
 ### Promise chaining
 
-```zscript
+```obiwan
 asyncFn()
     ->then(fn(data) { return data + 1; })
     ->then(callback)
@@ -271,7 +271,7 @@ asyncFn()
 
 ### Error handling
 
-```zscript
+```obiwan
 try {
     await riskyFn();
 } catch (err) {

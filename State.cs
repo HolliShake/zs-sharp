@@ -1,12 +1,12 @@
-namespace zscript;
+namespace obiwan;
 
 public class State : IDisposable
 {
     private readonly Stack<string> _dirStack = new();
     public readonly AutoLoader AutoLoader = new();
     public readonly List<Code> Codes = [];
-    public readonly List<ZsValue> Constants = [];
-    public readonly Dictionary<string, ZsValue?> LoadedModules = new();
+    public readonly List<ObValue> Constants = [];
+    public readonly Dictionary<string, ObValue?> LoadedModules = new();
     public readonly List<string> ModuleNames = [];
 
     public void Dispose()
@@ -46,7 +46,7 @@ public class State : IDisposable
         if (existingIndex != -1) return existingIndex;
 
         var index = Constants.Count;
-        Constants.Add(ZsValue.FromInt(value));
+        Constants.Add(ObValue.FromInt(value));
         return index;
     }
 
@@ -57,7 +57,7 @@ public class State : IDisposable
         if (existingIndex != -1) return existingIndex;
 
         var index = Constants.Count;
-        Constants.Add(ZsValue.FromNumber(value));
+        Constants.Add(ObValue.FromNumber(value));
         return index;
     }
 
@@ -67,7 +67,7 @@ public class State : IDisposable
         if (existingIndex != -1) return existingIndex;
 
         var index = Constants.Count;
-        Constants.Add(ZsValue.FromString(value));
+        Constants.Add(ObValue.FromString(value));
         return index;
     }
 

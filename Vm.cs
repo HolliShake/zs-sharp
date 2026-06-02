@@ -2,38 +2,38 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
 public class Vm : IDisposable
 {
-    private readonly ZsValue _attributeErrorClass;
-    private readonly Queue<ZsValue> _deferredTasks = new();
-    private readonly ZsValue _indexErrorClass;
-    private readonly ZsValue _zeroDivideErrorClass;
-    public readonly ZsValue ErrorClass;
-    public readonly ZsValue FalseSingleton;
-    public readonly ZsValue FutureClass;
-    public readonly ZsValue NullSingleton;
-    public readonly ZsValue ObjectClass;
-    public readonly Queue<ZsValue> PendingTasks = new();
+    private readonly ObValue _attributeErrorClass;
+    private readonly Queue<ObValue> _deferredTasks = new();
+    private readonly ObValue _indexErrorClass;
+    private readonly ObValue _zeroDivideErrorClass;
+    public readonly ObValue ErrorClass;
+    public readonly ObValue FalseSingleton;
+    public readonly ObValue FutureClass;
+    public readonly ObValue NullSingleton;
+    public readonly ObValue ObjectClass;
+    public readonly Queue<ObValue> PendingTasks = new();
     public readonly State State;
-    public readonly ZsValue TrueSingleton;
-    public readonly ZsValue TypeErrorClass;
+    public readonly ObValue TrueSingleton;
+    public readonly ObValue TypeErrorClass;
     public Frame? CurrentFrame;
 
     public Vm(State state)
     {
         State = state;
-        ObjectClass = ZsValue.CreateZsClass(null, "Object");
-        ErrorClass = ZsValue.CreateZsClass(ObjectClass, "Error");
-        _attributeErrorClass = ZsValue.CreateZsClass(ErrorClass, "AttributeError");
-        TypeErrorClass = ZsValue.CreateZsClass(ErrorClass, "TypeError");
-        _zeroDivideErrorClass = ZsValue.CreateZsClass(ErrorClass, "ZeroDivideError");
-        _indexErrorClass = ZsValue.CreateZsClass(ErrorClass, "IndexError");
-        FutureClass = ZsValue.CreateZsClass(ObjectClass, "Future");
-        NullSingleton = ZsValue.CreateNull();
-        TrueSingleton = ZsValue.FromBool(true);
-        FalseSingleton = ZsValue.FromBool(false);
+        ObjectClass = ObValue.CreateObClass(null, "Object");
+        ErrorClass = ObValue.CreateObClass(ObjectClass, "Error");
+        _attributeErrorClass = ObValue.CreateObClass(ErrorClass, "AttributeError");
+        TypeErrorClass = ObValue.CreateObClass(ErrorClass, "TypeError");
+        _zeroDivideErrorClass = ObValue.CreateObClass(ErrorClass, "ZeroDivideError");
+        _indexErrorClass = ObValue.CreateObClass(ErrorClass, "IndexError");
+        FutureClass = ObValue.CreateObClass(ObjectClass, "Future");
+        NullSingleton = ObValue.CreateNull();
+        TrueSingleton = ObValue.FromBool(true);
+        FalseSingleton = ObValue.FromBool(false);
         CurrentFrame = null;
     }
 
@@ -76,15 +76,15 @@ public class Vm : IDisposable
         return result;
     }
 
-    private ZsValue DoMul(ZsValue a, ZsValue b)
+    private ObValue DoMul(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Number() * b.Number()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Number() * b.Number()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (*)",
                 BuildTracebackFromFrame()
             )
         };
@@ -92,10 +92,10 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoDiv(ZsValue a, ZsValue b)
+    private ObValue DoDiv(ObValue a, ObValue b)
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 _zeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
@@ -104,10 +104,10 @@ public class Vm : IDisposable
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Number() / b.Number()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Number() / b.Number()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (*)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (*)",
                 BuildTracebackFromFrame()
             )
         };
@@ -115,10 +115,10 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoMod(ZsValue a, ZsValue b)
+    private ObValue DoMod(ObValue a, ObValue b)
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 _zeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
@@ -127,10 +127,10 @@ public class Vm : IDisposable
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Number() % b.Number()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Number() % b.Number()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (%)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (%)",
                 BuildTracebackFromFrame()
             )
         };
@@ -138,16 +138,16 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoAdd(ZsValue a, ZsValue b)
+    private ObValue DoAdd(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Number() + b.Number()),
-            (ValueType.String, ValueType.String) => ZsValue.FromString(a.String() + b.String()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Number() + b.Number()),
+            (ValueType.String, ValueType.String) => ObValue.FromString(a.String() + b.String()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (+)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (+)",
                 BuildTracebackFromFrame()
             )
         };
@@ -155,15 +155,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoSub(ZsValue a, ZsValue b)
+    private ObValue DoSub(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Number() - b.Number()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Number() - b.Number()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (-)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (-)",
                 BuildTracebackFromFrame()
             )
         };
@@ -171,15 +171,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoLshift(ZsValue a, ZsValue b)
+    private ObValue DoLshift(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Int() << b.Int()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Int() << b.Int()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<<)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (<<)",
                 BuildTracebackFromFrame()
             )
         };
@@ -187,15 +187,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoRshift(ZsValue a, ZsValue b)
+    private ObValue DoRshift(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Int() >> b.Int()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Int() >> b.Int()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>>)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (>>)",
                 BuildTracebackFromFrame()
             )
         };
@@ -203,7 +203,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoLt(ZsValue a, ZsValue b)
+    private ObValue DoLt(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -211,9 +211,9 @@ public class Vm : IDisposable
                 < b.Number()
                     ? TrueSingleton
                     : FalseSingleton,
-            _ => ZsValue.FromErrorMessage(
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (<)",
                 BuildTracebackFromFrame()
             )
         };
@@ -221,7 +221,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoLe(ZsValue a, ZsValue b)
+    private ObValue DoLe(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -229,9 +229,9 @@ public class Vm : IDisposable
                 <= b.Number()
                     ? TrueSingleton
                     : FalseSingleton,
-            _ => ZsValue.FromErrorMessage(
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (<=)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (<=)",
                 BuildTracebackFromFrame()
             )
         };
@@ -239,7 +239,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoGt(ZsValue a, ZsValue b)
+    private ObValue DoGt(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -247,9 +247,9 @@ public class Vm : IDisposable
                 > b.Number()
                     ? TrueSingleton
                     : FalseSingleton,
-            _ => ZsValue.FromErrorMessage(
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (>)",
                 BuildTracebackFromFrame()
             )
         };
@@ -257,7 +257,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoGe(ZsValue a, ZsValue b)
+    private ObValue DoGe(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -265,9 +265,9 @@ public class Vm : IDisposable
                 >= b.Number()
                     ? TrueSingleton
                     : FalseSingleton,
-            _ => ZsValue.FromErrorMessage(
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (>=)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (>=)",
                 BuildTracebackFromFrame()
             )
         };
@@ -275,7 +275,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoEq(ZsValue a, ZsValue b)
+    private ObValue DoEq(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -290,7 +290,7 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoNe(ZsValue a, ZsValue b)
+    private ObValue DoNe(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
@@ -305,15 +305,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoAnd(ZsValue a, ZsValue b)
+    private ObValue DoAnd(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Int() & b.Int()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Int() & b.Int()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (&)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (&)",
                 BuildTracebackFromFrame()
             )
         };
@@ -321,15 +321,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoOr(ZsValue a, ZsValue b)
+    private ObValue DoOr(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Int() | b.Int()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Int() | b.Int()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (|)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (|)",
                 BuildTracebackFromFrame()
             )
         };
@@ -337,15 +337,15 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoXor(ZsValue a, ZsValue b)
+    private ObValue DoXor(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
         {
             (ValueType.Number or ValueType.Int, ValueType.Number or ValueType.Int) =>
-                ZsValue.FromNumber(a.Int() ^ b.Int()),
-            _ => ZsValue.FromErrorMessage(
+                ObValue.FromNumber(a.Int() ^ b.Int()),
+            _ => ObValue.FromErrorMessage(
                 TypeErrorClass,
-                $"invalid operand types {a.GetZsType()} and {b.GetZsType()} for operator (^)",
+                $"invalid operand types {a.GetObType()} and {b.GetObType()} for operator (^)",
                 BuildTracebackFromFrame()
             )
         };
@@ -353,23 +353,23 @@ public class Vm : IDisposable
         return res;
     }
 
-    private ZsValue DoMakeArray(Frame frame, int size)
+    private ObValue DoMakeArray(Frame frame, int size)
     {
-        var array = new List<ZsValue>(size);
+        var array = new List<ObValue>(size);
         for (var i = 0; i < size; i++)
             array.Add(frame.PopOperand());
         array.Reverse();
-        return ZsValue.FromArray(array);
+        return ObValue.FromArray(array);
     }
 
     private void DoArrayUnpack(Frame frame, int size)
     {
         var array = frame.PopOperand();
-        if (!ZsValue.IsInstanceOf(array, ValueType.Array))
+        if (!ObValue.IsInstanceOf(array, ValueType.Array))
         {
             RaiseOrHandleException(
                 frame,
-                ZsValue.FromErrorMessage(
+                ObValue.FromErrorMessage(
                     TypeErrorClass,
                     "cannot unpack non-iterable",
                     BuildTracebackFromFrame()
@@ -383,7 +383,7 @@ public class Vm : IDisposable
         {
             RaiseOrHandleException(
                 frame,
-                ZsValue.FromErrorMessage(
+                ObValue.FromErrorMessage(
                     TypeErrorClass,
                     "not enough values to unpack",
                     BuildTracebackFromFrame()
@@ -396,9 +396,9 @@ public class Vm : IDisposable
             frame.PushOperand(sharpList[i]);
     }
 
-    private ZsValue DoMakeObject(Frame frame, int size)
+    private ObValue DoMakeObject(Frame frame, int size)
     {
-        var dict = new Dictionary<string, ZsValue>();
+        var dict = new Dictionary<string, ObValue>();
         for (var i = 0; i < size; i++)
         {
             var key = frame.PopOperand().ToString();
@@ -406,17 +406,17 @@ public class Vm : IDisposable
             dict[key] = val;
         }
 
-        return ZsValue.CreateZsObjectLiteral(
+        return ObValue.CreateObObjectLiteral(
             ObjectClass,
             dict.Reverse().ToDictionary(x => x.Key, x => x.Value)
         );
     }
 
-    private ZsValue DoLoadFunction(Frame callerFrame, int off)
+    private ObValue DoLoadFunction(Frame callerFrame, int off)
     {
         var codeObjectTemplate = State.Codes[off];
         var codeObject = codeObjectTemplate.Clone();
-        var function = ZsValue.FromCodeToFunction(codeObject);
+        var function = ObValue.FromCodeToFunction(codeObject);
 
         foreach (var (depth, address, destination) in codeObject.Captures)
         {
@@ -458,63 +458,63 @@ public class Vm : IDisposable
         frame.SetEnvVar(address, val);
     }
 
-    private ZsValue DoGetAttr(Frame frame, string attr, bool pop)
+    private ObValue DoGetAttr(Frame frame, string attr, bool pop)
     {
         var zsObject = frame.PopOperand();
-        var attribute = ZsValue.GetProperty(zsObject, attr);
+        var attribute = ObValue.GetProperty(zsObject, attr);
         if (attribute == null && pop)
             frame.PopOperand();
         return attribute
-               ?? ZsValue.FromErrorMessage(
+               ?? ObValue.FromErrorMessage(
                    _attributeErrorClass,
                    $"object has no attribute {attr}",
                    BuildTracebackFromFrame()
                );
     }
 
-    private ZsValue DoGetIndex(Frame frame)
+    private ObValue DoGetIndex(Frame frame)
     {
         var index = frame.PopOperand();
         var zsObject = frame.PopOperand();
 
-        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array) && (ZsValue.IsInstanceOf(index, ValueType.Int) ||
-                                                                ZsValue.IsInstanceOf(index, ValueType.Number)))
+        if (ObValue.IsInstanceOf(zsObject, ValueType.Array) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
+                                                                ObValue.IsInstanceOf(index, ValueType.Number)))
         {
             var indexValue = index.Int();
             var arr = zsObject.Array();
             var len = arr.Count;
             return indexValue >= 0 && indexValue < len
                 ? arr[indexValue]
-                : ZsValue.FromErrorMessage(_indexErrorClass, "index out of bounds", BuildTracebackFromFrame());
+                : ObValue.FromErrorMessage(_indexErrorClass, "index out of bounds", BuildTracebackFromFrame());
         }
 
-        if (ZsValue.IsInstanceOf(zsObject, "Object"))
+        if (ObValue.IsInstanceOf(zsObject, "Object"))
         {
             var attr = zsObject.String();
-            var attribute = ZsValue.GetProperty(zsObject, attr);
+            var attribute = ObValue.GetProperty(zsObject, attr);
             return attribute
-                   ?? ZsValue.FromErrorMessage(
+                   ?? ObValue.FromErrorMessage(
                        _attributeErrorClass,
                        $"value has no attribute {attr}",
                        BuildTracebackFromFrame()
                    );
         }
 
-        return ZsValue.FromErrorMessage(
+        return ObValue.FromErrorMessage(
             _attributeErrorClass,
             "value cannot be indexed",
             BuildTracebackFromFrame()
         );
     }
 
-    public ZsValue DoCall(Frame frame, int arg)
+    public ObValue DoCall(Frame frame, int arg)
     {
         var callable = frame.PopOperand();
-        var arguments = new ZsValue[arg];
+        var arguments = new ObValue[arg];
         for (var i = 0; i < arg; i++)
             arguments[i] = frame.PopOperand();
 
-        if (ZsValue.IsInstanceOf(callable, ValueType.NativeFunction))
+        if (ObValue.IsInstanceOf(callable, ValueType.NativeFunction))
         {
             var nativeFunction = callable.NativeFunction();
             var reversed = arguments.Reverse().ToArray();
@@ -530,7 +530,7 @@ public class Vm : IDisposable
         callableCode.MergeCaptureToEnvironment(newCallFrame);
 
         return callableCode.ArgCount != arg
-            ? ZsValue.FromErrorMessage(
+            ? ObValue.FromErrorMessage(
                 ErrorClass,
                 $"{callableCode.Name}: arg mismatch {callableCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
@@ -538,13 +538,13 @@ public class Vm : IDisposable
             : Run(newCallFrame);
     }
 
-    private ZsValue DoCallMethod(Frame frame, int arg)
+    private ObValue DoCallMethod(Frame frame, int arg)
     {
         var zsObject = frame.PeekOperandAt(arg + 1);
         var memberName = frame.PopOperand();
 
         // 1. Collect arguments
-        var arguments = new ZsValue[arg + 1];
+        var arguments = new ObValue[arg + 1];
         arguments[0] = zsObject;
         for (var i = 1; i <= arg; i++) arguments[i] = frame.PopOperand();
 
@@ -552,8 +552,8 @@ public class Vm : IDisposable
         frame.PopOperand();
 
         // 2. Cache type checks and defer string allocations
-        var isFuture = ZsValue.IsInstanceOf(zsObject, ValueType.Future);
-        var isArray = ZsValue.IsInstanceOf(zsObject, ValueType.Array);
+        var isFuture = ObValue.IsInstanceOf(zsObject, ValueType.Future);
+        var isArray = ObValue.IsInstanceOf(zsObject, ValueType.Array);
 
         string memberNameString = null;
 
@@ -572,7 +572,7 @@ public class Vm : IDisposable
         }
 
         // 3. Resolve Callable Property
-        ZsValue? callableProperty = null;
+        ObValue? callableProperty = null;
 
         if (isArray)
         {
@@ -581,17 +581,17 @@ public class Vm : IDisposable
 
             if (indexValue >= 0 && indexValue < arr.Count) callableProperty = arr[indexValue];
         }
-        else if (ZsValue.IsInstanceOf(zsObject, "Object"))
+        else if (ObValue.IsInstanceOf(zsObject, "Object"))
         {
             memberNameString ??= memberName.ToString();
-            callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
+            callableProperty = ObValue.GetProperty(zsObject, memberNameString);
         }
 
         // 4. Handle undefined attributes
         if (callableProperty == null)
         {
             memberNameString ??= memberName.ToString();
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 ErrorClass,
                 $"object has no attribute {memberNameString}",
                 BuildTracebackFromFrame()
@@ -599,12 +599,12 @@ public class Vm : IDisposable
         }
 
         // 5. Execute Native Function
-        if (ZsValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
+        if (ObValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
         {
             var nativeFunction = callableProperty.NativeFunction();
 
             // Replaces LINQ arguments.Skip(1).Reverse().ToArray()
-            var removedThis = new ZsValue[arg];
+            var removedThis = new ObValue[arg];
             for (var i = 0; i < arg; i++) removedThis[i] = arguments[arg - i];
 
             return nativeFunction(this, removedThis);
@@ -615,7 +615,7 @@ public class Vm : IDisposable
 
         // Fail-fast on argument mismatch before allocating a new frame
         if (callablePropertyCode.ArgCount != arg)
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 ErrorClass,
                 $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
@@ -632,7 +632,7 @@ public class Vm : IDisposable
         return Run(newCallFrame);
     }
 
-    private void RaiseOrHandleException(Frame thrownByFrame, ZsValue errorValue)
+    private void RaiseOrHandleException(Frame thrownByFrame, ObValue errorValue)
     {
         var current = thrownByFrame;
 
@@ -657,7 +657,7 @@ public class Vm : IDisposable
                 current.Suspend();
 
                 var zsFuture =
-                    current.Future ?? ZsValue.FromFuture(new Future(FutureState.Rejected, current));
+                    current.Future ?? ObValue.FromFuture(new Future(FutureState.Rejected, current));
                 current.SetFutureOrSkip(zsFuture);
 
                 zsFuture.Future().Reject(errorValue, null);
@@ -721,7 +721,7 @@ public class Vm : IDisposable
         return string.Join(Environment.NewLine, sites);
     }
 
-    public ZsValue Run(Frame frame)
+    public ObValue Run(Frame frame)
     {
         CurrentFrame = frame;
         var code = frame.FunctionValue.Code();
@@ -753,7 +753,7 @@ public class Vm : IDisposable
                     {
                         RaiseOrHandleException(
                             frame,
-                            ZsValue.FromErrorMessage(
+                            ObValue.FromErrorMessage(
                                 ErrorClass,
                                 "referenced before assignment",
                                 BuildTracebackFromFrame()
@@ -776,7 +776,7 @@ public class Vm : IDisposable
                 {
                     var str = ReadString(frame);
                     frame.Forward(str.Length + 1);
-                    frame.PushOperand(ZsValue.FromString(str));
+                    frame.PushOperand(ObValue.FromString(str));
                     break;
                 }
                 case OpCode.LoadNull:
@@ -829,7 +829,7 @@ public class Vm : IDisposable
                     var attr = ReadString(frame);
                     frame.Forward(attr.Length + 1);
                     var attribute = DoGetAttr(frame, attr, opcode == OpCode.GetAttrOrPopDup);
-                    if (ZsValue.IsInstanceOf(attribute, "Error"))
+                    if (ObValue.IsInstanceOf(attribute, "Error"))
                     {
                         RaiseOrHandleException(frame, attribute);
                         break;
@@ -841,7 +841,7 @@ public class Vm : IDisposable
                 case OpCode.GetIndex:
                 {
                     var index = DoGetIndex(frame);
-                    if (ZsValue.IsInstanceOf(index, "Error"))
+                    if (ObValue.IsInstanceOf(index, "Error"))
                     {
                         RaiseOrHandleException(frame, index);
                         break;
@@ -855,7 +855,7 @@ public class Vm : IDisposable
                     var arg = ReadInt(frame);
                     frame.Forward(4);
                     var ret = DoCall(frame, arg);
-                    if (ZsValue.IsInstanceOf(ret, "Error"))
+                    if (ObValue.IsInstanceOf(ret, "Error"))
                     {
                         RaiseOrHandleException(frame, ret);
                         break;
@@ -870,7 +870,7 @@ public class Vm : IDisposable
                     var arg = ReadInt(frame);
                     frame.Forward(4);
                     var ret = DoCallMethod(frame, arg);
-                    if (ZsValue.IsInstanceOf(ret, "Error"))
+                    if (ObValue.IsInstanceOf(ret, "Error"))
                     {
                         RaiseOrHandleException(frame, ret);
                         break;
@@ -888,7 +888,7 @@ public class Vm : IDisposable
                 case OpCode.Await:
                 {
                     var zsFuture = frame.PopOperand();
-                    if (!ZsValue.IsInstanceOf(zsFuture, ValueType.Future))
+                    if (!ObValue.IsInstanceOf(zsFuture, ValueType.Future))
                     {
                         frame.PushOperand(zsFuture);
                         break;
@@ -900,7 +900,7 @@ public class Vm : IDisposable
 
                     if (frame.Future == null)
                     {
-                        var future = ZsValue.FromFuture(new Future(FutureState.Pending, frame));
+                        var future = ObValue.FromFuture(new Future(FutureState.Pending, frame));
                         frame.SetFutureOrSkip(future);
                     }
 
@@ -920,7 +920,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoMul(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -934,7 +934,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoDiv(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -948,7 +948,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoMod(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -962,7 +962,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoAdd(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -976,7 +976,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoSub(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -990,7 +990,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoLshift(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1004,7 +1004,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoRshift(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1020,7 +1020,7 @@ public class Vm : IDisposable
 
                     var c = DoLt(b, a);
 
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1034,7 +1034,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoLe(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1048,7 +1048,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoGt(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1062,7 +1062,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoGe(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1076,7 +1076,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoEq(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1090,7 +1090,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoNe(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1104,7 +1104,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoAnd(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1118,7 +1118,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoOr(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1132,7 +1132,7 @@ public class Vm : IDisposable
                     var a = frame.PopOperand();
                     var b = frame.PopOperand();
                     var c = DoXor(b, a);
-                    if (ZsValue.IsInstanceOf(c, "Error"))
+                    if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
                         break;
@@ -1231,7 +1231,7 @@ public class Vm : IDisposable
                         var zsFuture =
                             frame.Future != null!
                                 ? frame.Future
-                                : ZsValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
+                                : ObValue.FromFuture(new Future(FutureState.Fulfill, frame, null!));
 
                         frame.SetFutureOrSkip(zsFuture);
 
@@ -1257,10 +1257,10 @@ public class Vm : IDisposable
         }
 
         // 1 := fail
-        return frame.Future ?? ZsValue.FromInt(1);
+        return frame.Future ?? ObValue.FromInt(1);
     }
 
-    public void MainLoop(ZsValue globalCodeObject)
+    public void MainLoop(ObValue globalCodeObject)
     {
         var globalFrame = new Frame(null, globalCodeObject, true, false);
         State.AutoLoader.InjectObject(this, globalFrame);

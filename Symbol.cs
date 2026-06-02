@@ -1,4 +1,4 @@
-namespace zscript;
+namespace obiwan;
 
 public class Symbol(string name, int offset, bool constant, Position position)
 {

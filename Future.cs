@@ -1,19 +1,19 @@
-namespace zscript;
+namespace obiwan;
 
 public class Future(FutureState initialState, Frame frame) : IBuiltin
 {
     private static readonly string[] Methods = ["then", "error"];
-    private readonly List<ZsValue> _fullFillReactions = [];
-    private readonly List<ZsValue> _rejectReactions = [];
+    private readonly List<ObValue> _fullFillReactions = [];
+    private readonly List<ObValue> _rejectReactions = [];
 
-    public Future(FutureState initialState, Frame frame, ZsValue zsValue)
+    public Future(FutureState initialState, Frame frame, ObValue zsValue)
         : this(initialState, frame)
     {
         Result = zsValue;
     }
 
     public FutureState State { get; private set; } = initialState;
-    public ZsValue? Result { get; private set; }
+    public ObValue? Result { get; private set; }
 
     public Frame SuspendedFrame { get; } = frame;
 
@@ -22,7 +22,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         return Methods.Contains(methodName);
     }
 
-    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName)
+    public static Func<Vm, ObValue[], ObValue> GetMethod(string methodName)
     {
         return methodName switch
         {
@@ -32,7 +32,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         };
     }
 
-    public void FullFill(ZsValue zsValue, Queue<ZsValue>? queue)
+    public void FullFill(ObValue zsValue, Queue<ObValue>? queue)
     {
         State = FutureState.Fulfill;
         Result = zsValue;
@@ -53,7 +53,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         _rejectReactions.Clear();
     }
 
-    public void Reject(ZsValue zsValue, Queue<ZsValue>? queue)
+    public void Reject(ObValue zsValue, Queue<ObValue>? queue)
     {
         State = FutureState.Rejected;
         Result = zsValue;
@@ -77,16 +77,16 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         _rejectReactions.Clear();
     }
 
-    public void AddListener(ZsValue zsValue)
+    public void AddListener(ObValue zsValue)
     {
         _fullFillReactions.Add(zsValue);
         _rejectReactions.Add(zsValue);
     }
 
-    private static ZsValue FutureThenMethod(Vm vm, ZsValue[] arguments)
+    private static ObValue FutureThenMethod(Vm vm, ObValue[] arguments)
     {
         if (arguments.Length != 2)
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 vm.ErrorClass,
                 "arguments must be 2",
                 vm.BuildTracebackFromFrame()
@@ -97,7 +97,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         var callback = arguments[1];
 
         var newFrame = new Frame(null, callback, true, false);
-        var newPromise = ZsValue.FromFuture(new Future(FutureState.Pending, newFrame));
+        var newPromise = ObValue.FromFuture(new Future(FutureState.Pending, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
 
         switch (thisArgFut.State)
@@ -126,10 +126,10 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         return newPromise;
     }
 
-    private static ZsValue FutureErrorMethod(Vm vm, ZsValue[] arguments)
+    private static ObValue FutureErrorMethod(Vm vm, ObValue[] arguments)
     {
         if (arguments.Length != 2)
-            return ZsValue.FromErrorMessage(
+            return ObValue.FromErrorMessage(
                 vm.ErrorClass,
                 "arguments must be 2",
                 vm.BuildTracebackFromFrame()
@@ -140,7 +140,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         var callback = arguments[1];
 
         var newFrame = new Frame(null, callback, true, false);
-        var newPromise = ZsValue.FromFuture(new Future(FutureState.Pending, newFrame));
+        var newPromise = ObValue.FromFuture(new Future(FutureState.Pending, newFrame));
         newFrame.SetFutureOrSkip(newPromise);
 
         switch (thisArgFut.State)

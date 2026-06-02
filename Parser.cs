@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace zscript;
+namespace obiwan;
 
 public class Parser(string path, string source) : Lexer(path, source)
 {

@@ -1,20 +1,20 @@
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
-public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, bool asynchronous) : IDisposable
+public class Frame(Frame? callerFrame, ObValue functionValue, bool callback, bool asynchronous) : IDisposable
 {
-    private readonly Stack<ZsValue> _operands = [];
+    private readonly Stack<ObValue> _operands = [];
     private readonly Stack<TryBlock> _tryCatchTable = [];
     public readonly bool Asynchronous = asynchronous;
     public readonly Frame? CallerFrame = callerFrame;
     public readonly int CodeLen = functionValue.Code().Bytecode.Count;
     public readonly Cell[] Environment = BuildEnvironment(functionValue.Code());
-    public readonly ZsValue FunctionValue = functionValue;
+    public readonly ObValue FunctionValue = functionValue;
     public readonly bool IsCallback = callback; // bug fix: was overwritten to false unconditionally
-    public ZsValue? Future;
+    public ObValue? Future;
     public int Pc;
-    public ZsValue? PendingError;
+    public ObValue? PendingError;
     public bool Suspended { get; private set; }
 
     public void Dispose()
@@ -40,7 +40,7 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         return env;
     }
 
-    public void SetFutureOrSkip(ZsValue future)
+    public void SetFutureOrSkip(ObValue future)
     {
         Future ??= future;
     }
@@ -65,17 +65,17 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         Pc = pc;
     }
 
-    public void PushOperand(ZsValue value)
+    public void PushOperand(ObValue value)
     {
         _operands.Push(value);
     }
 
-    public ZsValue PopOperand()
+    public ObValue PopOperand()
     {
         return _operands.Pop();
     }
 
-    public ZsValue PeekOperand()
+    public ObValue PeekOperand()
     {
         return _operands.Peek();
     }
@@ -85,17 +85,17 @@ public class Frame(Frame? callerFrame, ZsValue functionValue, bool callback, boo
         for (var i = 0; i < size; i++) _operands.Pop();
     }
 
-    public ZsValue PeekOperandAt(int address)
+    public ObValue PeekOperandAt(int address)
     {
         return _operands.ElementAt(address);
     }
 
-    public ZsValue? GetEnvVar(int address)
+    public ObValue? GetEnvVar(int address)
     {
         return Environment[address].Value;
     }
 
-    public void SetEnvVar(int address, ZsValue value)
+    public void SetEnvVar(int address, ObValue value)
     {
         Environment[address].Value = value;
     }

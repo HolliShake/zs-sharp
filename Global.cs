@@ -1,16 +1,16 @@
 ﻿using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
 public static class Global
 {
-    public static ZsValue Import(Vm vm, ZsValue[] args)
+    public static ObValue Import(Vm vm, ObValue[] args)
     {
         // 1. Validate arguments
         if (args.Length != 1)
-            return ZsValue.FromErrorMessage(vm.ErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
-        if (!ZsValue.IsInstanceOf(args[0], ValueType.String))
-            return ZsValue.FromErrorMessage(vm.TypeErrorClass, "import expects a string", vm.BuildTracebackFromFrame());
+            return ObValue.FromErrorMessage(vm.ErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
+        if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+            return ObValue.FromErrorMessage(vm.TypeErrorClass, "import expects a string", vm.BuildTracebackFromFrame());
 
         var moduleQualifiedPath = args[0].String();
         var cwd = vm.State.PeekDir();
@@ -21,7 +21,7 @@ public static class Global
 
         // 3. Check if the file actually exists
         if (!File.Exists(moduleFilePath))
-            return ZsValue.FromErrorMessage(vm.ErrorClass, $"Module not found: {moduleFilePath}",
+            return ObValue.FromErrorMessage(vm.ErrorClass, $"Module not found: {moduleFilePath}",
                 vm.BuildTracebackFromFrame());
 
         // 4. Cache & CIRCULAR IMPORT Check
@@ -29,7 +29,7 @@ public static class Global
         {
             // If the module is in the cache but is 'null', it means we are currently inside its vm.Run() execution!
             if (cachedModule == null)
-                return ZsValue.FromErrorMessage(
+                return ObValue.FromErrorMessage(
                     vm.ErrorClass,
                     $"Circular import detected. '{moduleQualifiedPath}' is already being loaded.",
                     vm.BuildTracebackFromFrame()
@@ -40,7 +40,7 @@ public static class Global
         // 5. Get the directory
         var moduleDir = Path.GetDirectoryName(moduleFilePath);
         if (moduleDir == null)
-            return ZsValue.FromErrorMessage(vm.ErrorClass, "Failed to get module directory",
+            return ObValue.FromErrorMessage(vm.ErrorClass, "Failed to get module directory",
                 vm.BuildTracebackFromFrame());
 
         vm.State.PushDir(moduleDir);
@@ -68,7 +68,7 @@ public static class Global
         }
         catch (Exception ex)
         {
-            return ZsValue.FromErrorMessage(vm.ErrorClass, $"Failed to import module: {ex.Message}",
+            return ObValue.FromErrorMessage(vm.ErrorClass, $"Failed to import module: {ex.Message}",
                 vm.BuildTracebackFromFrame());
         }
         finally
@@ -83,7 +83,7 @@ public static class Global
     }
 
 
-    public static ZsValue Print(Vm vm, ZsValue[] args)
+    public static ObValue Print(Vm vm, ObValue[] args)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < args.Length; i++)
@@ -97,7 +97,7 @@ public static class Global
         return vm.NullSingleton;
     }
 
-    public static ZsValue Println(Vm vm, ZsValue[] args)
+    public static ObValue Println(Vm vm, ObValue[] args)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < args.Length; i++)
@@ -111,99 +111,99 @@ public static class Global
         return vm.NullSingleton;
     }
 
-    public static ZsValue Scan(Vm vm, ZsValue[] args)
+    public static ObValue Scan(Vm vm, ObValue[] args)
     {
         Print(vm, args);
-        return ZsValue.FromString(Console.ReadLine() ?? "Something went wrong.");
+        return ObValue.FromString(Console.ReadLine() ?? "Something went wrong.");
     }
 
-    public static ZsValue OsWin(Vm vm, ZsValue[] args)
+    public static ObValue OsWin(Vm vm, ObValue[] args)
     {
         return OperatingSystem.IsWindows() ? vm.TrueSingleton : vm.FalseSingleton;
     }
 
-    public static ZsValue OsMac(Vm vm, ZsValue[] args)
+    public static ObValue OsMac(Vm vm, ObValue[] args)
     {
         return OperatingSystem.IsMacOS() ? vm.TrueSingleton : vm.FalseSingleton;
     }
 
-    public static ZsValue OsLinux(Vm vm, ZsValue[] args)
+    public static ObValue OsLinux(Vm vm, ObValue[] args)
     {
         return OperatingSystem.IsLinux() ? vm.TrueSingleton : vm.FalseSingleton;
     }
 
-    public static ZsValue GetOsType(Vm vm, ZsValue[] args)
+    public static ObValue GetOsType(Vm vm, ObValue[] args)
     {
-        if (OperatingSystem.IsWindows()) return ZsValue.FromString("windows");
-        if (OperatingSystem.IsMacOS()) return ZsValue.FromString("macos");
-        if (OperatingSystem.IsLinux()) ZsValue.FromString("linux");
+        if (OperatingSystem.IsWindows()) return ObValue.FromString("windows");
+        if (OperatingSystem.IsMacOS()) return ObValue.FromString("macos");
+        if (OperatingSystem.IsLinux()) ObValue.FromString("linux");
 
-        return ZsValue.FromString("unknown");
+        return ObValue.FromString("unknown");
     }
 
-    public static ZsValue BuildMath(Vm instanceOfVm)
+    public static ObValue BuildMath(Vm instanceOfVm)
     {
-        var mathClass = ZsValue.CreateZsClass(instanceOfVm.ObjectClass, "Math");
+        var mathClass = ObValue.CreateObClass(instanceOfVm.ObjectClass, "Math");
 
         // --- HELPER FUNCTIONS ---
         // These drastically reduce boilerplate while maintaining strict type checking
         // and ensuring AOT safety by using strongly typed delegates.
 
-        ZsValue Wrap1Arg(Func<double, double> func, string name)
+        ObValue Wrap1Arg(Func<double, double> func, string name)
         {
-            return ZsValue.FromNativeFunction((vm, args) =>
+            return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 1 argument",
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 1 argument",
                         vm.BuildTracebackFromFrame());
-                if (!ZsValue.IsInstanceOf(args[0], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a number",
+                if (!ObValue.IsInstanceOf(args[0], ValueType.Number))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a number",
                         vm.BuildTracebackFromFrame());
 
-                return ZsValue.FromNumber(func(args[0].Number()));
+                return ObValue.FromNumber(func(args[0].Number()));
             });
         }
 
-        ZsValue Wrap2Args(Func<double, double, double> func, string name)
+        ObValue Wrap2Args(Func<double, double, double> func, string name)
         {
-            return ZsValue.FromNativeFunction((vm, args) =>
+            return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 2)
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 2 arguments",
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 2 arguments",
                         vm.BuildTracebackFromFrame());
-                if (!ZsValue.IsInstanceOf(args[0], ValueType.Number) ||
-                    !ZsValue.IsInstanceOf(args[1], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
+                if (!ObValue.IsInstanceOf(args[0], ValueType.Number) ||
+                    !ObValue.IsInstanceOf(args[1], ValueType.Number))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
                         vm.BuildTracebackFromFrame());
 
-                return ZsValue.FromNumber(func(args[0].Number(), args[1].Number()));
+                return ObValue.FromNumber(func(args[0].Number(), args[1].Number()));
             });
         }
 
-        ZsValue Wrap3Args(Func<double, double, double, double> func, string name)
+        ObValue Wrap3Args(Func<double, double, double, double> func, string name)
         {
-            return ZsValue.FromNativeFunction((vm, args) =>
+            return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 3)
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 3 arguments",
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 3 arguments",
                         vm.BuildTracebackFromFrame());
-                if (!ZsValue.IsInstanceOf(args[0], ValueType.Number) ||
-                    !ZsValue.IsInstanceOf(args[1], ValueType.Number) ||
-                    !ZsValue.IsInstanceOf(args[2], ValueType.Number))
-                    return ZsValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
+                if (!ObValue.IsInstanceOf(args[0], ValueType.Number) ||
+                    !ObValue.IsInstanceOf(args[1], ValueType.Number) ||
+                    !ObValue.IsInstanceOf(args[2], ValueType.Number))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects numbers",
                         vm.BuildTracebackFromFrame());
 
-                return ZsValue.FromNumber(func(args[0].Number(), args[1].Number(), args[2].Number()));
+                return ObValue.FromNumber(func(args[0].Number(), args[1].Number(), args[2].Number()));
             });
         }
 
         // --- BUILD THE DICTIONARY ---
-        var mathMethods = new Dictionary<string, ZsValue>
+        var mathMethods = new Dictionary<string, ObValue>
         {
             // Properties (Constants)
-            ["PI"] = ZsValue.FromNumber(Math.PI),
-            ["E"] = ZsValue.FromNumber(Math.E),
-            ["Tau"] = ZsValue.FromNumber(Math.Tau), // Requires .NET 5+
+            ["PI"] = ObValue.FromNumber(Math.PI),
+            ["E"] = ObValue.FromNumber(Math.E),
+            ["Tau"] = ObValue.FromNumber(Math.Tau), // Requires .NET 5+
 
             // 1-Argument Functions
             ["abs"] = Wrap1Arg(Math.Abs, "abs"),
@@ -251,7 +251,7 @@ public static class Global
             ["clamp"] = Wrap3Args(Math.Clamp, "clamp")
         };
 
-        var instance = ZsValue.CreateZsObject(ValueType.Object, mathClass, mathMethods);
+        var instance = ObValue.CreateObObject(ValueType.Object, mathClass, mathMethods);
         return instance;
     }
 }

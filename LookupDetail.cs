@@ -1,4 +1,4 @@
-namespace zscript;
+namespace obiwan;
 
 public class LookupDetail(Symbol symbol, int depth, bool isLocal)
 {

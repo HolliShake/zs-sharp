@@ -1,4 +1,4 @@
-﻿namespace zscript;
+﻿namespace obiwan;
 
 public class TryBlock(int fromPc, int toPc, int fromLine, int toLine)
 {

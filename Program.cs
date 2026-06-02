@@ -1,4 +1,4 @@
-﻿namespace zscript;
+﻿namespace obiwan;
 
 public static class Program
 {
@@ -75,16 +75,16 @@ public static class Program
 
     private static void RunTestSuite()
     {
-        Console.WriteLine("Initializing zscript internal test harness...");
+        Console.WriteLine("Initializing obiwan internal test harness...");
         // Call your interpreter test runner assertions here!
         Console.WriteLine("All tests passed cleanly.");
     }
 
     private static void PrintHelp()
     {
-        Console.WriteLine("Zscript Execution Engine CLI");
+        Console.WriteLine("Obiwan Execution Engine CLI");
         Console.WriteLine("Usage:");
-        Console.WriteLine("  -r, --run <path>   Path to the zscript source file to execute.");
+        Console.WriteLine("  -r, --run <path>   Path to the obiwan source file to execute.");
         Console.WriteLine("  -t, --test         Execute the internal engine test suite.");
         Console.WriteLine("  -h, --help         Display this help screen.");
     }

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace zscript;
+namespace obiwan;
 
 public class Compiler : Parser
 {
@@ -932,7 +932,7 @@ public class Compiler : Parser
         }
     }
 
-    private ZsValue Program(Ast node, bool asModule)
+    private ObValue Program(Ast node, bool asModule)
     {
         var code = new Code("main", 0, false);
         var globalTable = new SymbolTable(ScopeType.Global, null);
@@ -956,7 +956,7 @@ public class Compiler : Parser
             code.Emit(OpCode.LoadNull);
             code.EmitLine(ModuleId, position.Line);
             code.Emit(OpCode.Return);
-            return ZsValue.FromCodeToScript(code);
+            return ObValue.FromCodeToScript(code);
         }
 
         foreach (var (key, val) in globalTable.Symbols)
@@ -975,10 +975,10 @@ public class Compiler : Parser
         code.EmitLine(ModuleId, position.Line);
         code.Emit(OpCode.Return);
 
-        return ZsValue.FromCodeToScript(code);
+        return ObValue.FromCodeToScript(code);
     }
 
-    public ZsValue CompileAsModule()
+    public ObValue CompileAsModule()
     {
         var ast = Parse();
         var val = Program(ast, true);
@@ -986,7 +986,7 @@ public class Compiler : Parser
         return val;
     }
 
-    public ZsValue Compile()
+    public ObValue Compile()
     {
         var ast = Parse();
         var val = Program(ast, false);

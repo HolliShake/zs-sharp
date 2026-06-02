@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace zscript;
+namespace obiwan;
 
 public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 {

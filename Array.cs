@@ -1,4 +1,4 @@
-namespace zscript;
+namespace obiwan;
 
 public class Array : IBuiltin
 {
@@ -9,7 +9,7 @@ public class Array : IBuiltin
         return Methods.Contains(methodName);
     }
 
-    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName)
+    public static Func<Vm, ObValue[], ObValue> GetMethod(string methodName)
     {
         return methodName switch
         {
@@ -23,57 +23,57 @@ public class Array : IBuiltin
         };
     }
 
-    private static ZsValue ArrayPushMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayPushMethod(Vm vm, ObValue[] args)
     {
         if (args.Length < 2)
-            return ZsValue.FromErrorMessage(vm.ErrorClass, "push() expects at least 1 argument",
+            return ObValue.FromErrorMessage(vm.ErrorClass, "push() expects at least 1 argument",
                 vm.BuildTracebackFromFrame());
         args[0].Array().AddRange(args.Skip(1).Reverse());
         return vm.NullSingleton;
     }
 
-    private static ZsValue ArrayPopMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayPopMethod(Vm vm, ObValue[] args)
     {
         var arr = args[0].Array();
         if (arr.Count == 0)
-            return ZsValue.FromErrorMessage(vm.ErrorClass, "pop() called on empty array", vm.BuildTracebackFromFrame());
+            return ObValue.FromErrorMessage(vm.ErrorClass, "pop() called on empty array", vm.BuildTracebackFromFrame());
         var item = arr[^1];
         arr.RemoveAt(arr.Count - 1);
         return item;
     }
 
-    private static ZsValue ArrayPeekMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayPeekMethod(Vm vm, ObValue[] args)
     {
         var arr = args[0].Array();
         return arr.Count != 0
             ? arr[^1]
-            : ZsValue.FromErrorMessage(vm.ErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
+            : ObValue.FromErrorMessage(vm.ErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
     }
 
-    private static ZsValue ArrayClearMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayClearMethod(Vm vm, ObValue[] args)
     {
         args[0].Array().Clear();
         return vm.NullSingleton;
     }
     
-    private static ZsValue ArrayForeachMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayForeachMethod(Vm vm, ObValue[] args)
     {
-        if (args.Length != 2) return ZsValue.FromErrorMessage(vm.ErrorClass, "foreach() expects 1 argument(s)", vm.BuildTracebackFromFrame());
+        if (args.Length != 2) return ObValue.FromErrorMessage(vm.ErrorClass, "foreach() expects 1 argument(s)", vm.BuildTracebackFromFrame());
         var array = args[0].Array();
         for (var i = 0; i < array.Count; ++i)
         {
             vm.CurrentFrame!.PushOperand(array[i]);
-            vm.CurrentFrame!.PushOperand(ZsValue.FromInt(i));
+            vm.CurrentFrame!.PushOperand(ObValue.FromInt(i));
             vm.CurrentFrame!.PushOperand(args[1]);
             var result = vm.DoCall(vm.CurrentFrame, 2);
-            if (ZsValue.IsInstanceOf(result, "Error")) return result;
+            if (ObValue.IsInstanceOf(result, "Error")) return result;
         }
         
         return vm.NullSingleton;
     }
 
-    private static ZsValue ArrayLengthMethod(Vm vm, ZsValue[] args)
+    private static ObValue ArrayLengthMethod(Vm vm, ObValue[] args)
     {
-        return ZsValue.FromInt(args[0].Array().Count);
+        return ObValue.FromInt(args[0].Array().Count);
     }
 }

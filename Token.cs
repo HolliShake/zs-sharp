@@ -1,4 +1,4 @@
-namespace zscript;
+namespace obiwan;
 
 public class Token(TokenType type, string value, Position position)
 {

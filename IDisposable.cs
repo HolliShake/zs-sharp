@@ -1,4 +1,4 @@
-﻿namespace zscript;
+﻿namespace obiwan;
 
 public interface IDisposable
 {

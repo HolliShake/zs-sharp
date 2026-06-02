@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace zscript;
+namespace obiwan;
 
 public class Lexer(string path, string source)
 {
