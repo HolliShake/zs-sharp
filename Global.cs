@@ -8,7 +8,7 @@ public static class Global
     {
         // 1. Validate arguments
         if (args.Length != 1)
-            return ObValue.FromErrorMessage(vm.ErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
         if (!ObValue.IsInstanceOf(args[0], ValueType.String))
             return ObValue.FromErrorMessage(vm.TypeErrorClass, "import expects a string", vm.BuildTracebackFromFrame());
 
@@ -154,7 +154,7 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 1 argument",
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
                         vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.Number))
                     return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a number",
@@ -169,7 +169,7 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 2)
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 2 arguments",
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 2 arguments",
                         vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.Number) ||
                     !ObValue.IsInstanceOf(args[1], ValueType.Number))
@@ -185,7 +185,7 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 3)
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects 3 arguments",
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 3 arguments",
                         vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.Number) ||
                     !ObValue.IsInstanceOf(args[1], ValueType.Number) ||

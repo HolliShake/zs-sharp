@@ -6,10 +6,11 @@ namespace obiwan;
 
 public class Vm : IDisposable
 {
-    private readonly ObValue _attributeErrorClass;
+    public readonly ObValue AttributeErrorClass;
     private readonly Queue<ObValue> _deferredTasks = new();
-    private readonly ObValue _indexErrorClass;
-    private readonly ObValue _zeroDivideErrorClass;
+    public readonly ObValue IndexErrorClass;
+    public readonly ObValue ZeroDivideErrorClass;
+    public readonly ObValue ArgumentErrorClass;
     public readonly ObValue ErrorClass;
     public readonly ObValue FalseSingleton;
     public readonly ObValue FutureClass;
@@ -26,10 +27,11 @@ public class Vm : IDisposable
         State = state;
         ObjectClass = ObValue.CreateObClass(null, "Object");
         ErrorClass = ObValue.CreateObClass(ObjectClass, "Error");
-        _attributeErrorClass = ObValue.CreateObClass(ErrorClass, "AttributeError");
+        AttributeErrorClass = ObValue.CreateObClass(ErrorClass, "AttributeError");
         TypeErrorClass = ObValue.CreateObClass(ErrorClass, "TypeError");
-        _zeroDivideErrorClass = ObValue.CreateObClass(ErrorClass, "ZeroDivideError");
-        _indexErrorClass = ObValue.CreateObClass(ErrorClass, "IndexError");
+        ZeroDivideErrorClass = ObValue.CreateObClass(ErrorClass, "ZeroDivideError");
+        IndexErrorClass = ObValue.CreateObClass(ErrorClass, "IndexError");
+        ArgumentErrorClass = ObValue.CreateObClass(ErrorClass, "ArgumentError");
         FutureClass = ObValue.CreateObClass(ObjectClass, "Future");
         NullSingleton = ObValue.CreateNull();
         TrueSingleton = ObValue.FromBool(true);
@@ -96,7 +98,7 @@ public class Vm : IDisposable
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ObValue.FromErrorMessage(
-                _zeroDivideErrorClass,
+                ZeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
             );
@@ -119,7 +121,7 @@ public class Vm : IDisposable
     {
         if (b is { Type: ValueType.Int } or { Type: ValueType.Number } && b.Number() == 0)
             return ObValue.FromErrorMessage(
-                _zeroDivideErrorClass,
+                ZeroDivideErrorClass,
                 "zero division error",
                 BuildTracebackFromFrame()
             );
@@ -466,7 +468,7 @@ public class Vm : IDisposable
             frame.PopOperand();
         return attribute
                ?? ObValue.FromErrorMessage(
-                   _attributeErrorClass,
+                   AttributeErrorClass,
                    $"object has no attribute {attr}",
                    BuildTracebackFromFrame()
                );
@@ -485,7 +487,7 @@ public class Vm : IDisposable
             var len = arr.Count;
             return indexValue >= 0 && indexValue < len
                 ? arr[indexValue]
-                : ObValue.FromErrorMessage(_indexErrorClass, "index out of bounds", BuildTracebackFromFrame());
+                : ObValue.FromErrorMessage(IndexErrorClass, "index out of bounds", BuildTracebackFromFrame());
         }
 
         if (ObValue.IsInstanceOf(zsObject, "Object"))
@@ -494,14 +496,14 @@ public class Vm : IDisposable
             var attribute = ObValue.GetProperty(zsObject, attr);
             return attribute
                    ?? ObValue.FromErrorMessage(
-                       _attributeErrorClass,
+                       AttributeErrorClass,
                        $"value has no attribute {attr}",
                        BuildTracebackFromFrame()
                    );
         }
 
         return ObValue.FromErrorMessage(
-            _attributeErrorClass,
+            AttributeErrorClass,
             "value cannot be indexed",
             BuildTracebackFromFrame()
         );
@@ -531,7 +533,7 @@ public class Vm : IDisposable
 
         return callableCode.ArgCount != arg
             ? ObValue.FromErrorMessage(
-                ErrorClass,
+                ArgumentErrorClass,
                 $"{callableCode.Name}: arg mismatch {callableCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
             )
@@ -592,7 +594,7 @@ public class Vm : IDisposable
         {
             memberNameString ??= memberName.ToString();
             return ObValue.FromErrorMessage(
-                ErrorClass,
+                AttributeErrorClass,
                 $"object has no attribute {memberNameString}",
                 BuildTracebackFromFrame()
             );
@@ -616,7 +618,7 @@ public class Vm : IDisposable
         // Fail-fast on argument mismatch before allocating a new frame
         if (callablePropertyCode.ArgCount != arg)
             return ObValue.FromErrorMessage(
-                ErrorClass,
+                ArgumentErrorClass,
                 $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
                 BuildTracebackFromFrame()
             );

@@ -26,7 +26,7 @@ public class Array : IBuiltin
     private static ObValue ArrayPushMethod(Vm vm, ObValue[] args)
     {
         if (args.Length < 2)
-            return ObValue.FromErrorMessage(vm.ErrorClass, "push() expects at least 1 argument",
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "push() expects at least 1 argument",
                 vm.BuildTracebackFromFrame());
         args[0].Array().AddRange(args.Skip(1).Reverse());
         return vm.NullSingleton;
@@ -36,7 +36,7 @@ public class Array : IBuiltin
     {
         var arr = args[0].Array();
         if (arr.Count == 0)
-            return ObValue.FromErrorMessage(vm.ErrorClass, "pop() called on empty array", vm.BuildTracebackFromFrame());
+            return ObValue.FromErrorMessage(vm.IndexErrorClass, "pop() called on empty array", vm.BuildTracebackFromFrame());
         var item = arr[^1];
         arr.RemoveAt(arr.Count - 1);
         return item;
@@ -47,7 +47,7 @@ public class Array : IBuiltin
         var arr = args[0].Array();
         return arr.Count != 0
             ? arr[^1]
-            : ObValue.FromErrorMessage(vm.ErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
+            : ObValue.FromErrorMessage(vm.IndexErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
     }
 
     private static ObValue ArrayClearMethod(Vm vm, ObValue[] args)
@@ -58,7 +58,7 @@ public class Array : IBuiltin
     
     private static ObValue ArrayForeachMethod(Vm vm, ObValue[] args)
     {
-        if (args.Length != 2) return ObValue.FromErrorMessage(vm.ErrorClass, "foreach() expects 1 argument(s)", vm.BuildTracebackFromFrame());
+        if (args.Length != 2) return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "foreach() expects 1 argument(s)", vm.BuildTracebackFromFrame());
         var array = args[0].Array();
         for (var i = 0; i < array.Count; ++i)
         {
