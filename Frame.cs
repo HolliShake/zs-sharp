@@ -5,6 +5,7 @@ namespace obiwan;
 public class Frame(Frame? callerFrame, ObValue functionValue, bool callback, bool asynchronous) : IDisposable
 {
     private readonly Stack<ObValue> _operands = [];
+    private readonly Dictionary<string, ObValue> _providedNames = [];
     private readonly Stack<TryBlock> _tryCatchTable = [];
     public readonly bool Asynchronous = asynchronous;
     public readonly Frame? CallerFrame = callerFrame;
@@ -21,6 +22,7 @@ public class Frame(Frame? callerFrame, ObValue functionValue, bool callback, boo
     {
         _operands.Clear();
         _tryCatchTable.Clear();
+        _providedNames.Clear();
         Future = null;
         Pc = 0;
         PendingError = null;
@@ -31,6 +33,23 @@ public class Frame(Frame? callerFrame, ObValue functionValue, bool callback, boo
             Environment[i].Value = null;
             Environment[i] = null!;
         }
+    }
+
+    public void AddProvidedNamespace(string ns, ObValue module)
+    {
+        _providedNames[ns] = module;
+    }
+
+    public ObValue? GetProvidedNamespace(string ns)
+    {
+        var currentFrame = CallerFrame;
+        while (currentFrame != null)
+        {
+            if (currentFrame._providedNames.TryGetValue(ns, out var module)) return module;
+            currentFrame = currentFrame.CallerFrame;
+        }
+
+        return null;
     }
 
     private static Cell[] BuildEnvironment(Code code)

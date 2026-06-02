@@ -5,6 +5,7 @@ namespace obiwan;
 public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
 {
     private readonly List<int> _breakSignals = [];
+    private readonly List<int> _continueSignals = [];
     private readonly SymbolTable? _parent = parent;
     private readonly ScopeType _scopeType = scopeType;
     public readonly Dictionary<string, Symbol> Symbols = new();
@@ -122,9 +123,19 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         _breakSignals.Add(offset);
     }
 
+    public void AddContinueSignal(int offset)
+    {
+        _continueSignals.Add(offset);
+    }
+
 
     public IEnumerable<int> GetBreakSignals()
     {
         return _breakSignals;
+    }
+
+    public IEnumerable<int> GetContinueSignals()
+    {
+        return _continueSignals;
     }
 }

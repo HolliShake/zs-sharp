@@ -83,6 +83,32 @@ public static class Global
         }
     }
 
+    public static ObValue Provide(Vm vm, ObValue[] args)
+    {
+        if (args.Length != 2)
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "provide expects 2 arguments",
+                vm.BuildTracebackFromFrame());
+        if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+            return ObValue.FromErrorMessage(vm.TypeErrorClass, "provide key must be a string",
+                vm.BuildTracebackFromFrame());
+        vm.CurrentFrame!.AddProvidedNamespace(args[0].String(), args[1]);
+        return vm.NullSingleton;
+    }
+
+    public static ObValue Inject(Vm vm, ObValue[] args)
+    {
+        if (args.Length != 1)
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "inject expects 1 argument",
+                vm.BuildTracebackFromFrame());
+        if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+            return ObValue.FromErrorMessage(vm.TypeErrorClass, "inject key must be a string",
+                vm.BuildTracebackFromFrame());
+        var injected = vm.CurrentFrame!.GetProvidedNamespace(args[0].String());
+        injected ??= vm.NullSingleton;
+
+        return injected;
+    }
+
 
     public static ObValue Print(Vm vm, ObValue[] args)
     {

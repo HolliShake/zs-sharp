@@ -105,9 +105,11 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
         Bytecode.Add(0);
     }
 
-    public void EmitAbsoluteJump(OpCode opcode, int address)
+    public int EmitAbsoluteJump(OpCode opcode, int address)
     {
+        var byteStart = Bytecode.Count;
         Emit(opcode, address);
+        return byteStart + 1;
     }
 
     public int EmitJump(OpCode opcode)
@@ -115,6 +117,12 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
         var current = Bytecode.Count;
         Emit(opcode, 0);
         return current + 1;
+    }
+
+    public void Label(int placeholderAddress, int labelAddress)
+    {
+        var span = CollectionsMarshal.AsSpan(Bytecode).Slice(placeholderAddress, 4);
+        BinaryPrimitives.WriteInt32BigEndian(span, labelAddress);
     }
 
     public void Label(int placeholderAddress)

@@ -582,6 +582,50 @@ public class Compiler : Parser
         }
     }
 
+    private void Continue(Code code, SymbolTable table, Ast node)
+    {
+        var nearestLoop = table.GetNearestParent(ScopeType.Loop);
+        if (nearestLoop == null) ErrorHandler.CompileError(Path, Source, "continue outside loop", node.Position);
+
+        var tryScope = table.GetNearestParent(ScopeType.TryBlock, ScopeType.CatchBlock);
+        var loopWrapsTry = SymbolTable.IsAncestorOf(nearestLoop, tryScope);
+        /*
+            // loop wraps try, where loop is for, while or do
+            loop () {
+                try {
+                    try {
+                        continue;
+                        rest of codes...
+                    } catch (err) {
+                        continue;
+                        rest of codes...
+                    }
+                } catch (err) {
+                    rest of codes...
+                }
+            }
+         */
+
+        if (loopWrapsTry)
+        {
+            var depth = SymbolTable.Depth(nearestLoop, tryScope);
+            // We need to pop the try scope.
+            code.EmitLine(ModuleId, node.Position.Line);
+            if (depth == 1) code.Emit(OpCode.PopTry);
+            else code.Emit(OpCode.PopNTry, depth);
+
+            // Jump
+            code.EmitLine(ModuleId, node.Position.Line);
+            nearestLoop?.AddContinueSignal(code.EmitJump(OpCode.AbsJump));
+        }
+        else
+        {
+            // Safe
+            code.EmitLine(ModuleId, node.Position.Line);
+            nearestLoop?.AddContinueSignal(code.EmitAbsoluteJump(OpCode.AbsJump, 0));
+        }
+    }
+
     private void Return(Code code, SymbolTable table, Ast node)
     {
         var nearestFunction = table.GetNearestParent(ScopeType.Function);
@@ -851,6 +895,7 @@ public class Compiler : Parser
 
         code.Label(jumpToEndWhile);
 
+        foreach (var continueSignal in loopTable.GetContinueSignals()) code.Label(continueSignal, begin);
         foreach (var breakSignal in loopTable.GetBreakSignals()) code.Label(breakSignal);
     }
 

@@ -214,8 +214,6 @@ while (i < callbacks->length()) {
     i = i + 1;
 }
 
-
-
 var items = [];
 
 items->push(1,2,3);
@@ -225,3 +223,16 @@ println(">>", items->peek());
 items->foreach(fn(a, b) {
     println(a);
 });
+
+fn child() {
+    println(">>>>>", inject("name")->add(1, 5));
+}
+
+fn parent() {
+    provide("name", {
+        add: fn(a, b) {return a + b;}
+    });
+    child();
+}
+
+parent();
