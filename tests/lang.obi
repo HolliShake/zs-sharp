@@ -230,7 +230,9 @@ fn child() {
 
 fn parent() {
     provide("name", {
-        add: fn(a, b) {return a + b;}
+        add: fn(a, b) {
+            return a + b;
+        }
     });
     child();
 }

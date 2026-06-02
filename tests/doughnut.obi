@@ -1,0 +1,93 @@
+local A = 0.0;
+local B = 0.0;
+
+local screenWidth  = 80;
+local screenHeight = 24;
+local R1 = 1.0;
+local R2 = 2.0;
+local K2 = 5.0;
+local K1 = screenWidth * K2 * 3.0 / (8.0 * (R1 + R2));
+
+fn renderFrame(A, B) {
+    local output = [];
+    local zbuf   = [];
+    println(zbuf);
+
+    local idx = 0;
+    while (idx < screenWidth * screenHeight) {
+        output->push(" ");
+        zbuf->push(0.0);
+        idx = idx + 1;
+    }
+
+    local theta = 0.0;
+    while (theta < 6.28318) {
+        local cosTheta = Math->cos(theta);
+        local sinTheta = Math->sin(theta);
+
+        local phi = 0.0;
+        while (phi < 6.28318) {
+            local cosPhi = Math->cos(phi);
+            local sinPhi = Math->sin(phi);
+
+            local cosA = Math->cos(A);
+            local sinA = Math->sin(A);
+            local cosB = Math->cos(B);
+            local sinB = Math->sin(B);
+
+            local circleX = R2 + R1 * cosTheta;
+            local circleY = R1 * sinTheta;
+
+            local x = circleX * (cosB * cosPhi + sinA * sinB * sinPhi) - circleY * cosA * sinB;
+            local y = circleX * (sinB * cosPhi - sinA * cosB * sinPhi) + circleY * cosA * cosB;
+            local z = K2 + cosA * circleX * sinPhi + circleY * sinA;
+            local ooz = 1.0 / z;
+
+            local xp = Math->floor(screenWidth  / 2.0 + K1 * ooz * x);
+            local yp = Math->floor(screenHeight / 2.0 - K1 * ooz * y * 0.5);
+
+            local luminance =
+                cosPhi * cosTheta * sinB
+                - cosA * cosTheta * sinPhi
+                - sinA * sinTheta
+                + cosB * (cosA * sinTheta - cosTheta * sinA * sinPhi);
+
+            local L = Math->floor(luminance * 8.0);
+
+            if (L > 0) {
+                if (xp >= 0 && xp < screenWidth && yp >= 0 && yp < screenHeight) {
+                    local pos = Math->floor(yp * screenWidth + xp);
+                    if (ooz > zbuf[pos]) {
+                        zbuf[pos]   = ooz;
+                        local chars   = ".,-~:;=!*#$@";
+                        local charIdx = L;
+                        if (charIdx > 11) charIdx = 11;
+                        output[pos] = chars[charIdx];
+                    }
+                }
+            }
+
+            phi = phi + 0.07;
+        }
+
+        theta = theta + 0.07;
+    }
+
+    local row = 0;
+    while (row < screenHeight) {
+        local line = "";
+        local col  = 0;
+        while (col < screenWidth) {
+            line = line + output[row * screenWidth + col];
+            col  = col + 1;
+        }
+        println(line);
+        row = row + 1;
+    }
+}
+
+while (1) {
+    renderFrame(A, B);
+    A = A + 0.07;
+    B = B + 0.03;
+}
