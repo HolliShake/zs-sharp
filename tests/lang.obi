@@ -218,6 +218,10 @@ while (i < callbacks->length()) {
 
 var items = [];
 
-items->push(21,2,3);
+items->push(1,2,3);
 
-println(items->peek());
+println(">>", items->peek());
+
+items->foreach(fn(a, b) {
+    println(a);
+});
