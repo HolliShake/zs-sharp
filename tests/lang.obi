@@ -194,7 +194,7 @@ try {
     print "CATCH";
 }
 
-const { Add: myAdd } = import("./lang.obi");
+const { Add: myAdd } = import("./import.obi");
 
 println(myAdd(1, 1000), Math, Math->PI, [1,200,3][1]);
 

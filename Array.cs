@@ -2,7 +2,7 @@ namespace zscript;
 
 public class Array : IBuiltin
 {
-    private static readonly string[] Methods = ["push", "length", "pop", "peek", "clear"];
+    private static readonly string[] Methods = ["push", "length", "pop", "peek", "clear", "foreach"];
 
     public static bool HasMethod(string methodName)
     {
@@ -17,6 +17,7 @@ public class Array : IBuiltin
             "pop" => ArrayPopMethod,
             "peek" => ArrayPeekMethod,
             "clear" => ArrayClearMethod,
+            "foreach" => ArrayForeachMethod,
             "length" => ArrayLengthMethod,
             _ => throw new InvalidSwitchValueException($"method {methodName} not implemented")
         };
@@ -52,6 +53,22 @@ public class Array : IBuiltin
     private static ZsValue ArrayClearMethod(Vm vm, ZsValue[] args)
     {
         args[0].Array().Clear();
+        return vm.NullSingleton;
+    }
+    
+    private static ZsValue ArrayForeachMethod(Vm vm, ZsValue[] args)
+    {
+        if (args.Length != 2) return ZsValue.FromErrorMessage(vm.ErrorClass, "foreach() expects 1 argument(s)", vm.BuildTracebackFromFrame());
+        var array = args[0].Array();
+        for (var i = 0; i < array.Count; ++i)
+        {
+            vm.CurrentFrame!.PushOperand(array[i]);
+            vm.CurrentFrame!.PushOperand(ZsValue.FromInt(i));
+            vm.CurrentFrame!.PushOperand(args[1]);
+            var result = vm.DoCall(vm.CurrentFrame, 2);
+            if (ZsValue.IsInstanceOf(result, "Error")) return result;
+        }
+        
         return vm.NullSingleton;
     }
 

@@ -507,7 +507,7 @@ public class Vm : IDisposable
         );
     }
 
-    private ZsValue DoCall(Frame frame, int arg)
+    public ZsValue DoCall(Frame frame, int arg)
     {
         var callable = frame.PopOperand();
         var arguments = new ZsValue[arg];
