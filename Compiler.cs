@@ -785,7 +785,7 @@ public class Compiler : Parser
 
                     break;
                 }
-                default: throw new InvalidEnumArgumentException("invalid value for initializer type");
+                default: throw new InvalidSwitchValueException("invalid value for initializer type");
             }
 
             variableInitializer = variableInitializer.Next;

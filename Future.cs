@@ -120,7 +120,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
                 thisArgFut.AddListener(newPromise);
                 break;
             }
-            default: throw new NotImplementedException();
+            default: throw new InvalidSwitchValueException($"state {thisArgFut.State} not implemented");
         }
 
         return newPromise;
@@ -163,7 +163,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
                 thisArgFut.AddListener(newPromise);
                 break;
             }
-            default: throw new NotImplementedException();
+            default: throw new InvalidSwitchValueException($"state {thisArgFut.State} not implemented");
         }
 
         return newPromise;

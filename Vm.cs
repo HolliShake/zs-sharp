@@ -1233,7 +1233,7 @@ public class Vm : IDisposable
                 }
                 default:
                 {
-                    throw new NotImplementedException($"OpCode {opcode} not implemented");
+                    throw new InvalidSwitchValueException($"OpCode {opcode} not implemented");
                 }
             }
         }
