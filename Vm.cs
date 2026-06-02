@@ -543,75 +543,93 @@ public class Vm : IDisposable
         var zsObject = frame.PeekOperandAt(arg + 1);
         var memberName = frame.PopOperand();
 
+        // 1. Collect arguments
         var arguments = new ZsValue[arg + 1];
         arguments[0] = zsObject;
-        for (var i = 1; i < arg + 1; i++)
-            arguments[i] = frame.PopOperand();
+        for (var i = 1; i <= arg; i++) arguments[i] = frame.PopOperand();
 
         // Pop this
         frame.PopOperand();
 
-        var memberNameString = memberName.ToString();
+        // 2. Cache type checks and defer string allocations
+        var isFuture = ZsValue.IsInstanceOf(zsObject, ValueType.Future);
+        var isArray = ZsValue.IsInstanceOf(zsObject, ValueType.Array);
 
-        if (
-            ZsValue.IsInstanceOf(zsObject, ValueType.Future)
-            && Future.HasMethod(memberNameString)
-        )
-            return Future.GetMethod(memberNameString)(this, arguments);
-        if (
-            ZsValue.IsInstanceOf(zsObject, ValueType.Array)
-            && Array.HasMethod(memberNameString)
-        )
-            return Array.GetMethod(memberNameString)(this, arguments);
+        string memberNameString = null;
 
+        if (isFuture)
+        {
+            memberNameString = memberName.ToString();
+            if (Future.HasMethod(memberNameString))
+                return Future.GetMethod(memberNameString)(this, arguments);
+        }
+
+        if (isArray)
+        {
+            memberNameString ??= memberName.ToString();
+            if (Array.HasMethod(memberNameString))
+                return Array.GetMethod(memberNameString)(this, arguments);
+        }
+
+        // 3. Resolve Callable Property
         ZsValue? callableProperty = null;
 
-        if (ZsValue.IsInstanceOf(zsObject, ValueType.Array))
+        if (isArray)
         {
             var indexValue = memberName.Int();
             var arr = zsObject.Array();
-            var len = arr.Count;
-            callableProperty ??= indexValue >= 0 && indexValue < len
-                ? arr[indexValue]
-                : callableProperty;
+
+            if (indexValue >= 0 && indexValue < arr.Count) callableProperty = arr[indexValue];
         }
         else if (ZsValue.IsInstanceOf(zsObject, "Object"))
         {
+            memberNameString ??= memberName.ToString();
             callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
         }
 
+        // 4. Handle undefined attributes
         if (callableProperty == null)
+        {
+            memberNameString ??= memberName.ToString();
             return ZsValue.FromErrorMessage(
                 ErrorClass,
                 $"object has no attribute {memberNameString}",
                 BuildTracebackFromFrame()
             );
+        }
 
+        // 5. Execute Native Function
         if (ZsValue.IsInstanceOf(callableProperty, ValueType.NativeFunction))
         {
             var nativeFunction = callableProperty.NativeFunction();
-            var removedThis = arguments.Skip(1).Reverse().ToArray();
+
+            // Replaces LINQ arguments.Skip(1).Reverse().ToArray()
+            var removedThis = new ZsValue[arg];
+            for (var i = 0; i < arg; i++) removedThis[i] = arguments[arg - i];
+
             return nativeFunction(this, removedThis);
         }
 
+        // 6. Execute User-Defined Function
         var callablePropertyCode = callableProperty.Code();
 
+        // Fail-fast on argument mismatch before allocating a new frame
+        if (callablePropertyCode.ArgCount != arg)
+            return ZsValue.FromErrorMessage(
+                ErrorClass,
+                $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
+                BuildTracebackFromFrame()
+            );
+
         var newCallFrame = new Frame(frame, callableProperty, false, callablePropertyCode.IsAsync);
-        for (var i = 1; i <= arg; i++)
-            newCallFrame.PushOperand(arguments[i]);
+        for (var i = 1; i <= arg; i++) newCallFrame.PushOperand(arguments[i]);
 
         // Set this
         newCallFrame.SetEnvVar(0, zsObject);
 
         callablePropertyCode.MergeCaptureToEnvironment(newCallFrame);
 
-        return callablePropertyCode.ArgCount != arg
-            ? ZsValue.FromErrorMessage(
-                ErrorClass,
-                $"arg mismatch {callablePropertyCode.ArgCount} != {arg}",
-                BuildTracebackFromFrame()
-            )
-            : Run(newCallFrame);
+        return Run(newCallFrame);
     }
 
     private void RaiseOrHandleException(Frame thrownByFrame, ZsValue errorValue)

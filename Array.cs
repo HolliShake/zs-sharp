@@ -2,7 +2,7 @@ namespace zscript;
 
 public class Array : IBuiltin
 {
-    private static readonly string[] Methods = ["push", "length"];
+    private static readonly string[] Methods = ["push", "length", "pop", "peek", "clear"];
 
     public static bool HasMethod(string methodName)
     {

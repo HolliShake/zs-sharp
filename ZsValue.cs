@@ -165,6 +165,7 @@ public sealed class ZsValue
         {
             ValueType.Script => "script",
             ValueType.Function => "function",
+            ValueType.NativeFunction => "native function",
             ValueType.Array => "array",
             ValueType.Future => "future",
             ValueType.Int => "int",
@@ -173,6 +174,7 @@ public sealed class ZsValue
             ValueType.String => "string",
             ValueType.Null => "null",
             ValueType.Error or
+                ValueType.ObjectLiteral or
                 ValueType.Object => GetInternalType(this),
             _ => throw new InvalidSwitchValueException($"type {Type} not implemented")
         };

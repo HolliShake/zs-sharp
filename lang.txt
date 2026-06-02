@@ -218,6 +218,6 @@ while (i < callbacks->length()) {
 
 var items = [];
 
-items->push(1,2,3);
+items->push(21,2,3);
 
-println(items);
+println(items->peek());
