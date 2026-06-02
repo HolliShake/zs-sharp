@@ -45,6 +45,7 @@ public class Vm : IDisposable
     {
         _deferredTasks.Clear();
         PendingTasks.Clear();
+        CurrentFrame = null;
     }
 
     private int ReadInt(Frame frame)

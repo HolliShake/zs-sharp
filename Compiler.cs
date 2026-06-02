@@ -891,6 +891,7 @@ public class Compiler : Parser
         Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
         var loopTable = new SymbolTable(ScopeType.Loop, table);
         var begin = code.GetCurrent();
+        Console.WriteLine(begin);
         Expr(code, loopTable, node.A);
         code.EmitLine(ModuleId, node.Position.Line);
         var jumpToEndWhile = code.EmitJump(OpCode.PopJumpIfFalse);

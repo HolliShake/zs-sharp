@@ -1085,7 +1085,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         var position = Lookahead.Position;
         Expect(Keyword.Continue);
         Expect(";");
-        return Ast.CreateBreakNode(position);
+        return Ast.CreateContinueNode(position);
     }
 
     private Ast Break()
