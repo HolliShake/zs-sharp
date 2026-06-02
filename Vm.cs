@@ -558,7 +558,7 @@ public class Vm : IDisposable
             && Future.HasMethod(memberNameString)
         )
             return Future.GetMethod(memberNameString)(this, arguments);
-        else if (
+        if (
             ZsValue.IsInstanceOf(zsObject, ValueType.Array)
             && Array.HasMethod(memberNameString)
         )
