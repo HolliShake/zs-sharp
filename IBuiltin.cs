@@ -2,13 +2,7 @@
 
 public interface IBuiltin
 {
-    public static bool HasMethod(string methodName)
-    {
-        throw new NotImplementedException("Please override HasMethod");
-    }
+    public static abstract bool HasMethod(string methodName);
 
-    public static Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName)
-    {
-        throw new NotImplementedException("Please override GetMethod");
-    }
+    public static abstract Func<Vm, ZsValue[], ZsValue> GetMethod(string methodName);
 }

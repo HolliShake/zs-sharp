@@ -1,6 +1,5 @@
 namespace zscript;
 
-public class InvalidSwitchValueException
+public class InvalidSwitchValueException(string message) : Exception(message)
 {
-    
 }

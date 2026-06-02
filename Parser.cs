@@ -727,7 +727,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             "var" => AstType.AstGlobalVar,
             "local" => AstType.AstLocalVar,
             "const" => AstType.AstConstVar,
-            _ => throw new NotImplementedException()
+            _ => throw new InvalidSwitchValueException($"keyword {keyword} not implemented")
         };
 
         Expect(keyword);

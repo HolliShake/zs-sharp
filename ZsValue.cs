@@ -174,7 +174,7 @@ public sealed class ZsValue
             ValueType.Null => "null",
             ValueType.Error or
                 ValueType.Object => GetInternalType(this),
-            _ => "unknown"
+            _ => throw new InvalidSwitchValueException($"type {Type} not implemented")
         };
     }
 
@@ -268,7 +268,7 @@ public sealed class ZsValue
             ValueType.Bool => Num != 0d ? "true" : "false",
             ValueType.Null => "null",
             ValueType.String when Ref is not null => (string)Ref,
-            _ => throw new InvalidOperationException()
+            _ => throw new InvalidSwitchValueException($"type {Type} not implemented")
         };
     }
 
@@ -280,7 +280,7 @@ public sealed class ZsValue
             FutureState.Pending => "Pending",
             FutureState.Fulfill or
                 FutureState.Rejected => fut.Result!.ToString(),
-            _ => throw new InvalidOperationException()
+            _ => throw new InvalidSwitchValueException($"state {fut.State} not implemented")
         };
         return $"Future {{ {rep} }}";
     }
@@ -312,7 +312,7 @@ public sealed class ZsValue
                 => value.Num.ToString(CultureInfo.InvariantCulture),
             ValueType.String => $"'{value.Ref as string}'",
             ValueType.Null => "null",
-            _ => throw new InvalidOperationException()
+            _ => throw new InvalidSwitchValueException($"type {value.Type} not implemented")
         };
     }
 

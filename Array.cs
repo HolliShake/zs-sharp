@@ -18,7 +18,7 @@ public class Array : IBuiltin
             "peek" => ArrayPeekMethod,
             "clear" => ArrayClearMethod,
             "length" => ArrayLengthMethod,
-            _ => throw new NotImplementedException($"method {methodName} not implemented")
+            _ => throw new InvalidSwitchValueException($"method {methodName} not implemented")
         };
     }
 
@@ -40,13 +40,13 @@ public class Array : IBuiltin
         arr.RemoveAt(arr.Count - 1);
         return item;
     }
-    
+
     private static ZsValue ArrayPeekMethod(Vm vm, ZsValue[] args)
     {
         var arr = args[0].Array();
-        return (arr.Count != 0) ? arr[^1] :
-            ZsValue.FromErrorMessage(vm.ErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
-        
+        return arr.Count != 0
+            ? arr[^1]
+            : ZsValue.FromErrorMessage(vm.ErrorClass, "peek() called on empty array", vm.BuildTracebackFromFrame());
     }
 
     private static ZsValue ArrayClearMethod(Vm vm, ZsValue[] args)

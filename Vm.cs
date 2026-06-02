@@ -580,7 +580,6 @@ public class Vm : IDisposable
             callableProperty = ZsValue.GetProperty(zsObject, memberNameString);
         }
 
-
         if (callableProperty == null)
             return ZsValue.FromErrorMessage(
                 ErrorClass,

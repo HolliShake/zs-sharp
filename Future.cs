@@ -28,7 +28,7 @@ public class Future(FutureState initialState, Frame frame) : IBuiltin
         {
             "then" => FutureThenMethod,
             "error" => FutureErrorMethod,
-            _ => throw new NotImplementedException($"method {methodName} not implemented")
+            _ => throw new InvalidSwitchValueException($"method {methodName} not implemented")
         };
     }
 
