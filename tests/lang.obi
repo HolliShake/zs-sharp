@@ -236,3 +236,12 @@ fn parent() {
 }
 
 parent();
+
+
+var ll = 0;
+
+while (ll < 10) {
+    ll = ll + 1;
+    if (ll == 5) continue;
+    println("ll ->", ll);
+}

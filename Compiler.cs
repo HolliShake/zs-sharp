@@ -503,6 +503,11 @@ public class Compiler : Parser
                 Break(code, table, node);
                 break;
             }
+            case AstType.AstContinue:
+            {
+                Continue(code, table, node);
+                break;
+            }
             case AstType.AstReturn:
             {
                 Return(code, table, node);
@@ -616,7 +621,7 @@ public class Compiler : Parser
 
             // Jump
             code.EmitLine(ModuleId, node.Position.Line);
-            nearestLoop?.AddContinueSignal(code.EmitJump(OpCode.AbsJump));
+            nearestLoop?.AddContinueSignal(code.EmitAbsoluteJump(OpCode.AbsJump, 0));
         }
         else
         {

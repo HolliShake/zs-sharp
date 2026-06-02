@@ -122,7 +122,10 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
     public void Label(int placeholderAddress, int labelAddress)
     {
         var span = CollectionsMarshal.AsSpan(Bytecode).Slice(placeholderAddress, 4);
-        BinaryPrimitives.WriteInt32BigEndian(span, labelAddress);
+    
+        // Calculate relative distance instead of absolute address
+        int relativeOffset = labelAddress - (placeholderAddress + 4);
+        BinaryPrimitives.WriteInt32BigEndian(span, relativeOffset);
     }
 
     public void Label(int placeholderAddress)
