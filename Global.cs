@@ -8,7 +8,8 @@ public static class Global
     {
         // 1. Validate arguments
         if (args.Length != 1)
-            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "import expects 1 argument", vm.BuildTracebackFromFrame());
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "import expects 1 argument",
+                vm.BuildTracebackFromFrame());
         if (!ObValue.IsInstanceOf(args[0], ValueType.String))
             return ObValue.FromErrorMessage(vm.TypeErrorClass, "import expects a string", vm.BuildTracebackFromFrame());
 

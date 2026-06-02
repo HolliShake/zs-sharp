@@ -6,24 +6,26 @@ namespace obiwan;
 
 public class Vm : IDisposable
 {
-    public readonly ObValue AttributeErrorClass;
-    private readonly Queue<ObValue> _deferredTasks = new();
-    public readonly ObValue IndexErrorClass;
-    public readonly ObValue ZeroDivideErrorClass;
+    private readonly Queue<ObValue> _deferredTasks;
     public readonly ObValue ArgumentErrorClass;
+    public readonly ObValue AttributeErrorClass;
     public readonly ObValue ErrorClass;
     public readonly ObValue FalseSingleton;
     public readonly ObValue FutureClass;
+    public readonly ObValue IndexErrorClass;
     public readonly ObValue NullSingleton;
     public readonly ObValue ObjectClass;
-    public readonly Queue<ObValue> PendingTasks = new();
+    public readonly Queue<ObValue> PendingTasks;
     public readonly State State;
     public readonly ObValue TrueSingleton;
     public readonly ObValue TypeErrorClass;
+    public readonly ObValue ZeroDivideErrorClass;
     public Frame? CurrentFrame;
 
     public Vm(State state)
     {
+        PendingTasks = new Queue<ObValue>();
+        _deferredTasks = new Queue<ObValue>();
         State = state;
         ObjectClass = ObValue.CreateObClass(null, "Object");
         ErrorClass = ObValue.CreateObClass(ObjectClass, "Error");

@@ -106,7 +106,7 @@ dotnet run -- -r path/to/script.obi
 
 | Flag               | Description                 |
 |--------------------|-----------------------------|
-| `-r, --run <path>` | Run an obiwan source file  |
+| `-r, --run <path>` | Run an obiwan source file   |
 | `-t, --test`       | Run the internal test suite |
 | `-h, --help`       | Show help                   |
 
@@ -146,32 +146,32 @@ Vm.cs             — executes bytecode via stack frames (Frame.cs)
 
 ### All source files
 
-| File                                        | Role                             |
-|---------------------------------------------|----------------------------------|
-| `Program.cs`                                | CLI entry point                  |
-| `Lexer.cs`                                  | Tokenizer                        |
-| `Token.cs`, `TokenType.cs`                  | Token model                      |
-| `Parser.cs`                                 | AST construction                 |
-| `Ast.cs`, `AstType.cs`                      | AST node types                   |
-| `Compiler.cs`                               | Bytecode emitter                 |
-| `OpCode.cs`, `OpCodeDebug.cs`               | Instruction set                  |
-| `Code.cs`                                   | Compiled code object             |
-| `Vm.cs`                                     | Virtual machine / interpreter    |
-| `Frame.cs`                                  | Call-stack frame                 |
-| `Future.cs`, `FutureState.cs`               | Async promise model              |
-| `Cell.cs`                                   | Closure cell (captured variable) |
-| `ObiwanValue.cs`, `ValueType.cs`            | Runtime value types              |
-| `Symbol.cs`, `SymbolTable.cs`               | Name resolution                  |
-| `ScopeType.cs`, `LookupDetail.cs`           | Scope metadata                   |
-| `State.cs`                                  | VM state                         |
-| `TryBlock.cs`                               | Exception-handling frame         |
-| `ErrorHandler.cs`                           | Error dispatch                   |
-| `InvalidSwitchValueException.cs`, `ObiwanCompileError.cs` | Error types              |
-| `IBuiltin.cs`                               | Builtin function interface       |
-| `Position.cs`                               | Source position tracking         |
-| `tests/lang.obi`, `tests/import.obi`        | Example obiwan programs          |
-| `test.js`                                   | Test harness (JavaScript)        |
-| `obiwan.csproj`                             | Project file (net8.0, AOT)       |
+| File                                                      | Role                             |
+|-----------------------------------------------------------|----------------------------------|
+| `Program.cs`                                              | CLI entry point                  |
+| `Lexer.cs`                                                | Tokenizer                        |
+| `Token.cs`, `TokenType.cs`                                | Token model                      |
+| `Parser.cs`                                               | AST construction                 |
+| `Ast.cs`, `AstType.cs`                                    | AST node types                   |
+| `Compiler.cs`                                             | Bytecode emitter                 |
+| `OpCode.cs`, `OpCodeDebug.cs`                             | Instruction set                  |
+| `Code.cs`                                                 | Compiled code object             |
+| `Vm.cs`                                                   | Virtual machine / interpreter    |
+| `Frame.cs`                                                | Call-stack frame                 |
+| `Future.cs`, `FutureState.cs`                             | Async promise model              |
+| `Cell.cs`                                                 | Closure cell (captured variable) |
+| `ObiwanValue.cs`, `ValueType.cs`                          | Runtime value types              |
+| `Symbol.cs`, `SymbolTable.cs`                             | Name resolution                  |
+| `ScopeType.cs`, `LookupDetail.cs`                         | Scope metadata                   |
+| `State.cs`                                                | VM state                         |
+| `TryBlock.cs`                                             | Exception-handling frame         |
+| `ErrorHandler.cs`                                         | Error dispatch                   |
+| `InvalidSwitchValueException.cs`, `ObiwanCompileError.cs` | Error types                      |
+| `IBuiltin.cs`                                             | Builtin function interface       |
+| `Position.cs`                                             | Source position tracking         |
+| `tests/lang.obi`, `tests/import.obi`                      | Example obiwan programs          |
+| `test.js`                                                 | Test harness (JavaScript)        |
+| `obiwan.csproj`                                           | Project file (net8.0, AOT)       |
 
 ---
 
