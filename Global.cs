@@ -138,6 +138,30 @@ public static class Global
         return vm.NullSingleton;
     }
 
+    public static ObValue Clear(Vm vm, ObValue[] args)
+    {
+        if (args.Length != 0)
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "clear expects 0 arguments",
+                vm.BuildTracebackFromFrame());
+
+        if (!Console.IsOutputRedirected)
+            Console.Clear();
+
+        return vm.NullSingleton;
+    }
+
+    public static ObValue Home(Vm vm, ObValue[] args)
+    {
+        if (args.Length != 0)
+            return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "home expects 0 arguments",
+                vm.BuildTracebackFromFrame());
+
+        if (!Console.IsOutputRedirected)
+            Console.SetCursorPosition(0, 0);
+
+        return vm.NullSingleton;
+    }
+
     public static ObValue Scan(Vm vm, ObValue[] args)
     {
         Print(vm, args);

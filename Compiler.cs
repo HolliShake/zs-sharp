@@ -426,14 +426,30 @@ public class Compiler : Parser
                 code.Emit(OpCode.DupTop);
 
                 var nameNode = node.A;
-                if (!table.SymbolExists(nameNode.Value))
-                    ErrorHandler.CompileError(Path, Source, "variable not found", nameNode.Position);
-                var symbol = table.Find(nameNode.Value);
-                if (symbol.Symbol.Constant)
-                    ErrorHandler.CompileError(Path, Source, "cannot assign to constant", nameNode.Position);
+                switch (nameNode.Type)
+                {
+                    case AstType.AstName:
+                    {
+                        if (!table.SymbolExists(nameNode.Value))
+                            ErrorHandler.CompileError(Path, Source, $"variable {nameNode.Value} not found", nameNode.Position);
+                        var symbol = table.Find(nameNode.Value);
+                        if (symbol.Symbol.Constant)
+                            ErrorHandler.CompileError(Path, Source, "cannot assign to constant", nameNode.Position);
 
-                code.EmitLine(ModuleId, node.Position.Line);
-                code.Emit(symbol.IsLocal ? OpCode.StoreLocal : OpCode.StoreName, symbol.Symbol.Offset);
+                        code.EmitLine(ModuleId, node.Position.Line);
+                        code.Emit(symbol.IsLocal ? OpCode.StoreLocal : OpCode.StoreName, symbol.Symbol.Offset);
+                        break;
+                    }
+                    case AstType.AstIndex:
+                    {
+                        Expr(code, table, nameNode.A!);
+                        Expr(code, table, nameNode.B!);
+                        code.EmitLine(ModuleId, node.Position.Line);
+                        code.Emit(OpCode.SetIndex);
+                        break;
+                    }
+                    default: throw new InvalidSwitchValueException("invalid switch value");
+                }
                 break;
             }
             default:
@@ -891,7 +907,6 @@ public class Compiler : Parser
         Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
         var loopTable = new SymbolTable(ScopeType.Loop, table);
         var begin = code.GetCurrent();
-        Console.WriteLine(begin);
         Expr(code, loopTable, node.A);
         code.EmitLine(ModuleId, node.Position.Line);
         var jumpToEndWhile = code.EmitJump(OpCode.PopJumpIfFalse);

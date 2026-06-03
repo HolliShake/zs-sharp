@@ -1,17 +1,18 @@
-local A = 0.0;
-local B = 0.0;
+var A = 0.0;
+var B = 0.0;
 
-local screenWidth  = 80;
-local screenHeight = 24;
-local R1 = 1.0;
-local R2 = 2.0;
-local K2 = 5.0;
-local K1 = screenWidth * K2 * 3.0 / (8.0 * (R1 + R2));
+var screenWidth  = 80;
+var screenHeight = 40;
+var R1 = 1.0;
+var R2 = 2.0;
+var K2 = 5.0;
+var K1 = screenWidth * K2 * 3.0 / (8.0 * (R1 + R2)) * 0.95;
 
 fn renderFrame(A, B) {
+    home();
+
     local output = [];
     local zbuf   = [];
-    println(zbuf);
 
     local idx = 0;
     while (idx < screenWidth * screenHeight) {
@@ -74,6 +75,7 @@ fn renderFrame(A, B) {
     }
 
     local row = 0;
+    local frame = "";
     while (row < screenHeight) {
         local line = "";
         local col  = 0;
@@ -81,9 +83,11 @@ fn renderFrame(A, B) {
             line = line + output[row * screenWidth + col];
             col  = col + 1;
         }
-        println(line);
+        frame = frame + line + "\n";
         row = row + 1;
     }
+
+    print(frame);
 }
 
 while (1) {

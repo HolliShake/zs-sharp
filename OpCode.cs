@@ -17,6 +17,7 @@ public enum OpCode : byte
     GetAttr,
     GetAttrOrPopDup,
     GetIndex,
+    SetIndex,
     Call,
     CallMethod,
     Await,

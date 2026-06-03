@@ -481,6 +481,20 @@ public class Vm : IDisposable
     {
         var index = frame.PopOperand();
         var zsObject = frame.PopOperand();
+        
+        if (ObValue.IsInstanceOf(zsObject, ValueType.String) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
+                                                                 ObValue.IsInstanceOf(index, ValueType.Number)))
+        {
+            var indexValue = index.Int();
+            var str = zsObject.String();
+
+            // Convert the UTF-16 string into an array of UTF-32 Runes
+            var runes = str.EnumerateRunes().ToArray();
+
+            return indexValue >= 0 && indexValue < runes.Length
+                ? ObValue.FromString(runes[indexValue].ToString())
+                : ObValue.FromErrorMessage(IndexErrorClass, "index out of bounds", BuildTracebackFromFrame());
+        }
 
         if (ObValue.IsInstanceOf(zsObject, ValueType.Array) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
                                                                 ObValue.IsInstanceOf(index, ValueType.Number)))
@@ -507,7 +521,40 @@ public class Vm : IDisposable
 
         return ObValue.FromErrorMessage(
             AttributeErrorClass,
-            "value cannot be indexed",
+            $"value {zsObject.GetObType()} cannot be indexed",
+            BuildTracebackFromFrame()
+        );
+    }
+
+    private ObValue DoSetIndex(Frame frame)
+    {
+        var index = frame.PopOperand();
+        var zsObject = frame.PopOperand();
+        var value = frame.PopOperand();
+        
+        if (ObValue.IsInstanceOf(zsObject, ValueType.Array) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
+                                                                ObValue.IsInstanceOf(index, ValueType.Number)))
+        {
+            var indexValue = index.Int();
+            var arr = zsObject.Array();
+            return arr[indexValue] = value;
+        }
+
+        if (ObValue.IsInstanceOf(zsObject, "Object"))
+        {
+            var attr = zsObject.String();
+            var attribute = ObValue.SetProperty(zsObject, attr, value);
+            return attribute
+                   ?? ObValue.FromErrorMessage(
+                       AttributeErrorClass,
+                       $"value has no attribute {attr}",
+                       BuildTracebackFromFrame()
+                   );
+        }
+
+        return ObValue.FromErrorMessage(
+            AttributeErrorClass,
+            $"value {zsObject.GetObType()} cannot be indexed",
             BuildTracebackFromFrame()
         );
     }
@@ -853,6 +900,16 @@ public class Vm : IDisposable
                     }
 
                     frame.PushOperand(index);
+                    break;
+                }
+                case OpCode.SetIndex:
+                {
+                    var index = DoSetIndex(frame);
+                    if (ObValue.IsInstanceOf(index, "Error"))
+                    {
+                        RaiseOrHandleException(frame, index);
+                        break;
+                    }
                     break;
                 }
                 case OpCode.Call:

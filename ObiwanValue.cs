@@ -247,6 +247,40 @@ public sealed class ObValue
 
         return null;
     }
+    
+    public static ObValue? SetProperty(ObValue zsValue, string propertyName, ObValue value)
+    {
+        // 1. Validation check
+        if (zsValue.Ref is not Dictionary<string, ObValue> props
+            || zsValue is not { Type: ValueType.Object or ValueType.ObjectLiteral or ValueType.Error })
+            return null;
+
+        // 2. If it already belongs to the instance itself, update it there
+        if (props.ContainsKey(propertyName))
+        {
+            props[propertyName] = value;
+            return value;
+        }
+
+        // 3. Walk the class/prototype chain to find where it "belongs" and update it
+        if (props.TryGetValue("constructor", out var current))
+        {
+            while (current is { Type: ValueType.Class, Ref: Dictionary<string, ObValue?> cp })
+            {
+                if (cp.ContainsKey(propertyName))
+                {
+                    cp[propertyName] = value;
+                    return value;
+                }
+                current = cp.GetValueOrDefault("base");
+            }
+        }
+    
+        // 4. Fallback: If it doesn't exist anywhere in the chain, create it locally
+        props[propertyName] = value;
+
+        return value;
+    }
 
     // ── Formatting ────────────────────────────────────────────────────────────
 

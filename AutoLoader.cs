@@ -15,11 +15,13 @@ public class AutoLoader
             new AutoLoad(3, "inject", _ => ObValue.FromNativeFunction(Global.Inject)),
             new AutoLoad(4, "print", _ => ObValue.FromNativeFunction(Global.Print)),
             new AutoLoad(5, "println", _ => ObValue.FromNativeFunction(Global.Println)),
-            new AutoLoad(6, "scan", _ => ObValue.FromNativeFunction(Global.Scan)),
-            new AutoLoad(7, "isWindows", _ => ObValue.FromNativeFunction(Global.OsWin)),
-            new AutoLoad(8, "isMac", _ => ObValue.FromNativeFunction(Global.OsMac)),
-            new AutoLoad(9, "isLinux", _ => ObValue.FromNativeFunction(Global.OsLinux)),
-            new AutoLoad(10, "getOsType", _ => ObValue.FromNativeFunction(Global.GetOsType))
+            new AutoLoad(6, "clear", _ => ObValue.FromNativeFunction(Global.Clear)),
+            new AutoLoad(7, "home", _ => ObValue.FromNativeFunction(Global.Home)),
+            new AutoLoad(8, "scan", _ => ObValue.FromNativeFunction(Global.Scan)),
+            new AutoLoad(9, "isWindows", _ => ObValue.FromNativeFunction(Global.OsWin)),
+            new AutoLoad(10, "isMac", _ => ObValue.FromNativeFunction(Global.OsMac)),
+            new AutoLoad(11, "isLinux", _ => ObValue.FromNativeFunction(Global.OsLinux)),
+            new AutoLoad(12, "getOsType", _ => ObValue.FromNativeFunction(Global.GetOsType))
         ];
 
         InjectedCount = _autoLoads.Count;
