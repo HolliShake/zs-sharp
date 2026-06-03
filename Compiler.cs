@@ -253,6 +253,38 @@ public class Compiler : Parser
                 code.Emit(OpCode.Await);
                 break;
             }
+            case AstType.AstUnaBitNot:
+            {
+                Debug.Assert(node is { A: not null }, "node.A is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.BitNot);
+                break;
+            }
+            case AstType.AstUnaNot:
+            {
+                Debug.Assert(node is { A: not null }, "node.A is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Not);
+                break;
+            }
+            case AstType.AstUnaPos:
+            {
+                Debug.Assert(node is { A: not null }, "node.A is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Pos);
+                break;
+            }
+            case AstType.AstUnaMinus:
+            {
+                Debug.Assert(node is { A: not null }, "node.A is null");
+                Expr(code, table, node.A);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Neg);
+                break;
+            }
             case AstType.AstBinMul:
             {
                 Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
@@ -431,7 +463,8 @@ public class Compiler : Parser
                     case AstType.AstName:
                     {
                         if (!table.SymbolExists(nameNode.Value))
-                            ErrorHandler.CompileError(Path, Source, $"variable {nameNode.Value} not found", nameNode.Position);
+                            ErrorHandler.CompileError(Path, Source, $"variable {nameNode.Value} not found",
+                                nameNode.Position);
                         var symbol = table.Find(nameNode.Value);
                         if (symbol.Symbol.Constant)
                             ErrorHandler.CompileError(Path, Source, "cannot assign to constant", nameNode.Position);
@@ -450,6 +483,7 @@ public class Compiler : Parser
                     }
                     default: throw new InvalidSwitchValueException("invalid switch value");
                 }
+
                 break;
             }
             default:

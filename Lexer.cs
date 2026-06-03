@@ -228,6 +228,11 @@ public class Lexer(string path, string source)
                 Advance();
                 return new Token(TokenType.Sym, "}", new Position(startLine, startColumn));
             }
+            case '~':
+            {
+                Advance();
+                return new Token(TokenType.Sym, "~", new Position(startLine, startColumn));
+            }
             case ',':
             {
                 Advance();

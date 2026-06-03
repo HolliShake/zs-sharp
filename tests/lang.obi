@@ -248,4 +248,7 @@ while (ll < 10) {
     println("ll ->", ll);
 }
 
-import("./doughnut.obi");
+println(~1);
+println(!![]);
+println(+3);
+println(-4);

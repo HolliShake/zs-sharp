@@ -81,6 +81,28 @@ public class Vm : IDisposable
         return result;
     }
 
+    private ObValue DoUnary(ObValue a, string op)
+    {
+        if (op is "!") return a.Bool() ? FalseSingleton : TrueSingleton;
+
+        var res = a.Type switch
+        {
+            ValueType.Number or ValueType.Int when op == "~" =>
+                ObValue.FromNumber(~a.Long()),
+            ValueType.Number or ValueType.Int when op == "+" =>
+                ObValue.FromNumber(+a.Long()),
+            ValueType.Number or ValueType.Int when op == "-" =>
+                ObValue.FromNumber(-a.Long()),
+            _ => ObValue.FromErrorMessage(
+                TypeErrorClass,
+                $"invalid operand types {a.GetObType()} for operator ({op})",
+                BuildTracebackFromFrame()
+            )
+        };
+
+        return res;
+    }
+
     private ObValue DoMul(ObValue a, ObValue b)
     {
         var res = (a.Type, b.Type) switch
@@ -481,7 +503,7 @@ public class Vm : IDisposable
     {
         var index = frame.PopOperand();
         var zsObject = frame.PopOperand();
-        
+
         if (ObValue.IsInstanceOf(zsObject, ValueType.String) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
                                                                  ObValue.IsInstanceOf(index, ValueType.Number)))
         {
@@ -531,7 +553,7 @@ public class Vm : IDisposable
         var index = frame.PopOperand();
         var zsObject = frame.PopOperand();
         var value = frame.PopOperand();
-        
+
         if (ObValue.IsInstanceOf(zsObject, ValueType.Array) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
                                                                 ObValue.IsInstanceOf(index, ValueType.Number)))
         {
@@ -905,11 +927,7 @@ public class Vm : IDisposable
                 case OpCode.SetIndex:
                 {
                     var index = DoSetIndex(frame);
-                    if (ObValue.IsInstanceOf(index, "Error"))
-                    {
-                        RaiseOrHandleException(frame, index);
-                        break;
-                    }
+                    if (ObValue.IsInstanceOf(index, "Error")) RaiseOrHandleException(frame, index);
                     break;
                 }
                 case OpCode.Call:
@@ -975,6 +993,58 @@ public class Vm : IDisposable
                     var size = ReadInt(frame);
                     frame.Forward(4);
                     DoPrint(frame, size);
+                    break;
+                }
+                case OpCode.BitNot:
+                {
+                    var a = frame.PopOperand();
+                    var b = DoUnary(a, "~");
+                    if (ObValue.IsInstanceOf(b, "Error"))
+                    {
+                        RaiseOrHandleException(frame, b);
+                        break;
+                    }
+
+                    frame.PushOperand(b);
+                    break;
+                }
+                case OpCode.Not:
+                {
+                    var a = frame.PopOperand();
+                    var b = DoUnary(a, "!");
+                    if (ObValue.IsInstanceOf(b, "Error"))
+                    {
+                        RaiseOrHandleException(frame, b);
+                        break;
+                    }
+
+                    frame.PushOperand(b);
+                    break;
+                }
+                case OpCode.Pos:
+                {
+                    var a = frame.PopOperand();
+                    var b = DoUnary(a, "+");
+                    if (ObValue.IsInstanceOf(b, "Error"))
+                    {
+                        RaiseOrHandleException(frame, b);
+                        break;
+                    }
+
+                    frame.PushOperand(b);
+                    break;
+                }
+                case OpCode.Neg:
+                {
+                    var a = frame.PopOperand();
+                    var b = DoUnary(a, "-");
+                    if (ObValue.IsInstanceOf(b, "Error"))
+                    {
+                        RaiseOrHandleException(frame, b);
+                        break;
+                    }
+
+                    frame.PushOperand(b);
                     break;
                 }
                 case OpCode.BinMul:

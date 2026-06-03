@@ -247,7 +247,7 @@ public sealed class ObValue
 
         return null;
     }
-    
+
     public static ObValue? SetProperty(ObValue zsValue, string propertyName, ObValue value)
     {
         // 1. Validation check
@@ -264,7 +264,6 @@ public sealed class ObValue
 
         // 3. Walk the class/prototype chain to find where it "belongs" and update it
         if (props.TryGetValue("constructor", out var current))
-        {
             while (current is { Type: ValueType.Class, Ref: Dictionary<string, ObValue?> cp })
             {
                 if (cp.ContainsKey(propertyName))
@@ -272,10 +271,10 @@ public sealed class ObValue
                     cp[propertyName] = value;
                     return value;
                 }
+
                 current = cp.GetValueOrDefault("base");
             }
-        }
-    
+
         // 4. Fallback: If it doesn't exist anywhere in the chain, create it locally
         props[propertyName] = value;
 

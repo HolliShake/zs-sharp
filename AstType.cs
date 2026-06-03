@@ -16,6 +16,7 @@ public enum AstType
     AstFunctionCall,
     AstAwait,
     AstSpread,
+    AstUnaBitNot,
     AstUnaPatternNot,
     AstUnaNot,
     AstUnaPlusPlus,

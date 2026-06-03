@@ -4,7 +4,7 @@ using System.Text;
 namespace obiwan;
 
 /// <summary>
-/// Describes a single decoded bytecode instruction.
+///     Describes a single decoded bytecode instruction.
 /// </summary>
 public record DecompiledInstruction(
     int Offset,
@@ -22,9 +22,9 @@ public record DecompiledInstruction(
 }
 
 /// <summary>
-/// Decompiles a single <see cref="Code"/> object into a list of
-/// <see cref="DecompiledInstruction"/> records, and can pretty-print the
-/// entire <see cref="State"/> (all code objects + constants).
+///     Decompiles a single <see cref="Code" /> object into a list of
+///     <see cref="DecompiledInstruction" /> records, and can pretty-print the
+///     entire <see cref="State" /> (all code objects + constants).
 /// </summary>
 public static class Decompiler
 {
@@ -33,8 +33,8 @@ public static class Decompiler
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// Decompiles every code object in <paramref name="state"/> and writes the
-    /// result to <paramref name="writer"/> (defaults to stdout).
+    ///     Decompiles every code object in <paramref name="state" /> and writes the
+    ///     result to <paramref name="writer" /> (defaults to stdout).
     /// </summary>
     public static void Disassemble(State state, TextWriter? writer = null)
     {
@@ -60,8 +60,8 @@ public static class Decompiler
     }
 
     /// <summary>
-    /// Decompiles a single <see cref="Code"/> object and writes the result to
-    /// <paramref name="writer"/>.
+    ///     Decompiles a single <see cref="Code" /> object and writes the result to
+    ///     <paramref name="writer" />.
     /// </summary>
     public static void DisassembleCode(Code code, State? state, TextWriter? writer = null)
     {
@@ -75,7 +75,7 @@ public static class Decompiler
 
         if (code.Captures.Count > 0)
         {
-            writer.WriteLine($"  Captures  :");
+            writer.WriteLine("  Captures  :");
             foreach (var (depth, address, destination) in code.Captures)
                 writer.WriteLine($"             depth={depth}  addr={address}  dest={destination}");
         }
@@ -116,8 +116,8 @@ public static class Decompiler
     }
 
     /// <summary>
-    /// Decodes the bytecode of <paramref name="code"/> into a flat list of
-    /// <see cref="DecompiledInstruction"/> objects.
+    ///     Decodes the bytecode of <paramref name="code" /> into a flat list of
+    ///     <see cref="DecompiledInstruction" /> objects.
     /// </summary>
     public static List<DecompiledInstruction> Decode(Code code, State? state = null)
     {
@@ -328,9 +328,9 @@ public static class Decompiler
     }
 
     /// <summary>
-    /// Builds a pc-to-source-line dictionary from the <see cref="Code.DebugLines"/>
-    /// table using the same binary-search logic as the VM's <c>GetLine</c> helper.
-    /// We emit the line number at the first instruction that belongs to it.
+    ///     Builds a pc-to-source-line dictionary from the <see cref="Code.DebugLines" />
+    ///     table using the same binary-search logic as the VM's <c>GetLine</c> helper.
+    ///     We emit the line number at the first instruction that belongs to it.
     /// </summary>
     private static Dictionary<int, int> BuildLineMap(Code code)
     {

@@ -367,6 +367,16 @@ public class Parser(string path, string source) : Lexer(path, source)
             return Ast.CreateAwaitNode(futureNode!, position);
         }
 
+        if (Check("~"))
+        {
+            Expect("~");
+            var operand = Unary();
+            if (operand == null)
+                ErrorHandler.CompileError(Path, Source, "an expression is expected", Lookahead.Position);
+
+            return Ast.CreateUnaryNode(AstType.AstUnaBitNot, operand!, position);
+        }
+
         if (Check("!"))
         {
             Expect("!");
