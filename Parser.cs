@@ -353,6 +353,27 @@ public class Parser(string path, string source) : Lexer(path, source)
         return node;
     }
 
+    private Ast? Postfix()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead != null");
+        var position = Lookahead.Position;
+        var node = MemberOrCall();
+        
+        if (node == null) return null;
+
+        if (!(Check("++") || Check("--"))) return node;
+        
+        var opt = Lookahead.Value;
+        Expect(opt);
+        
+        return Ast.CreatePostfixNode(opt switch
+        {
+            "++" => AstType.AstPostPlusPlus,
+            "--" => AstType.AstPostMinusMinus,
+            _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
+        }, node, position);
+    }
+
     private Ast? Unary()
     {
         Debug.Assert(Lookahead != null, "Lookahead != null");
@@ -427,7 +448,7 @@ public class Parser(string path, string source) : Lexer(path, source)
             return Ast.CreateUnaryNode(AstType.AstUnaMinus, operand!, position);
         }
 
-        return MemberOrCall();
+        return Postfix();
     }
 
     private Ast? Multiplicative()

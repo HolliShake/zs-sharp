@@ -108,6 +108,14 @@ public class Ast : IDisposable
             A = future
         };
     }
+    
+    public static Ast CreatePostfixNode(AstType astType, Ast future, Position position)
+    {
+        return new Ast(astType, position)
+        {
+            A = future
+        };
+    }
 
     public static Ast CreateUnaryNode(AstType astType, Ast future, Position position)
     {

@@ -20,12 +20,15 @@ public enum OpCode : byte
     SetIndex,
     Call,
     CallMethod,
+    PostInc,
+    PostDec,
     Await,
     BitNot,
     Not,
     Pos,
     Neg,
     DupTop,
+    Dup2,
     BinMul,
     BinDiv,
     BinMod,
@@ -52,5 +55,7 @@ public enum OpCode : byte
     JumpIfTrueOrPop,
     PopJumpIfFalse,
     PopJumpIfTrue,
+    Rot2,
+    Rot3,
     Return
 }

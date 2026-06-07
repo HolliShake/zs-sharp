@@ -14,6 +14,8 @@ public enum AstType
     AstMemberAccess,
     AstIndex,
     AstFunctionCall,
+    AstPostPlusPlus,
+    AstPostMinusMinus,
     AstAwait,
     AstSpread,
     AstUnaBitNot,

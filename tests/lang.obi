@@ -252,3 +252,15 @@ println(~1);
 println(!![]);
 println(+3);
 println(-4);
+
+var xpp = 0;
+var ypp = {
+    prop: 0
+};
+var zpp = [0];
+
+var app = xpp++ + 2 * 1 - ++xpp;
+
+println(xpp, app);
+
+

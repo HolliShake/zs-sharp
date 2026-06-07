@@ -245,6 +245,22 @@ public class Compiler : Parser
 
                 break;
             }
+            case AstType.AstPostPlusPlus:
+            {
+                AssignOp1(code, table, node);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.PostInc);
+                AssignOp2(code, table, node, true);
+                break;
+            }
+            case AstType.AstPostMinusMinus:
+            {
+                AssignOp1(code, table, node);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.PostDec);
+                AssignOp2(code, table, node, true);
+                break;
+            }
             case AstType.AstAwait:
             {
                 Debug.Assert(node is { A: not null }, "node.A is null");
@@ -491,6 +507,73 @@ public class Compiler : Parser
                 ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
                 break;
             }
+        }
+    }
+
+    private void AssignOp1(Code code, SymbolTable table, Ast expr)
+    {
+        Debug.Assert(expr is { A: not null }, "node.A is null");
+        switch (expr.A.Type)
+        {
+            case AstType.AstName:
+            {
+                Expr(code, table, expr.A);
+                break;
+            }
+            case AstType.AstIndex:
+            {
+                Expr(code, table, expr.A.A!);
+                Expr(code, table, expr.A.B!);
+                code.EmitLine(ModuleId, expr.Position.Line);
+                code.Emit(OpCode.Dup2);
+                code.EmitLine(ModuleId, expr.Position.Line);
+                code.Emit(OpCode.GetIndex);
+                break;
+            }
+            default: throw new InvalidSwitchValueException("invalid switch value");
+        }
+    }
+    private void AssignOp2(Code code, SymbolTable table, Ast expr, bool postfix)
+    {
+        Debug.Assert(expr is { A: not null }, "node.A is null");
+        var node = expr.A!;
+        switch (expr.A.Type)
+        {
+            case AstType.AstName:
+            {
+                var name = node.Value;
+                if (!table.SymbolExists(name))
+                    ErrorHandler.CompileError(Path, Source, "Symbol not found", node.Position);
+
+                var lookupDetail = table.Find(name);
+
+                if (!lookupDetail.IsLocal)
+                {
+                    // Register
+                    var address = code.AllocateLocal();
+                    code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address));
+                    // Console.WriteLine($"{lookupDetail.Depth}, {lookupDetail.Symbol.Offset}, {address}");
+                    table.Add(name, address, false, node.Position);
+                    code.Emit(OpCode.LoadCapture, address);
+                    break;
+                }
+
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
+                break;
+            }
+            case AstType.AstIndex:
+            {
+                if (postfix)
+                {
+                    code.EmitLine(ModuleId, node.Position.Line);
+                    code.Emit(OpCode.Rot3);
+                }
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.SetIndex);
+                break;
+            }
+            default: throw new InvalidSwitchValueException("invalid switch value");
         }
     }
 
