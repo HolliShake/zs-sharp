@@ -812,14 +812,11 @@ public class Compiler : Parser
 
     private void Function(Code code, SymbolTable table, Ast node)
     {
-        Debug.Assert(node is { A: not null }, "node.A is null");
+        Debug.Assert(node is { A: not null } && table.AlreadyExists(node.A.Value), "node.A is null");
         var fnCode = new Code(node.A.Value, node.IntArg0, node.Flag0);
         var locals = new SymbolTable(ScopeType.Function, table);
 
-        var functionAddress = code.AllocateLocal();
-        if (table.SymbolExists(node.A.Value))
-            ErrorHandler.CompileError(Path, Source, "function already exists", node.Position);
-        table.Add(node.A.Value, functionAddress, false, node.Position);
+        var forwarded = table.Find(node.A.Value);
 
         var position = node.Position;
 
@@ -859,7 +856,7 @@ public class Compiler : Parser
         code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.LoadFunction, addressOfCode);
         code.EmitLine(ModuleId, node.Position.Line);
-        code.Emit(OpCode.StoreName, functionAddress);
+        code.Emit(OpCode.StoreName, forwarded.Symbol.Offset);
     }
 
     private void CompileVariable(bool global, bool constant, Code code, SymbolTable table, Ast node)
@@ -1122,6 +1119,33 @@ public class Compiler : Parser
         }
     }
 
+    private void ForwardFunction(Code code, SymbolTable table, Ast node)
+    {
+        var position = node.Position;
+
+        var bodyHead = node.A;
+        while (bodyHead != null)
+        {
+            switch (bodyHead.Type)
+            {
+                case AstType.AstFunction:
+                {
+                    Debug.Assert(node is { A: not null }, "node.A is null");
+                    var function = bodyHead;
+                    Debug.Assert(function is { A: not null }, "node.A is null");
+                    var functionAddress = code.AllocateLocal();
+                    if (table.SymbolExists(function.A.Value))
+                        ErrorHandler.CompileError(Path, Source, "function already exists", function.Position);
+                    table.Add(function.A.Value, functionAddress, false, function.Position);
+                    break;
+                }
+            }
+
+            position = bodyHead.Position;
+            bodyHead = bodyHead.Next;
+        }
+    }
+
     private ObValue Program(Ast node, bool asModule)
     {
         var code = new Code("main", 0, false);
@@ -1129,6 +1153,9 @@ public class Compiler : Parser
 
         code.SetLocalCount(State.AutoLoader.InjectedCount);
         State.AutoLoader.InjectSymbol(globalTable);
+
+        // Forwards function prototype
+        ForwardFunction(code, globalTable, node);
 
         var position = node.Position;
 

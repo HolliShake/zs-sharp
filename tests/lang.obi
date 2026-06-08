@@ -224,10 +224,6 @@ items->foreach(fn(a, b) {
     println(a);
 });
 
-fn child() {
-    println(">>>>>", inject("name")->add(1, 5));
-}
-
 fn parent() {
     provide("name", {
         add: fn(a, b) {
@@ -235,6 +231,10 @@ fn parent() {
         }
     });
     child();
+}
+
+fn child() {
+    println(">>>>>", inject("name")->add(1, 5));
 }
 
 parent();

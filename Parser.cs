@@ -358,14 +358,14 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead != null");
         var position = Lookahead.Position;
         var node = MemberOrCall();
-        
+
         if (node == null) return null;
 
         if (!(Check("++") || Check("--"))) return node;
-        
+
         var opt = Lookahead.Value;
         Expect(opt);
-        
+
         return Ast.CreatePostfixNode(opt switch
         {
             "++" => AstType.AstPostPlusPlus,
