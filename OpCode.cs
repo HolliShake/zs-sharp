@@ -57,5 +57,6 @@ public enum OpCode : byte
     PopJumpIfTrue,
     Rot2,
     Rot3,
+    Rot4,
     Return
 }

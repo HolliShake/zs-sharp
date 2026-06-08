@@ -550,22 +550,22 @@ public class Vm : IDisposable
 
     private ObValue DoSetIndex(Frame frame)
     {
-        var index = frame.PopOperand();
-        var zsObject = frame.PopOperand();
         var value = frame.PopOperand();
+        var indx = frame.PopOperand();
+        var objc = frame.PopOperand();
 
-        if (ObValue.IsInstanceOf(zsObject, ValueType.Array) && (ObValue.IsInstanceOf(index, ValueType.Int) ||
-                                                                ObValue.IsInstanceOf(index, ValueType.Number)))
+        if (ObValue.IsInstanceOf(objc, ValueType.Array) && (ObValue.IsInstanceOf(indx, ValueType.Int) ||
+                                                            ObValue.IsInstanceOf(indx, ValueType.Number)))
         {
-            var indexValue = index.Int();
-            var arr = zsObject.Array();
+            var indexValue = indx.Int();
+            var arr = objc.Array();
             return arr[indexValue] = value;
         }
 
-        if (ObValue.IsInstanceOf(zsObject, "Object"))
+        if (ObValue.IsInstanceOf(objc, "Object"))
         {
-            var attr = zsObject.String();
-            var attribute = ObValue.SetProperty(zsObject, attr, value);
+            var attr = objc.String();
+            var attribute = ObValue.SetProperty(objc, attr, value);
             return attribute
                    ?? ObValue.FromErrorMessage(
                        AttributeErrorClass,
@@ -576,7 +576,7 @@ public class Vm : IDisposable
 
         return ObValue.FromErrorMessage(
             AttributeErrorClass,
-            $"value {zsObject.GetObType()} cannot be indexed",
+            $"value {objc.GetObType()} cannot be indexed",
             BuildTracebackFromFrame()
         );
     }
@@ -995,6 +995,21 @@ public class Vm : IDisposable
                     DoPrint(frame, size);
                     break;
                 }
+                case OpCode.PostInc:
+                {
+                    var a = frame.PopOperand();
+                    var b = ObValue.FromNumber(1);
+                    var c = DoAdd(b, a);
+                    if (ObValue.IsInstanceOf(c, "Error"))
+                    {
+                        RaiseOrHandleException(frame, c);
+                        break;
+                    }
+
+                    frame.PushOperand(c);
+                    frame.PushOperand(a);
+                    break;
+                }
                 case OpCode.BitNot:
                 {
                     var a = frame.PopOperand();
@@ -1343,6 +1358,29 @@ public class Vm : IDisposable
                 {
                     var jmp = ReadInt(frame);
                     frame.JumpTo(jmp);
+                    break;
+                }
+                case OpCode.Dup2:
+                {
+                    var top = frame.PopOperand();
+                    var nxt = frame.PopOperand();
+                    frame.PushOperand(nxt);
+                    frame.PushOperand(top);
+                    frame.PushOperand(nxt);
+                    frame.PushOperand(top);
+                    break;
+                }
+                case OpCode.Rot4:
+                {
+                    // A, B, C, D => D, A, B, C
+                    var d = frame.PopOperand(); // top
+                    var c = frame.PopOperand();
+                    var b = frame.PopOperand();
+                    var a = frame.PopOperand(); // bottom of the 4
+                    frame.PushOperand(d);
+                    frame.PushOperand(a);
+                    frame.PushOperand(b);
+                    frame.PushOperand(c);
                     break;
                 }
                 case OpCode.Return:

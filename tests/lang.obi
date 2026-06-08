@@ -257,10 +257,10 @@ var xpp = 0;
 var ypp = {
     prop: 0
 };
-var zpp = [0];
+var zpp = ["One", 2];
 
-var app = xpp++ + 2 * 1 - ++xpp;
+var app = zpp[1]++ * 3 + 1 + zpp[1]++ - 2;
 
-println(xpp, app);
+println(">>>", zpp, app);
 
 

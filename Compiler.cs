@@ -258,6 +258,8 @@ public class Compiler : Parser
                 AssignOp1(code, table, node);
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.PostDec);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.DupTop);
                 AssignOp2(code, table, node, true);
                 break;
             }
@@ -494,6 +496,8 @@ public class Compiler : Parser
                         Expr(code, table, nameNode.A!);
                         Expr(code, table, nameNode.B!);
                         code.EmitLine(ModuleId, node.Position.Line);
+                        code.Emit(OpCode.Rot4);
+                        code.EmitLine(ModuleId, node.Position.Line);
                         code.Emit(OpCode.SetIndex);
                         break;
                     }
@@ -533,6 +537,8 @@ public class Compiler : Parser
             default: throw new InvalidSwitchValueException("invalid switch value");
         }
     }
+
+
     private void AssignOp2(Code code, SymbolTable table, Ast expr, bool postfix)
     {
         Debug.Assert(expr is { A: not null }, "node.A is null");
@@ -567,8 +573,9 @@ public class Compiler : Parser
                 if (postfix)
                 {
                     code.EmitLine(ModuleId, node.Position.Line);
-                    code.Emit(OpCode.Rot3);
+                    code.Emit(OpCode.Rot4);
                 }
+
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.SetIndex);
                 break;
