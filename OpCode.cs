@@ -22,6 +22,8 @@ public enum OpCode : byte
     CallMethod,
     PostInc,
     PostDec,
+    Inc,
+    Dec,
     Await,
     BitNot,
     Not,

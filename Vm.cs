@@ -1010,6 +1010,21 @@ public class Vm : IDisposable
                     frame.PushOperand(a);
                     break;
                 }
+                case OpCode.Inc:
+                {
+                    var a = frame.PopOperand();
+                    var b = ObValue.FromNumber(1);
+                    var c = DoAdd(b, a);
+                    if (ObValue.IsInstanceOf(c, "Error"))
+                    {
+                        RaiseOrHandleException(frame, c);
+                        break;
+                    }
+
+                    frame.PushOperand(a);
+                    frame.PushOperand(c);
+                    break;
+                }
                 case OpCode.BitNot:
                 {
                     var a = frame.PopOperand();

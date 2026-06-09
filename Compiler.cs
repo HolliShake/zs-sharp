@@ -253,6 +253,14 @@ public class Compiler : Parser
                 AssignOp2(code, table, node, true);
                 break;
             }
+            case AstType.AstUnaPlusPlus:
+            {
+                AssignOp1(code, table, node);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Inc);
+                AssignOp2(code, table, node, true);
+                break;
+            }
             case AstType.AstPostMinusMinus:
             {
                 AssignOp1(code, table, node);
