@@ -1021,7 +1021,7 @@ public class Vm : IDisposable
                         break;
                     }
 
-                    frame.PushOperand(a);
+                    frame.PushOperand(c);
                     frame.PushOperand(c);
                     break;
                 }
@@ -1383,6 +1383,17 @@ public class Vm : IDisposable
                     frame.PushOperand(top);
                     frame.PushOperand(nxt);
                     frame.PushOperand(top);
+                    break;
+                }
+                case OpCode.Rot3:
+                {
+                    // a, b, c => c, a, b
+                    var c = frame.PopOperand();
+                    var b = frame.PopOperand();
+                    var a = frame.PopOperand();
+                    frame.PushOperand(c);
+                    frame.PushOperand(a);
+                    frame.PushOperand(b);
                     break;
                 }
                 case OpCode.Rot4:

@@ -258,7 +258,7 @@ public class Compiler : Parser
                 AssignOp1(code, table, node);
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.Inc);
-                AssignOp2(code, table, node, true);
+                AssignOp2(code, table, node, false);
                 break;
             }
             case AstType.AstPostMinusMinus:
@@ -578,11 +578,8 @@ public class Compiler : Parser
             }
             case AstType.AstIndex:
             {
-                if (postfix)
-                {
-                    code.EmitLine(ModuleId, node.Position.Line);
-                    code.Emit(OpCode.Rot4);
-                }
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Rot4);
 
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.SetIndex);
