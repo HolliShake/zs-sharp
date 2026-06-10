@@ -6,6 +6,7 @@ public enum OpCode : byte
     LoadCapture,
     LoadConst,
     LoadString,
+    LoadBool,
     LoadNull,
     MakeArray,
     ArrayUnpack,

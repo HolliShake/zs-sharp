@@ -61,6 +61,19 @@ public class Compiler : Parser
                 code.Emit(OpCode.LoadConst, index);
                 break;
             }
+            case AstType.AstBool:
+            {
+                var value = node.Value == Keyword.True;
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.LoadBool, value ? 1 : 0);
+                break;
+            }
+            case AstType.AstNull:
+            {
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.LoadNull);
+                break;
+            }
             case AstType.AstArrayLiteral:
             {
                 var elementHead = node.A;

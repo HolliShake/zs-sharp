@@ -877,6 +877,13 @@ public class Vm : IDisposable
                     frame.PushOperand(ObValue.FromString(str));
                     break;
                 }
+                case OpCode.LoadBool:
+                {
+                    var bit = ReadInt(frame);
+                    frame.Forward(4);
+                    frame.PushOperand(bit == 1 ? TrueSingleton : FalseSingleton);
+                    break;
+                }
                 case OpCode.LoadNull:
                 {
                     frame.PushOperand(NullSingleton);

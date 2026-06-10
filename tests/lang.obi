@@ -267,4 +267,6 @@ println("2>>>", ypp, bpp);
 ypp->prop = 10;
 println("2>>>", ypp, bpp);
 
+println(true, false, null);
+
 

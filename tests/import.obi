@@ -2,7 +2,7 @@
 
 println("From Obi!!!");
 
-const Add = fn(a, b) {
+const Add = fn (a, b) {
     return a + b;
 };
 
