@@ -1377,6 +1377,11 @@ public class Vm : IDisposable
                     frame.PopOperand();
                     break;
                 }
+                case OpCode.LoopStart:
+                {
+                    // Just a label
+                    break;
+                }
                 case OpCode.SetupTry:
                 {
                     var jmp = ReadInt(frame);

@@ -221,7 +221,7 @@ items->push(1,2,3);
 println(">>", items->peek());
 
 items->foreach(fn(a, b) {
-    println(a);
+    println("FOREACH", a);
 });
 
 fn parent() {

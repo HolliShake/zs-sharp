@@ -50,6 +50,7 @@ public enum OpCode : byte
     BinOr,
     BinXor,
     PopTop,
+    LoopStart,
     SetupTry,
     PopTry,
     PopNTry,
