@@ -305,4 +305,280 @@ public static class Global
         var instance = ObValue.CreateObObject(ValueType.Object, mathClass, mathMethods);
         return instance;
     }
+
+    public static ObValue BuildPath(Vm instanceOfVm)
+    {
+        var pathClass = ObValue.CreateObClass(instanceOfVm.ObjectClass, "Path");
+
+        // --- HELPER FUNCTIONS ---
+
+        // Wraps a function that takes no arguments and returns a string
+        ObValue Wrap0ArgsString(Func<string> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 0)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 0 arguments",
+                        vm.BuildTracebackFromFrame());
+
+                return ObValue.FromString(func());
+            });
+        }
+
+        // Wraps a function that takes 1 string and returns a string
+        ObValue Wrap1ArgString(Func<string, string> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string",
+                        vm.BuildTracebackFromFrame());
+
+                var result = func(args[0].String());
+                // Some Path methods (like GetDirectoryName on a root path) return null.
+                return ObValue.FromString(result);
+            });
+        }
+        
+        ObValue Wrap1ArgStringReturnsNullable(Func<string, string?> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string",
+                        vm.BuildTracebackFromFrame());
+
+                var result = func(args[0].String());
+                // Some Path methods (like GetDirectoryName on a root path) return null.
+                return result == null ? vm.NullSingleton : ObValue.FromString(result);
+            });
+        }
+
+        // Wraps a function that takes 1 string and returns a boolean
+        ObValue Wrap1ArgBool(Func<string, bool> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string",
+                        vm.BuildTracebackFromFrame());
+
+                return ObValue.FromBool(func(args[0].String()));
+            });
+        }
+
+        // Wraps a function that takes 2 strings and returns a string
+        ObValue Wrap2ArgsString(Func<string, string, string> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 2)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 2 arguments",
+                        vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String) ||
+                    !ObValue.IsInstanceOf(args[1], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects strings",
+                        vm.BuildTracebackFromFrame());
+
+                return ObValue.FromString(func(args[0].String(), args[1].String()));
+            });
+        }
+
+        // --- BUILD THE DICTIONARY ---
+        var pathMethods = new Dictionary<string, ObValue>
+        {
+            // Properties (Constants - converted to strings for the interpreter)
+            ["DirectorySeparator"] = ObValue.FromString(Path.DirectorySeparatorChar.ToString()),
+            ["AltDirectorySeparator"] = ObValue.FromString(Path.AltDirectorySeparatorChar.ToString()),
+            ["PathSeparator"] = ObValue.FromString(Path.PathSeparator.ToString()),
+
+            // 0-Argument Functions
+            ["getRandomFileName"] = Wrap0ArgsString(Path.GetRandomFileName, "getRandomFileName"),
+            ["getTempPath"] = Wrap0ArgsString(Path.GetTempPath, "getTempPath"),
+            ["getTempFileName"] = Wrap0ArgsString(Path.GetTempFileName, "getTempFileName"),
+
+            // 1-Argument Functions (String returns)
+            ["getFileName"] = Wrap1ArgString(Path.GetFileName, "getFileName"),
+            ["getFileNameWithoutExtension"] =
+                Wrap1ArgString(Path.GetFileNameWithoutExtension, "getFileNameWithoutExtension"),
+            ["getExtension"] = Wrap1ArgString(Path.GetExtension, "getExtension"),
+            ["getDirectoryName"] = Wrap1ArgStringReturnsNullable(Path.GetDirectoryName, "getDirectoryName"),
+            ["getFullPath"] = Wrap1ArgString(Path.GetFullPath, "getFullPath"),
+
+            // 1-Argument Functions (Boolean returns)
+            ["hasExtension"] = Wrap1ArgBool(Path.HasExtension, "hasExtension"),
+            ["isPathRooted"] = Wrap1ArgBool(Path.IsPathRooted, "isPathRooted"),
+            ["isPathFullyQualified"] =
+                Wrap1ArgBool(Path.IsPathFullyQualified, "isPathFullyQualified"), // Requires .NET Core 2.1+
+
+            // 2-Argument Functions
+            ["combine"] = Wrap2ArgsString(Path.Combine, "combine"),
+            ["changeExtension"] = Wrap2ArgsString(Path.ChangeExtension, "changeExtension"),
+            ["getRelativePath"] = Wrap2ArgsString(Path.GetRelativePath, "getRelativePath"), // Requires .NET Core 2.1+
+
+            // Custom Variadic Combine (Optional: if you want to support combining >2 paths)
+            ["combineAll"] = ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length == 0)
+                    return ObValue.FromString("");
+
+                var paths = new string[args.Length];
+                for (var i = 0; i < args.Length; i++)
+                {
+                    if (!ObValue.IsInstanceOf(args[i], ValueType.String))
+                        return ObValue.FromErrorMessage(vm.TypeErrorClass,
+                            "combineAll expects all arguments to be strings",
+                            vm.BuildTracebackFromFrame());
+                    paths[i] = args[i].String();
+                }
+
+                return ObValue.FromString(Path.Combine(paths));
+            })
+        };
+
+        var instance = ObValue.CreateObObject(ValueType.Object, pathClass, pathMethods);
+        return instance;
+    }
+    
+    public static ObValue BuildFile(Vm instanceOfVm)
+    {
+        var fileClass = ObValue.CreateObClass(instanceOfVm.ObjectClass, "File");
+
+        // --- HELPER FUNCTIONS ---
+
+        // 1-Argument: String -> Boolean (e.g., Exists)
+        ObValue Wrap1ArgStringReturnsBool(Func<string, bool> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+
+                return ObValue.FromBool(func(args[0].String()));
+            });
+        }
+
+        // 1-Argument: String -> String (e.g., ReadAllText)
+        ObValue Wrap1ArgStringReturnsString(Func<string, string> func, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+
+                try
+                {
+                    return ObValue.FromString(func(args[0].String()));
+                }
+                catch (Exception ex)
+                {
+                    // Catching IO exceptions prevents the host program from crashing due to bad script behavior
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                }
+            });
+        }
+
+        // 1-Argument: String -> Void (e.g., Delete)
+        ObValue Wrap1ArgStringReturnsVoid(Action<string> action, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 1)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+
+                try
+                {
+                    action(args[0].String());
+                    return vm.NullSingleton; // Return language's null/nil/void equivalent
+                }
+                catch (Exception ex)
+                {
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                }
+            });
+        }
+
+        // 2-Arguments: String, String -> Void (e.g., WriteAllText, Copy, Move)
+        ObValue Wrap2ArgsStringReturnsVoid(Action<string, string> action, string name)
+        {
+            return ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 2)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 2 arguments", vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String) || !ObValue.IsInstanceOf(args[1], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects string arguments", vm.BuildTracebackFromFrame());
+
+                try
+                {
+                    action(args[0].String(), args[1].String());
+                    return vm.NullSingleton;
+                }
+                catch (Exception ex)
+                {
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                }
+            });
+        }
+
+        // --- BUILD THE DICTIONARY ---
+        var fileMethods = new Dictionary<string, ObValue>
+        {
+            // Info / Checks
+            ["exists"] = Wrap1ArgStringReturnsBool(File.Exists, "exists"),
+            
+            // Reading
+            ["readText"] = Wrap1ArgStringReturnsString(path => File.ReadAllText(path), "readText"),
+            
+            // Writing / Modifying
+            ["writeText"] = Wrap2ArgsStringReturnsVoid((path, contents) => File.WriteAllText(path, contents), "writeText"),
+            ["appendText"] = Wrap2ArgsStringReturnsVoid((path, contents) => File.AppendAllText(path, contents), "appendText"),
+            
+            // File Operations
+            ["delete"] = Wrap1ArgStringReturnsVoid(File.Delete, "delete"),
+            ["copy"] = Wrap2ArgsStringReturnsVoid((src, dest) => File.Copy(src, dest), "copy"), // Fails if dest exists
+            ["move"] = Wrap2ArgsStringReturnsVoid((src, dest) => File.Move(src, dest), "move"),
+
+            // Custom 3-Arg Copy to support overwrite flags
+            ["copyWithOverwrite"] = ObValue.FromNativeFunction((vm, args) =>
+            {
+                if (args.Length != 3)
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "copyWithOverwrite expects 3 arguments", vm.BuildTracebackFromFrame());
+                
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String) || 
+                    !ObValue.IsInstanceOf(args[1], ValueType.String) || 
+                    !ObValue.IsInstanceOf(args[2], ValueType.Bool))
+                {
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, "copyWithOverwrite expects (string source, string dest, bool overwrite)", vm.BuildTracebackFromFrame());
+                }
+
+                try
+                {
+                    File.Copy(args[0].String(), args[1].String(), args[2].Bool());
+                    return vm.NullSingleton;
+                }
+                catch (Exception ex)
+                {
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"copyWithOverwrite failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                }
+            })
+        };
+
+        var instance = ObValue.CreateObObject(ValueType.Object, fileClass, fileMethods);
+        return instance;
+    }
 }

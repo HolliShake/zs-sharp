@@ -10,6 +10,7 @@ public class Vm : IDisposable
     public readonly ObValue ArgumentErrorClass;
     public readonly ObValue AttributeErrorClass;
     public readonly ObValue ErrorClass;
+    public readonly ObValue IoErrorClass;
     public readonly ObValue FalseSingleton;
     public readonly ObValue FutureClass;
     public readonly ObValue IndexErrorClass;
@@ -32,6 +33,7 @@ public class Vm : IDisposable
         AttributeErrorClass = ObValue.CreateObClass(ErrorClass, "AttributeError");
         TypeErrorClass = ObValue.CreateObClass(ErrorClass, "TypeError");
         ZeroDivideErrorClass = ObValue.CreateObClass(ErrorClass, "ZeroDivideError");
+        IoErrorClass = ObValue.CreateObClass(ErrorClass, "IoError");
         IndexErrorClass = ObValue.CreateObClass(ErrorClass, "IndexError");
         ArgumentErrorClass = ObValue.CreateObClass(ErrorClass, "ArgumentError");
         FutureClass = ObValue.CreateObClass(ObjectClass, "Future");
