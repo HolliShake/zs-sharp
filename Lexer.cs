@@ -2,6 +2,14 @@ using System.Text;
 
 namespace obiwan;
 
+public struct LexerState
+{
+    public int Indx;
+    public int Line;
+    public int Colm;
+}
+
+
 public class Lexer(string path, string source)
 {
     protected readonly string Path = path;
@@ -9,6 +17,15 @@ public class Lexer(string path, string source)
     private int _colm = 1;
     private int _indx;
     private int _line = 1;
+    
+    protected LexerState SaveState() => new() { Indx = _indx, Line = _line, Colm = _colm };
+    
+    protected void RestoreState(LexerState state)
+    {
+        _indx = state.Indx;
+        _line = state.Line;
+        _colm = state.Colm;
+    }
 
     protected Token Next()
     {

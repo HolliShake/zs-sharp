@@ -243,7 +243,7 @@ public class Compiler : Parser
                     }
                     else
                     {
-                        Expr(code, table, callable.B);
+                        Expr(code, table, callable.B!);
                     }
 
                     code.EmitLine(ModuleId, callable.B!.Position.Line);
@@ -544,12 +544,74 @@ public class Compiler : Parser
 
                 break;
             }
+            case AstType.AstMulAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinMul);
+                break;
+            }
+            case AstType.AstDivAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinDiv);
+                break;
+            }
+            case AstType.AstModAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinMod);
+                break;
+            }
+            case AstType.AstAddAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinAdd);
+                break;
+            }
+            case AstType.AstSubAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinSub);
+                break;
+            }
+            case AstType.AstLShiftAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinLshift);
+                break;
+            }
+            case AstType.AstRShiftAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinRshift);
+                break;
+            }
+            case AstType.AstAndAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinAnd);
+                break;
+            }
+            case AstType.AstOrAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinOr);
+                break;
+            }
+            case AstType.AstXorAssign:
+            {
+                AugmentedAssignment(code, table, node, OpCode.BinXor);
+                break;
+            }
             default:
             {
                 ErrorHandler.CompileError(Path, Source, "Node not implemented", node.Position);
                 break;
             }
         }
+    }
+
+    private void AugmentedAssignment(Code code, SymbolTable table, Ast node, OpCode opCode)
+    {
+        Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
+        AssignOp1(code, table, node);
+        Expr(code, table, node.B);
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.Emit(opCode);
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.Emit(OpCode.DupTop);
+        AssignOp2(code, table, node);
     }
 
     private void AssignOp1(Code code, SymbolTable table, Ast expr)
@@ -581,7 +643,7 @@ public class Compiler : Parser
                 code.Emit(OpCode.GetIndex);
                 break;
             }
-            default: throw new InvalidSwitchValueException("invalid switch value");
+            default: throw new InvalidSwitchValueException($"invalid switch value");
         }
     }
 

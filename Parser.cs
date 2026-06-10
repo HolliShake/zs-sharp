@@ -23,7 +23,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (!Check(type))
             ErrorHandler.CompileError(
                 Path, Source,
-                $"Expected token of type {type}, but got {Lookahead} at position {Lookahead.Position}.",
+                $"Expected token of type {type}, but got {Lookahead.Value} at position {Lookahead.Position.Line}.",
                 Lookahead.Position);
 
         Lookahead = Next();
@@ -35,7 +35,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (!Check(value))
             ErrorHandler.CompileError(
                 Path, Source,
-                $"Expected token with value '{value}', but got {Lookahead} at position {Lookahead.Position}.",
+                $"Expected token with value '{value}', but got {Lookahead.Value} at position {Lookahead.Position.Line}.",
                 Lookahead.Position);
 
         Lookahead = Next();
@@ -656,128 +656,39 @@ public class Parser(string path, string source) : Lexer(path, source)
         return lhs;
     }
 
-    private Ast? SimpleAssign()
+    private Ast? Assignment()
     {
         var lhs = Logical();
-
         if (lhs == null) return null;
 
-        while (Check("="))
+        if (Check("=")  || Check("+=") || Check("-=") ||
+            Check("*=") || Check("/=") || Check("%=") ||
+            Check("<<=")|| Check(">>=") ||
+            Check("&=") || Check("|=") || Check("^="))
         {
-            Debug.Assert(Lookahead != null, "Lookahead is null");
-            var opt = Lookahead.Value;
+            var opt = Lookahead!.Value;
             Expect(TokenType.Sym);
 
-            var rhs = Logical()
-                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
+            var rhs = Assignment()  // right-recursive
+                      ?? throw new Exception($"Expected expression after '{opt}' at position {Lookahead.Position}.");
 
-            lhs = Ast.CreateBinaryOperationNode(AstType.AstAssign, lhs, rhs, lhs.Position);
-        }
-
-        return lhs;
-    }
-
-    private Ast? MulAssign()
-    {
-        var lhs = SimpleAssign();
-        
-        if (lhs == null) return null;
-        
-        while (Check("*=") || Check("/=") || Check("%="))
-        {
-            Debug.Assert(Lookahead != null, "Lookahead is null");
-            var opt = Lookahead.Value;
-            Expect(TokenType.Sym);
-
-            var rhs = SimpleAssign()
-                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
-
-            lhs = Ast.CreateBinaryOperationNode(opt switch
+            var astType = opt switch
             {
-                "*=" => AstType.AstMulAssign,
-                "/=" => AstType.AstDivAssign,
-                "%=" => AstType.AstModAssign,
-                _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
-            }, lhs, rhs, lhs.Position);
-        }
-
-        return lhs;
-    }
-
-    private Ast? AddAssign()
-    {
-        var lhs = MulAssign();
-        
-        if (lhs == null) return null;
-        
-        while (Check("+=") || Check("-="))
-        {
-            Debug.Assert(Lookahead != null, "Lookahead is null");
-            var opt = Lookahead.Value;
-            Expect(TokenType.Sym);
-
-            var rhs = MulAssign()
-                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
-
-            lhs = Ast.CreateBinaryOperationNode(opt switch
-            {
-                "+=" => AstType.AstAddAssign,
-                "-=" => AstType.AstSubAssign,
-                _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
-            }, lhs, rhs, lhs.Position);
-        }
-
-        return lhs;
-    }
-    
-    private Ast? ShiftAssign()
-    {
-        var lhs = AddAssign();
-        
-        if (lhs == null) return null;
-        
-        while (Check("<<=") || Check(">>="))
-        {
-            Debug.Assert(Lookahead != null, "Lookahead is null");
-            var opt = Lookahead.Value;
-            Expect(TokenType.Sym);
-
-            var rhs = AddAssign()
-                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
-
-            lhs = Ast.CreateBinaryOperationNode(opt switch
-            {
+                "="   => AstType.AstAssign,
+                "+="  => AstType.AstAddAssign,
+                "-="  => AstType.AstSubAssign,
+                "*="  => AstType.AstMulAssign,
+                "/="  => AstType.AstDivAssign,
+                "%="  => AstType.AstModAssign,
                 "<<=" => AstType.AstLShiftAssign,
                 ">>=" => AstType.AstRShiftAssign,
-                _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
-            }, lhs, rhs, lhs.Position);
-        }
+                "&="  => AstType.AstAndAssign,
+                "|="  => AstType.AstOrAssign,
+                "^="  => AstType.AstXorAssign,
+                _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}'.")
+            };
 
-        return lhs;
-    }
-
-    private Ast? BitwiseAssign()
-    {
-        var lhs = ShiftAssign();
-        
-        if (lhs == null) return null;
-        
-        while (Check("&=") || Check("|=") || Check("^="))
-        {
-            Debug.Assert(Lookahead != null, "Lookahead is null");
-            var opt = Lookahead.Value;
-            Expect(TokenType.Sym);
-
-            var rhs = ShiftAssign()
-                      ?? throw new Exception($"Expected a terminal after '{opt}' at position {Lookahead.Position}.");
-
-            lhs = Ast.CreateBinaryOperationNode(opt switch
-            {
-                "&=" => AstType.AstAndAssign,
-                "|=" => AstType.AstOrAssign,
-                "^=" => AstType.AstXorAssign,
-                _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}' at position {Lookahead.Position}.")
-            }, lhs, rhs, lhs.Position);
+            return Ast.CreateBinaryOperationNode(astType, lhs, rhs, lhs.Position);
         }
 
         return lhs;
@@ -785,7 +696,7 @@ public class Parser(string path, string source) : Lexer(path, source)
 
     private Ast? Expression(bool nullable = true)
     {
-        var node = BitwiseAssign();
+        var node = Assignment();
         if (node != null) return node;
 
         if (nullable) return null;

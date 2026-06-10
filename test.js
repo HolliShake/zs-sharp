@@ -62,3 +62,7 @@ add(0, 1)
 
 add(0, "foccers")
     .catch(cbError);
+
+let zpp = ["One", 2];
+let app = zpp[1]++ * 3 + 1 + zpp[1]++ - 2 + ++zpp[1] + (zpp[1] += 2);
+console.log("1>>>", zpp, app);
