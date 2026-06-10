@@ -250,15 +250,7 @@ public class Compiler : Parser
                 AssignOp1(code, table, node);
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.PostInc);
-                AssignOp2(code, table, node, true);
-                break;
-            }
-            case AstType.AstUnaPlusPlus:
-            {
-                AssignOp1(code, table, node);
-                code.EmitLine(ModuleId, node.Position.Line);
-                code.Emit(OpCode.Inc);
-                AssignOp2(code, table, node, false);
+                AssignOp2(code, table, node);
                 break;
             }
             case AstType.AstPostMinusMinus:
@@ -268,7 +260,23 @@ public class Compiler : Parser
                 code.Emit(OpCode.PostDec);
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.DupTop);
-                AssignOp2(code, table, node, true);
+                AssignOp2(code, table, node);
+                break;
+            }
+            case AstType.AstUnaPlusPlus:
+            {
+                AssignOp1(code, table, node);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Inc);
+                AssignOp2(code, table, node);
+                break;
+            }
+            case AstType.AstUnaMinusMinus:
+            {
+                AssignOp1(code, table, node);
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Dec);
+                AssignOp2(code, table, node);
                 break;
             }
             case AstType.AstAwait:
@@ -499,6 +507,15 @@ public class Compiler : Parser
                         code.Emit(symbol.IsLocal ? OpCode.StoreLocal : OpCode.StoreName, symbol.Symbol.Offset);
                         break;
                     }
+                    case AstType.AstMemberAccess:
+                    {
+                        Expr(code, table, nameNode.A!);
+                        code.EmitLine(ModuleId, node.Position.Line);
+                        code.Emit(OpCode.Rot2);
+                        code.EmitLine(ModuleId, node.Position.Line);
+                        code.Emit(OpCode.SetAttr, nameNode.B!.Value);
+                        break;
+                    }
                     case AstType.AstIndex:
                     {
                         Expr(code, table, nameNode.A!);
@@ -532,6 +549,15 @@ public class Compiler : Parser
                 Expr(code, table, expr.A);
                 break;
             }
+            case AstType.AstMemberAccess:
+            {
+                Expr(code, table, expr.A.A!);
+                code.EmitLine(ModuleId, expr.Position.Line);
+                code.Emit(OpCode.DupTop);
+                code.EmitLine(ModuleId, expr.A.B!.Position.Line);
+                code.Emit(OpCode.GetAttr, expr.A.B!.Value);
+                break;
+            }
             case AstType.AstIndex:
             {
                 Expr(code, table, expr.A.A!);
@@ -547,7 +573,7 @@ public class Compiler : Parser
     }
 
 
-    private void AssignOp2(Code code, SymbolTable table, Ast expr, bool postfix)
+    private void AssignOp2(Code code, SymbolTable table, Ast expr)
     {
         Debug.Assert(expr is { A: not null }, "node.A is null");
         var node = expr.A!;
@@ -574,6 +600,15 @@ public class Compiler : Parser
 
                 code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
+                break;
+            }
+            case AstType.AstMemberAccess:
+            {
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.Rot3);
+
+                code.EmitLine(ModuleId, node.Position.Line);
+                code.Emit(OpCode.SetAttr, expr.A.B!.Value);
                 break;
             }
             case AstType.AstIndex:

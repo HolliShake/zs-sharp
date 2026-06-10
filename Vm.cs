@@ -548,6 +548,30 @@ public class Vm : IDisposable
         );
     }
 
+    private ObValue DoSetAttr(Frame frame, string attr)
+    {
+        var value = frame.PopOperand();
+        var objc = frame.PopOperand();
+
+
+        if (ObValue.IsInstanceOf(objc, "Object"))
+        {
+            var attribute = ObValue.SetProperty(objc, attr, value);
+            return attribute
+                   ?? ObValue.FromErrorMessage(
+                       AttributeErrorClass,
+                       $"value has no attribute {attr}",
+                       BuildTracebackFromFrame()
+                   );
+        }
+
+        return ObValue.FromErrorMessage(
+            AttributeErrorClass,
+            $"value {objc.GetObType()} cannot be indexed",
+            BuildTracebackFromFrame()
+        );
+    }
+
     private ObValue DoSetIndex(Frame frame)
     {
         var value = frame.PopOperand();
@@ -924,6 +948,14 @@ public class Vm : IDisposable
                     frame.PushOperand(index);
                     break;
                 }
+                case OpCode.SetAttr:
+                {
+                    var attr = ReadString(frame);
+                    frame.Forward(attr.Length + 1);
+                    var attribute = DoSetAttr(frame, attr);
+                    if (ObValue.IsInstanceOf(attribute, "Error")) RaiseOrHandleException(frame, attribute);
+                    break;
+                }
                 case OpCode.SetIndex:
                 {
                     var index = DoSetIndex(frame);
@@ -1010,11 +1042,41 @@ public class Vm : IDisposable
                     frame.PushOperand(a);
                     break;
                 }
+                case OpCode.PostDec:
+                {
+                    var a = frame.PopOperand();
+                    var b = ObValue.FromNumber(1);
+                    var c = DoSub(b, a);
+                    if (ObValue.IsInstanceOf(c, "Error"))
+                    {
+                        RaiseOrHandleException(frame, c);
+                        break;
+                    }
+
+                    frame.PushOperand(c);
+                    frame.PushOperand(a);
+                    break;
+                }
                 case OpCode.Inc:
                 {
                     var a = frame.PopOperand();
                     var b = ObValue.FromNumber(1);
                     var c = DoAdd(b, a);
+                    if (ObValue.IsInstanceOf(c, "Error"))
+                    {
+                        RaiseOrHandleException(frame, c);
+                        break;
+                    }
+
+                    frame.PushOperand(c);
+                    frame.PushOperand(c);
+                    break;
+                }
+                case OpCode.Dec:
+                {
+                    var a = frame.PopOperand();
+                    var b = ObValue.FromNumber(1);
+                    var c = DoSub(b, a);
                     if (ObValue.IsInstanceOf(c, "Error"))
                     {
                         RaiseOrHandleException(frame, c);
@@ -1383,6 +1445,15 @@ public class Vm : IDisposable
                     frame.PushOperand(top);
                     frame.PushOperand(nxt);
                     frame.PushOperand(top);
+                    break;
+                }
+                case OpCode.Rot2:
+                {
+                    // a, b => b, a
+                    var b = frame.PopOperand();
+                    var a = frame.PopOperand();
+                    frame.PushOperand(b);
+                    frame.PushOperand(a);
                     break;
                 }
                 case OpCode.Rot3:
