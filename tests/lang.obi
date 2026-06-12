@@ -273,7 +273,6 @@ var mutators = [];
 while (i1 < 3) {
     local obj = {val: i1};
     mutators->push(fn(v) {
- 
         obj->val = v + obj->val;
         println("MUTATOR", obj);
         obj = {val: i1};
@@ -286,6 +285,14 @@ println(mutators);
 var ii = 0;
 while (ii < mutators->length()) {
     mutators[ii](ii * 5);
-    ii = ii + 1;
+    ii++;
+}
+
+var ggh = 0;
+println(++ggh * 2 + ggh++);
+println(ggh);
+
+from 0 to 8 foreach i, i++ {
+    println(i);
 }
 

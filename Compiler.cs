@@ -513,15 +513,7 @@ public class Compiler : Parser
                 {
                     case AstType.AstName:
                     {
-                        if (!table.SymbolExists(nameNode.Value))
-                            ErrorHandler.CompileError(Path, Source, $"variable {nameNode.Value} not found",
-                                nameNode.Position);
-                        var symbol = table.Find(nameNode.Value);
-                        if (symbol.Symbol.Constant)
-                            ErrorHandler.CompileError(Path, Source, "cannot assign to constant", nameNode.Position);
-
-                        code.EmitLine(ModuleId, node.Position.Line);
-                        code.Emit(symbol.IsLocal ? OpCode.StoreLocal : OpCode.StoreName, symbol.Symbol.Offset);
+                        Identifier(code, table, nameNode, true);
                         break;
                     }
                     case AstType.AstMemberAccess:
@@ -660,6 +652,7 @@ public class Compiler : Parser
         {
             case AstType.AstName:
             {
+                code.Emit(OpCode.Rot2);
                 Identifier(code, table, expr.A, true);
                 break;
             }
