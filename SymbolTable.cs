@@ -67,10 +67,10 @@ public class SymbolTable(ScopeType scopeType, SymbolTable? parent)
         throw new KeyNotFoundException($"Symbol '{symbol}' not found.");
     }
 
-    public void Add(string symbol, int offset, bool constant, Position position)
+    public void Add(string symbol, int offset, bool constant, bool definedInLoop, Position position)
     {
         Debug.Assert(!Symbols.ContainsKey(symbol), $"Symbol {symbol} already exists");
-        Symbols[symbol] = new Symbol(symbol, offset, constant, position);
+        Symbols[symbol] = new Symbol(symbol, offset, constant, definedInLoop, position);
     }
 
     public static bool IsAncestorOf(SymbolTable? ancestor, SymbolTable? descendant)

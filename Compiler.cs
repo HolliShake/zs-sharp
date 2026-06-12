@@ -13,31 +13,35 @@ public class Compiler : Parser
     private State State { get; }
     private int ModuleId { get; }
 
+    private void Identifier(Code code, SymbolTable table, Ast node, bool isAssignment)
+    {
+        var name = node.Value;
+        if (!table.SymbolExists(name))
+            ErrorHandler.CompileError(Path, Source, "Symbol not found", node.Position);
+
+        var lookupDetail = table.Find(name);
+
+        if (!lookupDetail.IsLocal)
+        {
+            // Register
+            var address = code.AllocateLocal();
+            code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address, lookupDetail.Symbol.DefinedInLoop));
+            table.Add(name, address, false, false, node.Position);
+            code.Emit(isAssignment ? OpCode.StoreName : OpCode.LoadCapture, address);
+            return;
+        }
+
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.Emit(isAssignment ? OpCode.StoreLocal : OpCode.LoadLocal, lookupDetail.Symbol.Offset);
+    }
+
     private void Expr(Code code, SymbolTable table, Ast node)
     {
         switch (node.Type)
         {
             case AstType.AstName:
             {
-                var name = node.Value;
-                if (!table.SymbolExists(name))
-                    ErrorHandler.CompileError(Path, Source, "Symbol not found", node.Position);
-
-                var lookupDetail = table.Find(name);
-
-                if (!lookupDetail.IsLocal)
-                {
-                    // Register
-                    var address = code.AllocateLocal();
-                    code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address));
-                    // Console.WriteLine($"{lookupDetail.Depth}, {lookupDetail.Symbol.Offset}, {address}");
-                    table.Add(name, address, false, node.Position);
-                    code.Emit(OpCode.LoadCapture, address);
-                    break;
-                }
-
-                code.EmitLine(ModuleId, node.Position.Line);
-                code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
+                Identifier(code, table, node, false);
                 break;
             }
             case AstType.AstInt:
@@ -118,7 +122,7 @@ public class Compiler : Parser
 
                 // We inject 'this' to all functions as first local variable.
                 var thisAddress = fnCode.AllocateLocal();
-                locals.Add("this", thisAddress, false, node.B != null ? node.B.Position : position);
+                locals.Add("this", thisAddress, false, false, node.B != null ? node.B.Position : position);
 
                 var paramHead = node.B;
                 while (paramHead != null)
@@ -128,7 +132,7 @@ public class Compiler : Parser
                         ErrorHandler.CompileError(Path, Source, "Parameter already exists", paramHead.Position);
 
                     var paramAddress = fnCode.AllocateLocal();
-                    locals.Add(name, paramAddress, false, paramHead.Position);
+                    locals.Add(name, paramAddress, false, false, paramHead.Position);
                     fnCode.EmitLine(ModuleId, paramHead.Position.Line);
                     fnCode.Emit(OpCode.StoreLocal, paramAddress);
                     position = paramHead.Position;
@@ -621,7 +625,7 @@ public class Compiler : Parser
         {
             case AstType.AstName:
             {
-                Expr(code, table, expr.A);
+                Identifier(code, table, expr.A, false);
                 break;
             }
             case AstType.AstMemberAccess:
@@ -656,25 +660,7 @@ public class Compiler : Parser
         {
             case AstType.AstName:
             {
-                var name = node.Value;
-                if (!table.SymbolExists(name))
-                    ErrorHandler.CompileError(Path, Source, "Symbol not found", node.Position);
-
-                var lookupDetail = table.Find(name);
-
-                if (!lookupDetail.IsLocal)
-                {
-                    // Register
-                    var address = code.AllocateLocal();
-                    code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address));
-                    // Console.WriteLine($"{lookupDetail.Depth}, {lookupDetail.Symbol.Offset}, {address}");
-                    table.Add(name, address, false, node.Position);
-                    code.Emit(OpCode.LoadCapture, address);
-                    break;
-                }
-
-                code.EmitLine(ModuleId, node.Position.Line);
-                code.Emit(OpCode.LoadLocal, lookupDetail.Symbol.Offset);
+                Identifier(code, table, expr.A, true);
                 break;
             }
             case AstType.AstMemberAccess:
@@ -937,7 +923,7 @@ public class Compiler : Parser
 
         // We inject 'this' to all functions as first local variable.
         var thisAddress = fnCode.AllocateLocal();
-        locals.Add("this", thisAddress, false, node.B != null ? node.B.Position : position);
+        locals.Add("this", thisAddress, false, false, node.B != null ? node.B.Position : position);
 
         var paramHead = node.B;
         while (paramHead != null)
@@ -947,7 +933,7 @@ public class Compiler : Parser
                 ErrorHandler.CompileError(Path, Source, "Parameter already exists", paramHead.Position);
 
             var paramAddress = fnCode.AllocateLocal();
-            locals.Add(name, paramAddress, false, paramHead.Position);
+            locals.Add(name, paramAddress, false, false, paramHead.Position);
             fnCode.EmitLine(ModuleId, paramHead.Position.Line);
             fnCode.Emit(OpCode.StoreLocal, paramAddress);
             position = paramHead.Position;
@@ -1011,7 +997,7 @@ public class Compiler : Parser
                         ErrorHandler.CompileError(Path, Source, "variable already exists",
                             variableInitializer.Position);
 
-                    table.Add(nameNode.Value, nameAddress, constant, variableInitializer.Position);
+                    table.Add(nameNode.Value, nameAddress, constant, table.IsInside(ScopeType.Loop), variableInitializer.Position);
                     break;
                 }
                 case AstType.AstDestructureArrayInitializer:
@@ -1028,7 +1014,7 @@ public class Compiler : Parser
                         if (table.AlreadyExists(head.Value))
                             ErrorHandler.CompileError(Path, Source, "variable already exists", head.Position);
 
-                        table.Add(head.Value, address, constant, head.Position);
+                        table.Add(head.Value, address, constant,table.IsInside(ScopeType.Loop), head.Position);
 
                         addressOfVars.Add(address);
 
@@ -1071,7 +1057,7 @@ public class Compiler : Parser
                         if (table.AlreadyExists(keyValuePairHead.B!.Value))
                             ErrorHandler.CompileError(Path, Source, "variable already exists",
                                 keyValuePairHead.Position);
-                        table.Add(keyValuePairHead.B!.Value, address, constant, keyValuePairHead.Position);
+                        table.Add(keyValuePairHead.B!.Value, address, constant, table.IsInside(ScopeType.Loop), keyValuePairHead.Position);
 
                         code.EmitLine(ModuleId, variableInitializer.Position.Line);
                         code.Emit(storeOpCode, address);
@@ -1119,7 +1105,7 @@ public class Compiler : Parser
 
         var errorVar = node.C;
         var errorVarAddress = code.AllocateLocal();
-        catchTable.Add(errorVar.Value, errorVarAddress, false, errorVar.Position);
+        catchTable.Add(errorVar.Value, errorVarAddress, false, table.IsInside(ScopeType.Loop), errorVar.Position);
 
         code.EmitLine(ModuleId, errorVar.Position.Line);
         code.Emit(OpCode.StoreLocal, errorVarAddress);
@@ -1255,7 +1241,7 @@ public class Compiler : Parser
                     var functionAddress = code.AllocateLocal();
                     if (table.SymbolExists(function.A.Value))
                         ErrorHandler.CompileError(Path, Source, "function already exists", function.Position);
-                    table.Add(function.A.Value, functionAddress, false, function.Position);
+                    table.Add(function.A.Value, functionAddress, false, false, function.Position);
                     break;
                 }
             }

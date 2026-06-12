@@ -76,8 +76,8 @@ public static class Decompiler
         if (code.Captures.Count > 0)
         {
             writer.WriteLine("  Captures  :");
-            foreach (var (depth, address, destination) in code.Captures)
-                writer.WriteLine($"             depth={depth}  addr={address}  dest={destination}");
+            foreach (var (depth, address, destination, definedInLoop) in code.Captures)
+                writer.WriteLine($"             depth={depth}  addr={address}  dest={destination} loop={definedInLoop}");
         }
 
         writer.WriteLine();

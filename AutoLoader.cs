@@ -38,7 +38,7 @@ public class AutoLoader
         foreach (var (address, name) in _autoLoads.ToDictionary(x => x.Address, x => x.Name))
         {
             if (symbolTable.AlreadyExists(name)) throw new Exception($"Autoload {name} already exists");
-            symbolTable.Add(name, address, true, new Position(1, 1));
+            symbolTable.Add(name, address, true, false, new Position(1, 1));
         }
     }
 

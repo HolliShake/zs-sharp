@@ -447,7 +447,7 @@ public class Vm : IDisposable
         var codeObject = codeObjectTemplate.Clone();
         var function = ObValue.FromCodeToFunction(codeObject);
 
-        foreach (var (depth, address, destination) in codeObject.Captures)
+        foreach (var (depth, address, destination, definedInLoop) in codeObject.Captures)
         {
             var currentFrame = callerFrame;
             var currentDepth = 1;
@@ -465,7 +465,7 @@ public class Vm : IDisposable
 
             var capturedVariable = currentFrame.Environment[address];
             capturedVariable.IncRef();
-            codeObject.CapturedCells[destination] = capturedVariable;
+            codeObject.CapturedCells[destination] = definedInLoop ? new Cell(capturedVariable.Value) : capturedVariable;
         }
 
         return function;

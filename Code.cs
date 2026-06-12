@@ -9,7 +9,7 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
     public List<byte> Bytecode = [];
     public Dictionary<int, Cell> CapturedCells = [];
 
-    public List<(int Depth, int Address, int Destination)> Captures = [];
+    public List<(int Depth, int Address, int Destination, bool DefinedInLoop)> Captures = [];
     public List<OpCodeDebug> DebugLines = [];
     public string Name { get; } = name;
     public int ArgCount { get; private set; } = argCount;
@@ -132,7 +132,7 @@ public class Code(string name, int argCount, bool isAsync) : IDisposable
         BinaryPrimitives.WriteInt32BigEndian(span, jumpDestination);
     }
 
-    public void AddCapture((int Depth, int Address, int Destination) capture)
+    public void AddCapture((int Depth, int Address, int Destination, bool DefinedInLoop) capture)
     {
         Captures.Add(capture);
     }
