@@ -36,6 +36,11 @@ public sealed class ObValue
         return new ObValue(ValueType.Function, reference: code);
     }
 
+    public static ObValue FromRange(double start, double end)
+    {
+        return new ObValue(ValueType.Range, 0, new Range(start, end));
+    }
+
     public static ObValue FromInt(int value)
     {
         return new ObValue(ValueType.Int, value);
@@ -125,6 +130,12 @@ public sealed class ObValue
         return (Future)Ref;
     }
 
+    public Range Range()
+    {
+        Debug.Assert(this is { Type: ValueType.Range, Ref: not null }, "Ref is not a range or is null.");
+        return (Range)Ref;
+    }
+
     public int Int()
     {
         return (int)Num;
@@ -168,6 +179,7 @@ public sealed class ObValue
             ValueType.NativeFunction => "native function",
             ValueType.Array => "array",
             ValueType.Future => "future",
+            ValueType.Range => "range",
             ValueType.Int => "int",
             ValueType.Number => "number",
             ValueType.Bool => "bool",
@@ -298,6 +310,7 @@ public sealed class ObValue
                 => ConvertDictToJsonFormat(GetObType(), (Dictionary<string, ObValue>)Ref, true),
             ValueType.Array when Ref is not null => ConvertArrayToJsonFormat((List<ObValue>)Ref),
             ValueType.Future when Ref is not null => FormatFuture(),
+            ValueType.Range when Ref is not null => FormatRange(),
             ValueType.Int => ((int)Num).ToString(),
             ValueType.Number => Num.ToString(CultureInfo.InvariantCulture),
             ValueType.Bool => Num != 0d ? "true" : "false",
@@ -318,6 +331,12 @@ public sealed class ObValue
             _ => throw new InvalidSwitchValueException($"state {fut.State} not implemented")
         };
         return $"Future {{ {rep} }}";
+    }
+
+    private string FormatRange()
+    {
+        var r = Range();
+        return $"Range {{ start = {r.From}, end = {r.To} }}";
     }
 
     private string FormatError()
@@ -343,6 +362,8 @@ public sealed class ObValue
                 => ConvertArrayToJsonFormat(arr, depth),
             ValueType.Class when value.Ref is Dictionary<string, ObValue?> cp
                 => $"[class {cp.GetValueOrDefault("type")?.Ref as string ?? "?"}]",
+            ValueType.Future when value.Ref is Future => value.FormatFuture(),
+            ValueType.Range when value.Ref is Range => value.FormatRange(),
             ValueType.Int or ValueType.Number
                 => value.Num.ToString(CultureInfo.InvariantCulture),
             ValueType.String => $"'{value.Ref as string}'",

@@ -342,7 +342,7 @@ public static class Global
                 return ObValue.FromString(result);
             });
         }
-        
+
         ObValue Wrap1ArgStringReturnsNullable(Func<string, string?> func, string name)
         {
             return ObValue.FromNativeFunction((vm, args) =>
@@ -448,7 +448,7 @@ public static class Global
         var instance = ObValue.CreateObObject(ValueType.Object, pathClass, pathMethods);
         return instance;
     }
-    
+
     public static ObValue BuildFile(Vm instanceOfVm)
     {
         var fileClass = ObValue.CreateObClass(instanceOfVm.ObjectClass, "File");
@@ -461,9 +461,11 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.String))
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path",
+                        vm.BuildTracebackFromFrame());
 
                 return ObValue.FromBool(func(args[0].String()));
             });
@@ -475,9 +477,11 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.String))
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path",
+                        vm.BuildTracebackFromFrame());
 
                 try
                 {
@@ -486,7 +490,8 @@ public static class Global
                 catch (Exception ex)
                 {
                     // Catching IO exceptions prevents the host program from crashing due to bad script behavior
-                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}",
+                        vm.BuildTracebackFromFrame());
                 }
             });
         }
@@ -497,9 +502,11 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 1)
-                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 1 argument",
+                        vm.BuildTracebackFromFrame());
                 if (!ObValue.IsInstanceOf(args[0], ValueType.String))
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects a string path",
+                        vm.BuildTracebackFromFrame());
 
                 try
                 {
@@ -508,7 +515,8 @@ public static class Global
                 }
                 catch (Exception ex)
                 {
-                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}",
+                        vm.BuildTracebackFromFrame());
                 }
             });
         }
@@ -519,9 +527,12 @@ public static class Global
             return ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 2)
-                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 2 arguments", vm.BuildTracebackFromFrame());
-                if (!ObValue.IsInstanceOf(args[0], ValueType.String) || !ObValue.IsInstanceOf(args[1], ValueType.String))
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects string arguments", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, $"{name} expects 2 arguments",
+                        vm.BuildTracebackFromFrame());
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String) ||
+                    !ObValue.IsInstanceOf(args[1], ValueType.String))
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass, $"{name} expects string arguments",
+                        vm.BuildTracebackFromFrame());
 
                 try
                 {
@@ -530,7 +541,8 @@ public static class Global
                 }
                 catch (Exception ex)
                 {
-                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"{name} failed: {ex.Message}",
+                        vm.BuildTracebackFromFrame());
                 }
             });
         }
@@ -540,14 +552,16 @@ public static class Global
         {
             // Info / Checks
             ["exists"] = Wrap1ArgStringReturnsBool(File.Exists, "exists"),
-            
+
             // Reading
             ["readText"] = Wrap1ArgStringReturnsString(path => File.ReadAllText(path), "readText"),
-            
+
             // Writing / Modifying
-            ["writeText"] = Wrap2ArgsStringReturnsVoid((path, contents) => File.WriteAllText(path, contents), "writeText"),
-            ["appendText"] = Wrap2ArgsStringReturnsVoid((path, contents) => File.AppendAllText(path, contents), "appendText"),
-            
+            ["writeText"] =
+                Wrap2ArgsStringReturnsVoid((path, contents) => File.WriteAllText(path, contents), "writeText"),
+            ["appendText"] =
+                Wrap2ArgsStringReturnsVoid((path, contents) => File.AppendAllText(path, contents), "appendText"),
+
             // File Operations
             ["delete"] = Wrap1ArgStringReturnsVoid(File.Delete, "delete"),
             ["copy"] = Wrap2ArgsStringReturnsVoid((src, dest) => File.Copy(src, dest), "copy"), // Fails if dest exists
@@ -557,14 +571,15 @@ public static class Global
             ["copyWithOverwrite"] = ObValue.FromNativeFunction((vm, args) =>
             {
                 if (args.Length != 3)
-                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "copyWithOverwrite expects 3 arguments", vm.BuildTracebackFromFrame());
-                
-                if (!ObValue.IsInstanceOf(args[0], ValueType.String) || 
-                    !ObValue.IsInstanceOf(args[1], ValueType.String) || 
+                    return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "copyWithOverwrite expects 3 arguments",
+                        vm.BuildTracebackFromFrame());
+
+                if (!ObValue.IsInstanceOf(args[0], ValueType.String) ||
+                    !ObValue.IsInstanceOf(args[1], ValueType.String) ||
                     !ObValue.IsInstanceOf(args[2], ValueType.Bool))
-                {
-                    return ObValue.FromErrorMessage(vm.TypeErrorClass, "copyWithOverwrite expects (string source, string dest, bool overwrite)", vm.BuildTracebackFromFrame());
-                }
+                    return ObValue.FromErrorMessage(vm.TypeErrorClass,
+                        "copyWithOverwrite expects (string source, string dest, bool overwrite)",
+                        vm.BuildTracebackFromFrame());
 
                 try
                 {
@@ -573,7 +588,8 @@ public static class Global
                 }
                 catch (Exception ex)
                 {
-                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"copyWithOverwrite failed: {ex.Message}", vm.BuildTracebackFromFrame());
+                    return ObValue.FromErrorMessage(vm.IoErrorClass, $"copyWithOverwrite failed: {ex.Message}",
+                        vm.BuildTracebackFromFrame());
                 }
             })
         };

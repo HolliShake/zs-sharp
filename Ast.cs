@@ -8,6 +8,7 @@ public class Ast : IDisposable
     public Ast? B;
     public Ast? C;
     public Ast? D;
+    public Ast? E;
     public bool Flag0;
     public bool Flag1;
     public int IntArg0;
@@ -24,6 +25,7 @@ public class Ast : IDisposable
         B = null;
         C = null;
         D = null;
+        E = null;
         Next = null;
         Flag0 = false;
         Flag1 = false;
@@ -42,11 +44,13 @@ public class Ast : IDisposable
         B?.Dispose();
         C?.Dispose();
         D?.Dispose();
+        E?.Dispose();
         Next?.Dispose();
         A = null;
         B = null;
         C = null;
         D = null;
+        E = null;
         Next = null;
     }
 
@@ -180,6 +184,19 @@ public class Ast : IDisposable
             A = tryHead,
             B = catchHead,
             C = catchReceiver
+        };
+    }
+
+    public static Ast CreateFromForeachNode(Ast start, Ast end, Ast step, Ast iterVar, Ast thenBranch,
+        Position position)
+    {
+        return new Ast(AstType.AstFromForeach, position)
+        {
+            A = start,
+            B = end,
+            C = step,
+            D = iterVar,
+            E = thenBranch
         };
     }
 

@@ -150,7 +150,7 @@ println(x);
 println(test());
 
 var g = 0;
-while (g < 10) {
+while (g < 10) do {
     println(g);
     g = g + 1;
 }
@@ -176,7 +176,7 @@ println(c());
 
 try {
     local x = 2;
-    while (x < 10) {
+    while (x < 10) do {
         try {
             try {
                 println(x);
@@ -209,7 +209,7 @@ var callbacks = [
 ];
 
 var i = 0;
-while (i < callbacks->length()) {
+while (i < callbacks->length()) do {
     callbacks[i](i);
     i = i + 1;
 }
@@ -220,7 +220,7 @@ items->push(1,2,3);
 
 println(">>", items->peek());
 
-items->foreach(fn(a, b) {
+items->each(fn(a, b) {
     println("FOREACH", a);
 });
 
@@ -241,7 +241,7 @@ parent();
 
 var ll = 0;
 
-while (ll < 10) {
+while (ll < 10) do {
     ll = ll + 1;
     if (ll == 5) continue;
     println("ll ->", ll);
@@ -270,7 +270,7 @@ println(true, false, null);
 
 var i1 = 0;
 var mutators = [];
-while (i1 < 3) {
+while (i1 < 3) do {
     local obj = {val: i1};
     mutators->push(fn(v) {
         obj->val = v + obj->val;
@@ -283,7 +283,7 @@ while (i1 < 3) {
 println(mutators);
 
 var ii = 0;
-while (ii < mutators->length()) {
+while ii < mutators->length() do {
     mutators[ii](ii * 5);
     ii++;
 }
@@ -292,7 +292,7 @@ var ggh = 0;
 println(++ggh * 2 + ggh++);
 println(ggh);
 
-from 0 to 8 foreach i, i++ {
-    println(i);
+from 0 to 4 foreach i, 1 do {
+    println(">>>>", i);
 }
 

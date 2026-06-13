@@ -11,6 +11,7 @@ public enum ValueType
     ObjectLiteral,
     Array,
     Future,
+    Range,
     Int,
     Number,
     Bool,

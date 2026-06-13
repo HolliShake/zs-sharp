@@ -65,6 +65,8 @@ public enum AstType
     AstLocalVar,
     AstConstVar,
     AstTryCatch,
+    AstFromForeach,
+    AstForeach,
     AstWhile,
     AstIf,
     AstSwitch,

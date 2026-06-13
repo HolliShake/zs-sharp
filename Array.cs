@@ -2,7 +2,7 @@ namespace obiwan;
 
 public class Array : IBuiltin
 {
-    private static readonly string[] Methods = ["push", "length", "pop", "peek", "clear", "foreach"];
+    private static readonly string[] Methods = ["push", "length", "pop", "peek", "clear", "each"];
 
     public static bool HasMethod(string methodName)
     {
@@ -17,7 +17,7 @@ public class Array : IBuiltin
             "pop" => ArrayPopMethod,
             "peek" => ArrayPeekMethod,
             "clear" => ArrayClearMethod,
-            "foreach" => ArrayForeachMethod,
+            "each" => ArrayEachMethod,
             "length" => ArrayLengthMethod,
             _ => throw new InvalidSwitchValueException($"method {methodName} not implemented")
         };
@@ -58,7 +58,7 @@ public class Array : IBuiltin
         return vm.NullSingleton;
     }
 
-    private static ObValue ArrayForeachMethod(Vm vm, ObValue[] args)
+    private static ObValue ArrayEachMethod(Vm vm, ObValue[] args)
     {
         if (args.Length != 2)
             return ObValue.FromErrorMessage(vm.ArgumentErrorClass, "foreach() expects 1 argument(s)",

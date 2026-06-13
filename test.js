@@ -69,11 +69,11 @@
 
 const mutators = [];
 for (let i = 0; i < 3; i++) {
-    let obj = {"val":i};
+    let obj = {"val": i};
     mutators.push((v) => {
         obj.val = v + obj.val;
         console.log(obj);
-        obj = {"val":i};
+        obj = {"val": i};
     });
 }
 
@@ -83,3 +83,6 @@ while (ii < mutators.length) {
     ii++;
 }
 
+for (let i = 0; i < 8; ++i) {
+    console.log(">>", i);
+}

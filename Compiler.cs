@@ -25,7 +25,8 @@ public class Compiler : Parser
         {
             // Register
             var address = code.AllocateLocal();
-            code.AddCapture((lookupDetail.Depth, lookupDetail.Symbol.Offset, address, lookupDetail.Symbol.DefinedInLoop));
+            code.AddCapture(
+                (lookupDetail.Depth, lookupDetail.Symbol.Offset, address, lookupDetail.Symbol.DefinedInLoop));
             table.Add(name, address, false, false, node.Position);
             code.Emit(isAssignment ? OpCode.StoreName : OpCode.LoadCapture, address);
             return;
@@ -639,7 +640,7 @@ public class Compiler : Parser
                 code.Emit(OpCode.GetIndex);
                 break;
             }
-            default: throw new InvalidSwitchValueException($"invalid switch value");
+            default: throw new InvalidSwitchValueException("invalid switch value");
         }
     }
 
@@ -652,6 +653,7 @@ public class Compiler : Parser
         {
             case AstType.AstName:
             {
+                code.EmitLine(ModuleId, node.Position.Line);
                 code.Emit(OpCode.Rot2);
                 Identifier(code, table, expr.A, true);
                 break;
@@ -705,6 +707,11 @@ public class Compiler : Parser
             case AstType.AstTryCatch:
             {
                 TryCatch(code, table, node);
+                break;
+            }
+            case AstType.AstFromForeach:
+            {
+                FromForeach(code, table, node);
                 break;
             }
             case AstType.AstWhile:
@@ -990,7 +997,8 @@ public class Compiler : Parser
                         ErrorHandler.CompileError(Path, Source, "variable already exists",
                             variableInitializer.Position);
 
-                    table.Add(nameNode.Value, nameAddress, constant, table.IsInside(ScopeType.Loop), variableInitializer.Position);
+                    table.Add(nameNode.Value, nameAddress, constant, table.IsInside(ScopeType.Loop),
+                        variableInitializer.Position);
                     break;
                 }
                 case AstType.AstDestructureArrayInitializer:
@@ -1007,7 +1015,7 @@ public class Compiler : Parser
                         if (table.AlreadyExists(head.Value))
                             ErrorHandler.CompileError(Path, Source, "variable already exists", head.Position);
 
-                        table.Add(head.Value, address, constant,table.IsInside(ScopeType.Loop), head.Position);
+                        table.Add(head.Value, address, constant, table.IsInside(ScopeType.Loop), head.Position);
 
                         addressOfVars.Add(address);
 
@@ -1050,7 +1058,8 @@ public class Compiler : Parser
                         if (table.AlreadyExists(keyValuePairHead.B!.Value))
                             ErrorHandler.CompileError(Path, Source, "variable already exists",
                                 keyValuePairHead.Position);
-                        table.Add(keyValuePairHead.B!.Value, address, constant, table.IsInside(ScopeType.Loop), keyValuePairHead.Position);
+                        table.Add(keyValuePairHead.B!.Value, address, constant, table.IsInside(ScopeType.Loop),
+                            keyValuePairHead.Position);
 
                         code.EmitLine(ModuleId, variableInitializer.Position.Line);
                         code.Emit(storeOpCode, address);
@@ -1117,20 +1126,75 @@ public class Compiler : Parser
         code.Emit(OpCode.PopTry);
     }
 
+    private void FromForeach(Code code, SymbolTable table, Ast node)
+    {
+        Debug.Assert(node is { A: not null, B: not null, C: not null, D: not null, E: not null },
+            "node.A or node.B or node.C or node.D or node.E is null");
+        var start = node.A;
+        var end = node.B;
+        var step = node.C;
+        var variable = node.D;
+        var body = node.E;
+        var loopTable = new SymbolTable(ScopeType.Loop, table);
+
+        // Setup
+        Expr(code, loopTable, end);
+        Expr(code, loopTable, start);
+
+        code.EmitLine(ModuleId, start.Position.Line);
+        code.Emit(OpCode.MakeRange);
+
+        // Loop start
+        var begin = code.GetCurrent();
+        code.EmitLine(ModuleId, start.Position.Line);
+        code.Emit(OpCode.RangeCursor);
+
+        // Setup var
+        var variableAddress = code.AllocateLocal();
+        loopTable.Add(variable.Value, variableAddress, false, true, variable.Position);
+        code.EmitLine(ModuleId, variable.Position.Line);
+        code.Emit(OpCode.StoreLocal, variableAddress);
+
+        code.EmitLine(ModuleId, start.Position.Line);
+        var jumpToEndForeach = code.EmitJump(OpCode.JumpIfNotNext);
+
+        // Body
+        Stmt(code, loopTable, body);
+
+        // Step
+        code.EmitLine(ModuleId, step.Position.Line);
+        Expr(code, loopTable, step);
+
+        code.EmitLine(ModuleId, step.Position.Line);
+        code.Emit(OpCode.RangeForwardCursor);
+
+        // Loop reset
+        code.EmitLine(ModuleId, node.Position.Line);
+        code.EmitAbsoluteJump(OpCode.AbsJump, begin);
+
+        code.Label(jumpToEndForeach);
+
+        // Clean range
+        code.EmitLine(ModuleId, step.Position.Line);
+        code.Emit(OpCode.PopTop);
+    }
+
     private void While(Code code, SymbolTable table, Ast node)
     {
         Debug.Assert(node is { A: not null, B: not null }, "node.A or node.B is null");
         var loopTable = new SymbolTable(ScopeType.Loop, table);
         var begin = code.GetCurrent();
-        
+
         code.EmitLine(ModuleId, node.Position.Line);
         code.Emit(OpCode.LoopStart);
-        
+
         Expr(code, loopTable, node.A);
         code.EmitLine(ModuleId, node.Position.Line);
         var jumpToEndWhile = code.EmitJump(OpCode.PopJumpIfFalse);
 
         Stmt(code, loopTable, node.B);
+
+        code.EmitLine(ModuleId, node.Position.Line);
         code.EmitAbsoluteJump(OpCode.AbsJump, begin);
 
         code.Label(jumpToEndWhile);

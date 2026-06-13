@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace obiwan;
@@ -9,7 +10,6 @@ public struct LexerState
     public int Colm;
 }
 
-
 public class Lexer(string path, string source)
 {
     protected readonly string Path = path;
@@ -17,9 +17,12 @@ public class Lexer(string path, string source)
     private int _colm = 1;
     private int _indx;
     private int _line = 1;
-    
-    protected LexerState SaveState() => new() { Indx = _indx, Line = _line, Colm = _colm };
-    
+
+    protected LexerState SaveState()
+    {
+        return new LexerState { Indx = _indx, Line = _line, Colm = _colm };
+    }
+
     protected void RestoreState(LexerState state)
     {
         _indx = state.Indx;
@@ -39,21 +42,23 @@ public class Lexer(string path, string source)
                 continue;
             }
 
-            if (Rune.IsLetter(rune) || Source[_indx] == '_') return ReadIdentifierOrKeyword();
+            if (IsIdentifierStart(rune)) return ReadIdentifierOrKeyword();
 
             if (Rune.IsDigit(rune)) return ReadNumber();
 
-            if (Source[_indx] == '"') return ReadString();
+            if (rune.Value == '"') return ReadString();
 
-            if (Source[_indx] == '/' && _indx + 1 < Source.Length)
+            if (rune.Value == '/' && _indx + 1 < Source.Length)
             {
-                if (Source[_indx + 1] == '/')
+                var nextRune = Rune.GetRuneAt(Source, _indx + rune.Utf16SequenceLength);
+
+                if (nextRune.Value == '/')
                 {
                     SkipLineComment();
                     continue;
                 }
 
-                if (Source[_indx + 1] == '*')
+                if (nextRune.Value == '*')
                 {
                     SkipBlockComment();
                     continue;
@@ -65,6 +70,21 @@ public class Lexer(string path, string source)
         }
 
         return new Token(TokenType.Eof, "", new Position(_line, _colm));
+    }
+
+    private static bool IsIdentifierStart(Rune rune)
+    {
+        return Rune.IsLetter(rune) || rune.Value == '_';
+    }
+
+    private static bool IsIdentifierContinue(Rune rune)
+    {
+        return Rune.IsLetterOrDigit(rune) || rune.Value == '_'
+                                          || Rune.GetUnicodeCategory(rune) is
+                                              UnicodeCategory.NonSpacingMark or
+                                              UnicodeCategory.SpacingCombiningMark or
+                                              UnicodeCategory.ConnectorPunctuation or
+                                              UnicodeCategory.Format;
     }
 
     private void Advance()
@@ -83,6 +103,15 @@ public class Lexer(string path, string source)
             _colm++;
             _indx += rune.Utf16SequenceLength;
         }
+    }
+
+    private Rune PeekRune(int offset = 0)
+    {
+        var idx = _indx;
+        for (var i = 0; i < offset && idx < Source.Length; i++)
+            idx += Rune.GetRuneAt(Source, idx).Utf16SequenceLength;
+
+        return idx < Source.Length ? Rune.GetRuneAt(Source, idx) : default;
     }
 
     private void SkipLineComment()
@@ -132,7 +161,7 @@ public class Lexer(string path, string source)
         while (_indx < Source.Length)
         {
             var rune = Rune.GetRuneAt(Source, _indx);
-            if (!Rune.IsLetterOrDigit(rune) && Source[_indx] != '_') break;
+            if (!IsIdentifierContinue(rune)) break;
             Advance();
         }
 
@@ -211,7 +240,18 @@ public class Lexer(string path, string source)
     {
         var startLine = _line;
         var startColumn = _colm;
-        var c = Source[_indx];
+        var rune = Rune.GetRuneAt(Source, _indx);
+
+        if (rune.Value > 0x7F)
+        {
+            ErrorHandler.CompileError(Path, Source,
+                $"Unknown operator or symbol '{rune}' (U+{rune.Value:X4}).",
+                new Position(startLine, startColumn));
+            Advance();
+            return null;
+        }
+
+        var c = (char)rune.Value;
 
         switch (c)
         {
@@ -375,6 +415,7 @@ public class Lexer(string path, string source)
             {
                 ErrorHandler.CompileError(Path, Source, $"Unknown operator or symbol '{c}' (U+{(int)c:X4}).",
                     new Position(startLine, startColumn));
+                Advance();
                 break;
             }
         }
@@ -387,6 +428,7 @@ public class Lexer(string path, string source)
         if (_indx >= Source.Length || Source[_indx] != expected)
             return false;
         _indx++;
+        _colm++;
         return true;
     }
 
@@ -399,32 +441,57 @@ public class Lexer(string path, string source)
 
         while (_indx < Source.Length)
         {
-            var c = Source[_indx];
-            if (c == '\\')
+            var rune = Rune.GetRuneAt(Source, _indx);
+            if (rune.Value == '\\')
             {
                 Advance();
                 if (_indx >= Source.Length) break;
-                var next = Source[_indx];
-                switch (next)
+                var nextRune = Rune.GetRuneAt(Source, _indx);
+                switch (nextRune.Value)
                 {
                     case '"': str.Append('"'); break;
                     case '\\': str.Append('\\'); break;
                     case 'n': str.Append('\n'); break;
                     case 'r': str.Append('\r'); break;
                     case 't': str.Append('\t'); break;
-                    default: str.Append(next); break;
+                    case '0': str.Append('\0'); break;
+                    case 'u':
+                    {
+                        Advance();
+                        var hexStart = _indx;
+                        var hexCount = 0;
+                        while (_indx < Source.Length && hexCount < 6 && IsHexDigit(Source[_indx]))
+                        {
+                            Advance();
+                            hexCount++;
+                        }
+
+                        if (hexCount == 0)
+                        {
+                            ErrorHandler.CompileError(Path, Source,
+                                "Invalid unicode escape sequence. Expected hex digits after '\\u'.",
+                                new Position(startLine, startColumn));
+                            break;
+                        }
+
+                        var hex = Source[hexStart.._indx];
+                        var codepoint = Convert.ToInt32(hex, 16);
+                        str.Append(char.ConvertFromUtf32(codepoint));
+                        continue;
+                    }
+                    default: str.Append(nextRune.ToString()); break;
                 }
 
                 Advance();
             }
-            else if (c == '"')
+            else if (rune.Value == '"')
             {
                 Advance();
                 break;
             }
             else
             {
-                str.Append(c);
+                str.Append(rune.ToString());
                 Advance();
             }
         }

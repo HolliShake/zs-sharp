@@ -77,13 +77,15 @@ public class Parser(string path, string source) : Lexer(path, source)
                     var boolNode = Ast.CreateTerminalNode(AstType.AstBool, Lookahead.Value, Lookahead.Position);
                     Expect(TokenType.Key);
                     return boolNode;
-                } 
+                }
+
                 if (Check(Keyword.Null))
                 {
                     var nullNode = Ast.CreateTerminalNode(AstType.AstNull, Lookahead.Value, Lookahead.Position);
                     Expect(TokenType.Key);
                     return nullNode;
                 }
+
                 break;
             }
         }
@@ -661,30 +663,30 @@ public class Parser(string path, string source) : Lexer(path, source)
         var lhs = Logical();
         if (lhs == null) return null;
 
-        if (Check("=")  || Check("+=") || Check("-=") ||
+        if (Check("=") || Check("+=") || Check("-=") ||
             Check("*=") || Check("/=") || Check("%=") ||
-            Check("<<=")|| Check(">>=") ||
+            Check("<<=") || Check(">>=") ||
             Check("&=") || Check("|=") || Check("^="))
         {
             var opt = Lookahead!.Value;
             Expect(TokenType.Sym);
 
-            var rhs = Assignment()  // right-recursive
+            var rhs = Assignment() // right-recursive
                       ?? throw new Exception($"Expected expression after '{opt}' at position {Lookahead.Position}.");
 
             var astType = opt switch
             {
-                "="   => AstType.AstAssign,
-                "+="  => AstType.AstAddAssign,
-                "-="  => AstType.AstSubAssign,
-                "*="  => AstType.AstMulAssign,
-                "/="  => AstType.AstDivAssign,
-                "%="  => AstType.AstModAssign,
+                "=" => AstType.AstAssign,
+                "+=" => AstType.AstAddAssign,
+                "-=" => AstType.AstSubAssign,
+                "*=" => AstType.AstMulAssign,
+                "/=" => AstType.AstDivAssign,
+                "%=" => AstType.AstModAssign,
                 "<<=" => AstType.AstLShiftAssign,
                 ">>=" => AstType.AstRShiftAssign,
-                "&="  => AstType.AstAndAssign,
-                "|="  => AstType.AstOrAssign,
-                "^="  => AstType.AstXorAssign,
+                "&=" => AstType.AstAndAssign,
+                "|=" => AstType.AstOrAssign,
+                "^=" => AstType.AstXorAssign,
                 _ => throw new InvalidSwitchValueException($"Unexpected operator '{opt}'.")
             };
 
@@ -713,6 +715,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check(Keyword.Local)) return VariableDeclaration(Keyword.Local);
         if (Check(Keyword.Const)) return VariableDeclaration(Keyword.Const);
         if (Check(Keyword.Try)) return TryCatch();
+        if (Check(Keyword.From)) return FromForeach();
         if (Check(Keyword.While)) return While();
         if (Check(Keyword.If)) return If();
         if (Check(Keyword.Switch)) return Switch();
@@ -1061,15 +1064,44 @@ public class Parser(string path, string source) : Lexer(path, source)
         return Ast.CreateTryCatchNode(tryHead, catchHead, errorVar, position);
     }
 
+    private Ast FromForeach()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect(Keyword.From);
+        var start = Expression();
+        if (start == null)
+            ErrorHandler.CompileError(Path, Source, "Expected expression.", Lookahead.Position);
+        Expect(Keyword.To);
+        var end = Expression();
+        if (end == null)
+            ErrorHandler.CompileError(Path, Source, "Expected expression.", Lookahead.Position);
+        Expect(Keyword.Foreach);
+        var iterVar = Terminal();
+        if (iterVar == null)
+            ErrorHandler.CompileError(Path, Source, "expects a variable name", Lookahead.Position);
+        if (iterVar is not { Type: AstType.AstName })
+            ErrorHandler.CompileError(Path, Source, "expects a variable name", Lookahead.Position);
+        Expect(",");
+        var step = Expression();
+        if (step == null)
+            ErrorHandler.CompileError(Path, Source, "Expected expression.", Lookahead.Position);
+        Expect(Keyword.Do);
+        var thenBranch = Statement();
+        if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects statement", Lookahead.Position);
+        return Ast.CreateFromForeachNode(
+            start!, end!, step!, iterVar!, thenBranch!, position
+        );
+    }
+
     private Ast While()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
         Expect(Keyword.While);
-        Expect("(");
         var condition = Expression();
         if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
-        Expect(")");
+        Expect(Keyword.Do);
         var thenBranch = Statement();
         if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects statement", Lookahead.Position);
         return Ast.CreateWhileNode(

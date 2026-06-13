@@ -18,7 +18,9 @@
     public static readonly string Switch = "switch";
     public static readonly string Case = "case";
     public static readonly string Default = "default";
-    public static readonly string For = "for";
+    public static readonly string From = "from";
+    public static readonly string To = "to";
+    public static readonly string Foreach = "foreach";
     public static readonly string While = "while";
     public static readonly string Do = "do";
     public static readonly string Break = "break";
@@ -36,7 +38,7 @@
     [
         Class, Constructor, Base, Fn, Async, Await, Return,
         Var, Local, Const, Try, Catch, If, Else, Switch, Case,
-        Default, For, While, Do, Break, Print, Continue, True, False,
+        Default, From, To, Foreach, While, Do, Break, Print, Continue, True, False,
         Null, Is, Not
     ];
 

@@ -10,10 +10,10 @@ public class Vm : IDisposable
     public readonly ObValue ArgumentErrorClass;
     public readonly ObValue AttributeErrorClass;
     public readonly ObValue ErrorClass;
-    public readonly ObValue IoErrorClass;
     public readonly ObValue FalseSingleton;
     public readonly ObValue FutureClass;
     public readonly ObValue IndexErrorClass;
+    public readonly ObValue IoErrorClass;
     public readonly ObValue NullSingleton;
     public readonly ObValue ObjectClass;
     public readonly Queue<ObValue> PendingTasks;
@@ -914,6 +914,58 @@ public class Vm : IDisposable
                     frame.PushOperand(objectValue);
                     break;
                 }
+                case OpCode.MakeRange:
+                {
+                    var a = frame.PopOperand();
+                    var b = frame.PopOperand();
+                    if (!(a is { Type: ValueType.Int or ValueType.Number } ||
+                          b is { Type: ValueType.Int or ValueType.Number }))
+                    {
+                        RaiseOrHandleException(frame,
+                            ObValue.FromErrorMessage(TypeErrorClass,
+                                $"not a number {a.GetObType()} and {b.GetObType()}", BuildTracebackFromFrame()));
+                        break;
+                    }
+
+                    var c = ObValue.FromRange(a.Number(), b.Number());
+
+                    frame.PushOperand(c);
+                    break;
+                }
+                case OpCode.RangeCursor:
+                {
+                    var range = frame.PeekOperand().Range();
+                    frame.PushOperand(ObValue.FromNumber(range.Cursor));
+                    break;
+                }
+                case OpCode.RangeForwardCursor:
+                {
+                    var step = frame.PopOperand();
+                    if (step is not { Type: ValueType.Int or ValueType.Number })
+                    {
+                        RaiseOrHandleException(frame,
+                            ObValue.FromErrorMessage(TypeErrorClass, "not a number", BuildTracebackFromFrame()));
+                        break;
+                    }
+
+                    var range = frame.PeekOperand().Range();
+                    range.Next(step.Number());
+                    break;
+                }
+                case OpCode.RangeSetCursor:
+                {
+                    var step = frame.PopOperand();
+                    if (step is not { Type: ValueType.Int or ValueType.Number })
+                    {
+                        RaiseOrHandleException(frame,
+                            ObValue.FromErrorMessage(TypeErrorClass, "not a number", BuildTracebackFromFrame()));
+                        break;
+                    }
+
+                    var range = frame.PeekOperand().Range();
+                    range.CursorSet(step.Number());
+                    break;
+                }
                 case OpCode.LoadFunction:
                 {
                     var off = ReadInt(frame);
@@ -1404,6 +1456,30 @@ public class Vm : IDisposable
                     frame.Forward(4);
                     for (var i = 0; i < size; i++)
                         frame.PopTryTable();
+                    break;
+                }
+                case OpCode.JumpIfNotNextOrNext:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+
+                    var top = frame.PeekOperand();
+
+                    if (!top.Range().HasNext)
+                        frame.JumpTo(jmp);
+                    else
+                        top.Range().Next();
+                    break;
+                }
+                case OpCode.JumpIfNotNext:
+                {
+                    var jmp = ReadInt(frame);
+                    frame.Forward(4);
+
+                    var top = frame.PeekOperand();
+
+                    if (!top.Range().HasNext)
+                        frame.JumpTo(jmp);
                     break;
                 }
                 case OpCode.JumpIfFalseOrPop:

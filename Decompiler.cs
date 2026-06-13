@@ -77,7 +77,8 @@ public static class Decompiler
         {
             writer.WriteLine("  Captures  :");
             foreach (var (depth, address, destination, definedInLoop) in code.Captures)
-                writer.WriteLine($"             depth={depth}  addr={address}  dest={destination} loop={definedInLoop}");
+                writer.WriteLine(
+                    $"             depth={depth}  addr={address}  dest={destination} loop={definedInLoop}");
         }
 
         writer.WriteLine();

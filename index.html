@@ -1,335 +1,503 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Obiwan Language Documentation</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --bg:        #0a0e14;
-    --surface:   #111820;
-    --card:      #19222e;
-    --border:    #243040;
-    --orange:    #e07b39;
-    --orange2:   #f0974a;
-    --blue:      #5ca6e8;
-    --cyan:      #56c8c8;
-    --green:     #6abf7b;
-    --red:       #e06c75;
-    --purple:    #b48ead;
-    --yellow:    #d4b96a;
-    --muted:     #5c7080;
-    --dim:       #7e99b0;
-    --text:      #c9d9e8;
-    --bright:    #e8f0f8;
-    --code-bg:   #0d151f;
-    --nav-w:     230px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Obiwan Language Documentation</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"/>
+    <style>
+        :root {
+            --bg: #0a0e14;
+            --surface: #111820;
+            --card: #19222e;
+            --border: #243040;
+            --orange: #e07b39;
+            --orange2: #f0974a;
+            --blue: #5ca6e8;
+            --cyan: #56c8c8;
+            --green: #6abf7b;
+            --red: #e06c75;
+            --purple: #b48ead;
+            --yellow: #d4b96a;
+            --muted: #5c7080;
+            --dim: #7e99b0;
+            --text: #c9d9e8;
+            --bright: #e8f0f8;
+            --code-bg: #0d151f;
+            --nav-w: 230px;
+        }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    line-height: 1.55;
-    display: flex;
-  }
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  /* ── NAV ── */
-  nav {
-    width: var(--nav-w);
-    min-height: 100vh;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-    flex-shrink: 0;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  nav::-webkit-scrollbar { width: 4px; }
-  nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.55;
+            display: flex;
+        }
 
-  .nav-logo {
-    padding: 20px 18px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .nav-logo .icon { font-size: 22px; }
-  .nav-logo .label { font-weight: 700; font-size: 15px; color: var(--cyan); letter-spacing: .5px; }
-  .nav-logo .sub { font-size: 10px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+        /* ── NAV ── */
+        nav {
+            width: var(--nav-w);
+            min-height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
 
-  nav ul { list-style: none; padding: 8px 0 24px; }
-  nav ul li a {
-    display: block;
-    padding: 5px 18px;
-    color: var(--dim);
-    text-decoration: none;
-    font-size: 12.5px;
-    transition: color .15s, background .15s;
-    border-left: 2px solid transparent;
-  }
-  nav ul li a:hover,
-  nav ul li a.active {
-    color: var(--cyan);
-    background: rgba(86,200,200,.07);
-    border-left-color: var(--cyan);
-  }
-  .nav-group {
-    padding: 14px 18px 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+        nav::-webkit-scrollbar {
+            width: 4px;
+        }
 
-  /* ── MAIN ── */
-  main {
-    flex: 1;
-    min-width: 0;
-    padding: 0 32px 60px;
-    max-width: 1100px;
-  }
+        nav::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
 
-  /* ── HEADER ── */
-  header {
-    padding: 40px 0 32px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 40px;
-  }
-  header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--bright);
-    letter-spacing: -.5px;
-  }
-  header h1 span { color: var(--cyan); }
-  header p {
-    color: var(--dim);
-    margin-top: 6px;
-    font-size: 13.5px;
-  }
-  .badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-  .badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 4px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--cyan);
-  }
+        .nav-logo {
+            padding: 20px 18px 14px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-  /* ── SECTIONS ── */
-  section { margin-bottom: 48px; scroll-margin-top: 24px; }
-  section h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--bright);
-    margin-bottom: 16px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  section h2 .ico { color: var(--cyan); font-size: 16px; }
-  section h3 {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--orange2);
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    margin: 24px 0 10px;
-  }
+        .nav-logo .icon {
+            font-size: 22px;
+        }
 
-  /* ── GRID ── */
-  .grid   { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-  .grid-wide { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .grid-full { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  @media(max-width: 750px) {
-    .grid-wide, .grid, .grid-3 { grid-template-columns: 1fr; }
-    nav { display: none; }
-    main { padding: 0 16px 40px; }
-  }
+        .nav-logo .label {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--cyan);
+            letter-spacing: .5px;
+        }
 
-  /* ── CARD ── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .card-title {
-    padding: 9px 14px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--cyan);
-    letter-spacing: .4px;
-    text-transform: uppercase;
-    background: rgba(86,200,200,.07);
-    border-bottom: 1px solid var(--border);
-    font-family: 'Inter', sans-serif;
-  }
-  .card pre {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.65;
-    padding: 14px 16px;
-    background: var(--code-bg);
-    overflow-x: auto;
-    white-space: pre;
-    color: var(--text);
-  }
-  .card pre::-webkit-scrollbar { height: 4px; }
-  .card pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .nav-logo .sub {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-  /* ── PROSE ── */
-  .prose {
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--dim);
-    line-height: 1.65;
-  }
-  .prose + pre { border-top: 1px solid var(--border); }
+        nav ul {
+            list-style: none;
+            padding: 8px 0 24px;
+        }
 
-  /* ── NOTE / WARNING ── */
-  .note {
-    background: rgba(86,200,200,.07);
-    border: 1px solid rgba(86,200,200,.2);
-    border-radius: 6px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    margin-bottom: 14px;
-  }
-  .note b { color: var(--cyan); }
-  .warning {
-    background: rgba(224,108,117,.07);
-    border: 1px solid rgba(224,108,117,.2);
-    border-radius: 6px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    margin-bottom: 14px;
-  }
+        nav ul li a {
+            display: block;
+            padding: 5px 18px;
+            color: var(--dim);
+            text-decoration: none;
+            font-size: 12.5px;
+            transition: color .15s, background .15s;
+            border-left: 2px solid transparent;
+        }
 
-  /* ── TABLE ── */
-  .table-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
-  th { background: rgba(86,200,200,.07); color: var(--bright); font-weight: 600; }
-  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
-  td code { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--yellow); }
+        nav ul li a:hover,
+        nav ul li a.active {
+            color: var(--cyan);
+            background: rgba(86, 200, 200, .07);
+            border-left-color: var(--cyan);
+        }
 
-  /* ── SYNTAX COLORS ── */
-  .kw   { color: var(--purple); }          /* keywords: fn, var, const, local, return, async, await, if, else, while, switch, case, break, continue, try, catch */
-  .fn_  { color: var(--blue); }            /* function names */
-  .ty   { color: var(--cyan); }            /* types */
-  .str_ { color: var(--green); }           /* strings */
-  .num  { color: var(--orange2); }         /* numbers */
-  .com  { color: var(--muted); font-style: italic; } /* comments */
-  .op   { color: var(--red); }             /* operators */
-  .mac  { color: var(--orange); }          /* builtins: println, print, Math */
-  .att  { color: var(--yellow); }          /* attributes / special */
-  .bool_{ color: var(--orange2); }         /* true, false, null */
+        .nav-group {
+            padding: 14px 18px 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
 
-  p.note { /* inline paragraph note */
-    background: rgba(86,200,200,.07);
-    border: 1px solid rgba(86,200,200,.2);
-    border-radius: 6px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    margin-top: 12px;
-  }
-  p.note b { color: var(--cyan); }
-</style>
+        /* ── MAIN ── */
+        main {
+            flex: 1;
+            min-width: 0;
+            padding: 0 32px 60px;
+            max-width: 1100px;
+        }
+
+        /* ── HEADER ── */
+        header {
+            padding: 40px 0 32px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--bright);
+            letter-spacing: -.5px;
+        }
+
+        header h1 span {
+            color: var(--cyan);
+        }
+
+        header p {
+            color: var(--dim);
+            margin-top: 6px;
+            font-size: 13.5px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--cyan);
+        }
+
+        /* ── SECTIONS ── */
+        section {
+            margin-bottom: 48px;
+            scroll-margin-top: 24px;
+        }
+
+        section h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--bright);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        section h2 .ico {
+            color: var(--cyan);
+            font-size: 16px;
+        }
+
+        section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--orange2);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: 24px 0 10px;
+        }
+
+        /* ── GRID ── */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .grid-wide {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .grid-full {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 750px) {
+            .grid-wide, .grid, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                display: none;
+            }
+
+            main {
+                padding: 0 16px 40px;
+            }
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .card-title {
+            padding: 9px 14px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--cyan);
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            background: rgba(86, 200, 200, .07);
+            border-bottom: 1px solid var(--border);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card pre {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.65;
+            padding: 14px 16px;
+            background: var(--code-bg);
+            overflow-x: auto;
+            white-space: pre;
+            color: var(--text);
+        }
+
+        .card pre::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .card pre::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        /* ── PROSE ── */
+        .prose {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--dim);
+            line-height: 1.65;
+        }
+
+        .prose + pre {
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── NOTE / WARNING ── */
+        .note {
+            background: rgba(86, 200, 200, .07);
+            border: 1px solid rgba(86, 200, 200, .2);
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 14px;
+        }
+
+        .note b {
+            color: var(--cyan);
+        }
+
+        .warning {
+            background: rgba(224, 108, 117, .07);
+            border: 1px solid rgba(224, 108, 117, .2);
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text);
+            margin-bottom: 14px;
+        }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(86, 200, 200, .07);
+            color: var(--bright);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(255, 255, 255, .015);
+        }
+
+        td code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11.5px;
+            color: var(--yellow);
+        }
+
+        /* ── SYNTAX COLORS ── */
+        .kw {
+            color: var(--purple);
+        }
+
+        /* keywords: fn, var, const, local, return, async, await, if, else, while, switch, case, break, continue, try, catch */
+        .fn_ {
+            color: var(--blue);
+        }
+
+        /* function names */
+        .ty {
+            color: var(--cyan);
+        }
+
+        /* types */
+        .str_ {
+            color: var(--green);
+        }
+
+        /* strings */
+        .num {
+            color: var(--orange2);
+        }
+
+        /* numbers */
+        .com {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* comments */
+        .op {
+            color: var(--red);
+        }
+
+        /* operators */
+        .mac {
+            color: var(--orange);
+        }
+
+        /* builtins: println, print, Math */
+        .att {
+            color: var(--yellow);
+        }
+
+        /* attributes / special */
+        .bool_ {
+            color: var(--orange2);
+        }
+
+        /* true, false, null */
+
+        p.note { /* inline paragraph note */
+            background: rgba(86, 200, 200, .07);
+            border: 1px solid rgba(86, 200, 200, .2);
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text);
+            margin-top: 12px;
+        }
+
+        p.note b {
+            color: var(--cyan);
+        }
+    </style>
 </head>
 <body>
 
 <!-- ══════════════════════════════════════ NAV ══════════════════════════════════════ -->
 <nav>
-  <div class="nav-logo">
-    <span class="icon">⚔️</span>
-    <div>
-      <div class="label">Obiwan</div>
-      <div class="sub">language reference</div>
+    <div class="nav-logo">
+        <span class="icon">⚔️</span>
+        <div>
+            <div class="label">Obiwan</div>
+            <div class="sub">language reference</div>
+        </div>
     </div>
-  </div>
-  <ul>
-    <li class="nav-group">Language</li>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#variables">Variables</a></li>
-    <li><a href="#types">Types &amp; Literals</a></li>
-    <li><a href="#operators">Operators</a></li>
-    <li><a href="#functions">Functions</a></li>
+    <ul>
+        <li class="nav-group">Language</li>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#variables">Variables</a></li>
+        <li><a href="#types">Types &amp; Literals</a></li>
+        <li><a href="#operators">Operators</a></li>
+        <li><a href="#functions">Functions</a></li>
 
-    <li class="nav-group">Control Flow</li>
-    <li><a href="#conditionals">Conditionals</a></li>
-    <li><a href="#switch">Switch</a></li>
-    <li><a href="#loops">Loops</a></li>
-    <li><a href="#trycatch">Try / Catch</a></li>
-    <li><a href="#async">Async / Await</a></li>
+        <li class="nav-group">Control Flow</li>
+        <li><a href="#conditionals">Conditionals</a></li>
+        <li><a href="#switch">Switch</a></li>
+        <li><a href="#loops">Loops</a></li>
+        <li><a href="#trycatch">Try / Catch</a></li>
+        <li><a href="#async">Async / Await</a></li>
 
-    <li class="nav-group">Data</li>
-    <li><a href="#arrays">Arrays</a></li>
-    <li><a href="#objects">Objects</a></li>
-    <li><a href="#destructuring">Destructuring</a></li>
-    <li><a href="#closures">Closures</a></li>
+        <li class="nav-group">Data</li>
+        <li><a href="#arrays">Arrays</a></li>
+        <li><a href="#objects">Objects</a></li>
+        <li><a href="#destructuring">Destructuring</a></li>
+        <li><a href="#closures">Closures</a></li>
 
-    <li class="nav-group">Standard Library</li>
-    <li><a href="#stdlib-math">Math</a></li>
-    <li><a href="#stdlib-path">Path</a></li>
-    <li><a href="#stdlib-file">File</a></li>
-    <li><a href="#stdlib-globals">Global Functions</a></li>
+        <li class="nav-group">Standard Library</li>
+        <li><a href="#stdlib-math">Math</a></li>
+        <li><a href="#stdlib-path">Path</a></li>
+        <li><a href="#stdlib-file">File</a></li>
+        <li><a href="#stdlib-globals">Global Functions</a></li>
 
-    <li class="nav-group">Advanced</li>
-    <li><a href="#promises">Promises &amp; Chaining</a></li>
-    <li><a href="#modules">Modules</a></li>
-    <li><a href="#provide-inject">Provide / Inject</a></li>
-    <li><a href="#examples">Full Examples</a></li>
-    <li><a href="#csharp-host">C# Host API</a></li>
-  </ul>
+        <li class="nav-group">Advanced</li>
+        <li><a href="#promises">Promises &amp; Chaining</a></li>
+        <li><a href="#modules">Modules</a></li>
+        <li><a href="#provide-inject">Provide / Inject</a></li>
+        <li><a href="#examples">Full Examples</a></li>
+        <li><a href="#csharp-host">C# Host API</a></li>
+    </ul>
 </nav>
 
 <!-- ══════════════════════════════════════ MAIN ══════════════════════════════════════ -->
 <main>
 
-<header>
-  <h1><span>Obiwan</span> Language Documentation</h1>
-  <p>A dynamically-typed scripting language with async/await, closures, destructuring, and a rich standard library.</p>
-  <div class="badges">
-    <span class="badge">dynamic typing</span>
-    <span class="badge">async / await</span>
-    <span class="badge">first-class fns</span>
-    <span class="badge">closures</span>
-    <span class="badge">try / catch</span>
-    <span class="badge">promise chaining</span>
-    <span class="badge">.obi files</span>
-  </div>
-</header>
+    <header>
+        <h1><span>Obiwan</span> Language Documentation</h1>
+        <p>A dynamically-typed scripting language with async/await, closures, destructuring, and a rich standard
+            library.</p>
+        <div class="badges">
+            <span class="badge">dynamic typing</span>
+            <span class="badge">async / await</span>
+            <span class="badge">first-class fns</span>
+            <span class="badge">closures</span>
+            <span class="badge">try / catch</span>
+            <span class="badge">promise chaining</span>
+            <span class="badge">.obi files</span>
+        </div>
+    </header>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║           OVERVIEW           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="overview">
-  <h2><span class="ico">🌐</span> Overview</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║           OVERVIEW           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="overview">
+        <h2><span class="ico">🌐</span> Overview</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Language Highlights</div>
-      <pre><span class="com">// Obiwan — a scripting language with modern ergonomics</span>
+            <div class="card">
+                <div class="card-title">Language Highlights</div>
+                <pre><span class="com">// Obiwan — a scripting language with modern ergonomics</span>
 
 <span class="com">// First-class functions</span>
 <span class="kw">fn</span> <span class="fn_">greet</span>(name) {
@@ -343,46 +511,52 @@
 }
 
 <span class="com">// Closures and higher-order functions</span>
-<span class="kw">const</span> double = <span class="kw">fn</span>(x) { <span class="kw">return</span> x <span class="op">*</span> <span class="num">2</span>; };
+<span class="kw">const</span> double = <span class="kw">fn</span>(x) { <span class="kw">return</span> x <span
+                            class="op">*</span> <span class="num">2</span>; };
 
 <span class="com">// Destructuring</span>
 <span class="kw">var</span> [a, b] = [<span class="num">1</span>, <span class="num">2</span>];
 <span class="kw">var</span> { name, age } = { name: <span class="str_">"Alice"</span>, age: <span class="num">30</span> };</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Member Access with -></div>
-      <pre><span class="com">// Obiwan uses -> for method / property access</span>
+            <div class="card">
+                <div class="card-title">Member Access with -></div>
+                <pre><span class="com">// Obiwan uses -> for method / property access</span>
 
 <span class="kw">var</span> items = [];
-items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>);
+items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1</span>, <span
+                            class="num">2</span>, <span class="num">3</span>);
 
 <span class="mac">println</span>(items<span class="op">-></span><span class="fn_">length</span>());   <span class="com">// 3</span>
 <span class="mac">println</span>(items<span class="op">-></span><span class="fn_">peek</span>());    <span class="com">// last element</span>
 
 <span class="com">// Math module access</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">PI</span>);           <span class="com">// 3.14159...</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">sqrt</span>(<span class="num">16</span>));    <span class="com">// 4</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">pow</span>(<span class="num">2</span>, <span class="num">8</span>));   <span class="com">// 256</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">PI</span>);           <span
+                            class="com">// 3.14159...</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sqrt</span>(<span class="num">16</span>));    <span class="com">// 4</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">pow</span>(<span class="num">2</span>, <span class="num">8</span>));   <span
+                            class="com">// 256</span>
 
 <span class="com">// Array index access</span>
 <span class="kw">var</span> arr = [<span class="num">1</span>, <span class="num">200</span>, <span class="num">3</span>];
 <span class="mac">println</span>(arr[<span class="num">1</span>]);            <span class="com">// 200</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║          VARIABLES           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="variables">
-  <h2><span class="ico">📦</span> Variables</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          VARIABLES           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="variables">
+        <h2><span class="ico">📦</span> Variables</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Declaration Keywords</div>
-      <pre><span class="com">// var — function/global scoped</span>
+            <div class="card">
+                <div class="card-title">Declaration Keywords</div>
+                <pre><span class="com">// var — function/global scoped</span>
 <span class="kw">var</span> x = <span class="num">10</span>;
 <span class="kw">var</span> name = <span class="str_">"Obiwan"</span>;
 <span class="kw">var</span> active = <span class="bool_">true</span>;
@@ -401,11 +575,11 @@ items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1
 
 <span class="com">// Multiple var on one line</span>
 <span class="kw">var</span> a = <span class="num">2</span>, b = <span class="num">3</span>;</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Assignment Operators</div>
-      <pre><span class="kw">var</span> n = <span class="num">10</span>;
+            <div class="card">
+                <div class="card-title">Assignment Operators</div>
+                <pre><span class="kw">var</span> n = <span class="num">10</span>;
 
 n <span class="op">+=</span> <span class="num">5</span>;    <span class="com">// n = 15</span>
 n <span class="op">-=</span> <span class="num">3</span>;    <span class="com">// n = 12</span>
@@ -422,29 +596,34 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 
 <span class="com">// Post / pre increment on variables and properties</span>
 <span class="kw">var</span> z = [<span class="str_">"One"</span>, <span class="num">2</span>];
-<span class="kw">var</span> app = z[<span class="num">1</span>]<span class="op">++</span> <span class="op">*</span> <span class="num">3</span> + <span class="num">1</span> + z[<span class="num">1</span>]<span class="op">++</span> <span class="op">-</span> <span class="num">2</span> + <span class="op">++</span>z[<span class="num">1</span>] + (z[<span class="num">1</span>] <span class="op">*=</span> <span class="num">2</span>);</pre>
-    </div>
+<span class="kw">var</span> app = z[<span class="num">1</span>]<span class="op">++</span> <span
+                            class="op">*</span> <span class="num">3</span> + <span class="num">1</span> + z[<span
+                            class="num">1</span>]<span class="op">++</span> <span class="op">-</span> <span class="num">2</span> + <span
+                            class="op">++</span>z[<span class="num">1</span>] + (z[<span class="num">1</span>] <span
+                            class="op">*=</span> <span class="num">2</span>);</pre>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║        TYPES & LITERALS      ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="types">
-  <h2><span class="ico">🔷</span> Types &amp; Literals</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        TYPES & LITERALS      ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="types">
+        <h2><span class="ico">🔷</span> Types &amp; Literals</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Primitive Literals</div>
-      <pre><span class="com">// Number — double precision float</span>
+            <div class="card">
+                <div class="card-title">Primitive Literals</div>
+                <pre><span class="com">// Number — double precision float</span>
 <span class="kw">var</span> n1 = <span class="num">42</span>;
 <span class="kw">var</span> n2 = <span class="num">3.14</span>;
 <span class="kw">var</span> n3 = <span class="op">-</span><span class="num">0.5</span>;
 
 <span class="com">// String — double quoted</span>
 <span class="kw">var</span> s = <span class="str_">"Hello, World!"</span>;
-<span class="kw">var</span> concat = <span class="str_">"foo"</span> + <span class="str_">"bar"</span>;   <span class="com">// "foobar"</span>
+<span class="kw">var</span> concat = <span class="str_">"foo"</span> + <span class="str_">"bar"</span>;   <span
+                            class="com">// "foobar"</span>
 
 <span class="com">// Boolean</span>
 <span class="kw">var</span> yes = <span class="bool_">true</span>;
@@ -453,43 +632,74 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 <span class="com">// Null</span>
 <span class="kw">var</span> nothing = <span class="bool_">null</span>;
 
-<span class="mac">println</span>(<span class="bool_">true</span>, <span class="bool_">false</span>, <span class="bool_">null</span>);  <span class="com">// true false null</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="bool_">true</span>, <span class="bool_">false</span>, <span class="bool_">null</span>);  <span
+                            class="com">// true false null</span></pre>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Type Overview</div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Type</th><th>Example</th><th>Notes</th></tr>
-          <tr><td><code>Number</code></td><td><code>42</code>, <code>3.14</code></td><td>double precision</td></tr>
-          <tr><td><code>String</code></td><td><code>"hello"</code></td><td>double-quoted only</td></tr>
-          <tr><td><code>Boolean</code></td><td><code>true</code>, <code>false</code></td><td>—</td></tr>
-          <tr><td><code>Null</code></td><td><code>null</code></td><td>absence of value</td></tr>
-          <tr><td><code>Object</code></td><td><code>{ key: val }</code></td><td>also arrays</td></tr>
-          <tr><td><code>Function</code></td><td><code>fn(x){}</code></td><td>first-class</td></tr>
-        </table>
-      </div>
-    </div>
+            <div class="card">
+                <div class="card-title">Type Overview</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Example</th>
+                            <th>Notes</th>
+                        </tr>
+                        <tr>
+                            <td><code>Number</code></td>
+                            <td><code>42</code>, <code>3.14</code></td>
+                            <td>double precision</td>
+                        </tr>
+                        <tr>
+                            <td><code>String</code></td>
+                            <td><code>"hello"</code></td>
+                            <td>double-quoted only</td>
+                        </tr>
+                        <tr>
+                            <td><code>Boolean</code></td>
+                            <td><code>true</code>, <code>false</code></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><code>Null</code></td>
+                            <td><code>null</code></td>
+                            <td>absence of value</td>
+                        </tr>
+                        <tr>
+                            <td><code>Object</code></td>
+                            <td><code>{ key: val }</code></td>
+                            <td>also arrays</td>
+                        </tr>
+                        <tr>
+                            <td><code>Function</code></td>
+                            <td><code>fn(x){}</code></td>
+                            <td>first-class</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║          OPERATORS           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="operators">
-  <h2><span class="ico">⚡</span> Operators</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          OPERATORS           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="operators">
+        <h2><span class="ico">⚡</span> Operators</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Arithmetic &amp; Comparison</div>
-      <pre><span class="com">// Arithmetic</span>
+            <div class="card">
+                <div class="card-title">Arithmetic &amp; Comparison</div>
+                <pre><span class="com">// Arithmetic</span>
 <span class="num">5</span> <span class="op">+</span> <span class="num">3</span>    <span class="com">// 8</span>
 <span class="num">5</span> <span class="op">-</span> <span class="num">3</span>    <span class="com">// 2</span>
 <span class="num">5</span> <span class="op">*</span> <span class="num">3</span>    <span class="com">// 15</span>
 <span class="num">5</span> <span class="op">/</span> <span class="num">2</span>    <span class="com">// 2.5</span>
-<span class="num">5</span> <span class="op">%</span> <span class="num">3</span>    <span class="com">// 2  (modulo)</span>
-<span class="ty">Math</span><span class="op">-></span><span class="fn_">pow</span>(<span class="num">2</span>, <span class="num">10</span>)  <span class="com">// 1024 (no ** operator)</span>
+<span class="num">5</span> <span class="op">%</span> <span class="num">3</span>    <span
+                            class="com">// 2  (modulo)</span>
+<span class="ty">Math</span><span class="op">-></span><span class="fn_">pow</span>(<span class="num">2</span>, <span
+                            class="num">10</span>)  <span class="com">// 1024 (no ** operator)</span>
 
 <span class="com">// Comparison</span>
 <span class="num">3</span> <span class="op">></span> <span class="num">2</span>    <span class="com">// true</span>
@@ -498,15 +708,19 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 <span class="num">3</span> <span class="op">&lt;=</span> <span class="num">2</span>   <span class="com">// false</span>
 <span class="num">3</span> <span class="op">==</span> <span class="num">3</span>   <span class="com">// true</span>
 <span class="num">3</span> <span class="op">!=</span> <span class="num">2</span>   <span class="com">// true</span>
-<span class="mac">println</span>(<span class="num">3</span> <span class="op">></span> <span class="num">2</span>);    <span class="com">// true</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="num">3</span> <span class="op">></span> <span
+                            class="num">2</span>);    <span class="com">// true</span></pre>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Logical &amp; Bitwise &amp; Unary</div>
-      <pre><span class="com">// Logical</span>
-<span class="bool_">true</span> <span class="op">&amp;&amp;</span> <span class="bool_">false</span>    <span class="com">// false</span>
-<span class="bool_">true</span> <span class="op">||</span> <span class="bool_">false</span>    <span class="com">// true</span>
-<span class="mac">println</span>(<span class="num">5</span> <span class="op">&amp;&amp;</span> <span class="num">2</span>);  <span class="com">// truthy short-circuit</span>
+            <div class="card">
+                <div class="card-title">Logical &amp; Bitwise &amp; Unary</div>
+                <pre><span class="com">// Logical</span>
+<span class="bool_">true</span> <span class="op">&amp;&amp;</span> <span class="bool_">false</span>    <span
+                            class="com">// false</span>
+<span class="bool_">true</span> <span class="op">||</span> <span class="bool_">false</span>    <span
+                            class="com">// true</span>
+<span class="mac">println</span>(<span class="num">5</span> <span class="op">&amp;&amp;</span> <span
+                            class="num">2</span>);  <span class="com">// truthy short-circuit</span>
 
 <span class="com">// Bitwise</span>
 <span class="num">5</span> <span class="op">&amp;</span> <span class="num">3</span>     <span class="com">// 1</span>
@@ -520,31 +734,33 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 <span class="mac">println</span>(<span class="op">!!</span>[]);   <span class="com">// double negation → true</span>
 <span class="mac">println</span>(<span class="op">+</span><span class="num">3</span>);     <span class="com">// unary plus → 3</span>
 <span class="mac">println</span>(<span class="op">-</span><span class="num">4</span>);     <span class="com">// unary minus → -4</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║          FUNCTIONS           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="functions">
-  <h2><span class="ico">🔧</span> Functions</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          FUNCTIONS           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="functions">
+        <h2><span class="ico">🔧</span> Functions</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Declaration &amp; First-Class</div>
-      <pre><span class="com">// Named function</span>
+            <div class="card">
+                <div class="card-title">Declaration &amp; First-Class</div>
+                <pre><span class="com">// Named function</span>
 <span class="kw">fn</span> <span class="fn_">add</span>(a, b) {
     <span class="kw">return</span> a <span class="op">+</span> b;
 }
-<span class="mac">println</span>(<span class="fn_">add</span>(<span class="num">3</span>, <span class="num">4</span>));   <span class="com">// 7</span>
+<span class="mac">println</span>(<span class="fn_">add</span>(<span class="num">3</span>, <span class="num">4</span>));   <span
+                            class="com">// 7</span>
 
 <span class="com">// Function expression stored in const</span>
 <span class="kw">const</span> multiply = <span class="kw">fn</span>(a, b) {
     <span class="kw">return</span> a <span class="op">*</span> b;
 };
-<span class="mac">println</span>(<span class="fn_">multiply</span>(<span class="num">3</span>, <span class="num">5</span>));  <span class="com">// 15</span>
+<span class="mac">println</span>(<span class="fn_">multiply</span>(<span class="num">3</span>, <span
+                            class="num">5</span>));  <span class="com">// 15</span>
 
 <span class="com">// Immediately invoked function</span>
 (<span class="kw">fn</span>(param) {
@@ -553,22 +769,26 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 
 <span class="com">// Recursive function</span>
 <span class="kw">fn</span> <span class="fn_">fact</span>(n) {
-    <span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;
-    <span class="kw">return</span> n <span class="op">*</span> <span class="fn_">fact</span>(n <span class="op">-</span> <span class="num">1</span>);
+    <span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span class="kw">return</span> <span
+                            class="num">1</span>;
+    <span class="kw">return</span> n <span class="op">*</span> <span class="fn_">fact</span>(n <span class="op">-</span> <span
+                            class="num">1</span>);
 }
-<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">5</span>));  <span class="com">// 120</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">5</span>));  <span
+                            class="com">// 120</span></pre>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Async Functions</div>
-      <pre><span class="com">// Declare with async keyword after params</span>
+            <div class="card">
+                <div class="card-title">Async Functions</div>
+                <pre><span class="com">// Declare with async keyword after params</span>
 <span class="kw">fn</span> <span class="fn_">add</span>(a, b) <span class="kw">async</span> {
     <span class="kw">return</span> a <span class="op">+</span> b;
 }
 
 <span class="com">// Await an async call</span>
 <span class="kw">fn</span> <span class="fn_">main</span>() <span class="kw">async</span> {
-    <span class="kw">var</span> result = <span class="kw">await</span> <span class="fn_">add</span>(<span class="num">10</span>, <span class="num">20</span>);
+    <span class="kw">var</span> result = <span class="kw">await</span> <span class="fn_">add</span>(<span
+                            class="num">10</span>, <span class="num">20</span>);
     <span class="mac">println</span>(result);  <span class="com">// 30</span>
 }
 
@@ -581,11 +801,11 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 <span class="com">// Call without await — fire and forget</span>
 <span class="fn_">main</span>();
 <span class="mac">println</span>(<span class="str_">"Done!"</span>);   <span class="com">// may print before main resolves</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Functions as Arguments</div>
-      <pre><span class="com">// Functions stored in arrays</span>
+            <div class="card">
+                <div class="card-title">Functions as Arguments</div>
+                <pre><span class="com">// Functions stored in arrays</span>
 <span class="kw">var</span> callbacks = [
     <span class="kw">fn</span>(index) {
         <span class="mac">println</span>(<span class="str_">"from callback"</span>, index);
@@ -605,21 +825,21 @@ n <span class="op">&gt;&gt;=</span> <span class="num">1</span>;   <span class="c
 items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw">fn</span>(a, b) {
     <span class="mac">println</span>(<span class="str_">"FOREACH"</span>, a);
 });</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         CONDITIONALS         ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="conditionals">
-  <h2><span class="ico">🔀</span> Conditionals</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         CONDITIONALS         ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="conditionals">
+        <h2><span class="ico">🔀</span> Conditionals</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">if / else</div>
-      <pre><span class="com">// Standard if / else</span>
+            <div class="card">
+                <div class="card-title">if / else</div>
+                <pre><span class="com">// Standard if / else</span>
 <span class="kw">if</span> (condition) {
     <span class="mac">println</span>(<span class="str_">"true branch"</span>);
 } <span class="kw">else</span> {
@@ -638,7 +858,8 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 }
 
 <span class="com">// Single-line body (no braces)</span>
-<span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;
+<span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span
+                            class="kw">return</span> <span class="num">1</span>;
 
 <span class="com">// Nested if</span>
 <span class="kw">if</span> (x <span class="op">></span> <span class="num">0</span>) {
@@ -648,12 +869,14 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
         <span class="mac">println</span>(<span class="str_">"positive"</span>);
     }
 }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Truthiness Rules</div>
-      <div class="prose">Obiwan evaluates conditions with JavaScript-like truthiness. Any non-zero number, non-empty string, or object is truthy. Zero, empty string, null, and false are falsy.</div>
-      <pre><span class="com">// Falsy values</span>
+            <div class="card">
+                <div class="card-title">Truthiness Rules</div>
+                <div class="prose">Obiwan evaluates conditions with JavaScript-like truthiness. Any non-zero number,
+                    non-empty string, or object is truthy. Zero, empty string, null, and false are falsy.
+                </div>
+                <pre><span class="com">// Falsy values</span>
 <span class="kw">if</span> (<span class="num">0</span>)           { } <span class="com">// falsy</span>
 <span class="kw">if</span> (<span class="bool_">false</span>)       { } <span class="com">// falsy</span>
 <span class="kw">if</span> (<span class="bool_">null</span>)        { } <span class="com">// falsy</span>
@@ -666,21 +889,21 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 <span class="kw">if</span> ([])          { } <span class="com">// truthy (object)</span>
 <span class="kw">if</span> ({})          { } <span class="com">// truthy (object)</span>
 <span class="kw">if</span> (<span class="bool_">true</span>)        { } <span class="com">// truthy</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║           SWITCH             ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="switch">
-  <h2><span class="ico">🔁</span> Switch</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║           SWITCH             ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="switch">
+        <h2><span class="ico">🔁</span> Switch</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Switch Statement</div>
-      <pre><span class="com">// Multiple cases can share a body (fall-through grouping)</span>
+            <div class="card">
+                <div class="card-title">Switch Statement</div>
+                <pre><span class="com">// Multiple cases can share a body (fall-through grouping)</span>
 <span class="kw">fn</span> <span class="fn_">catcher</span>() {
     <span class="kw">switch</span> (<span class="num">1003</span>) {
         <span class="kw">case</span> <span class="num">100</span>:
@@ -704,11 +927,11 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
         <span class="kw">default</span>: <span class="kw">return</span> <span class="str_">"Unknown"</span>;
     }
 }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Switch Expression</div>
-      <pre><span class="com">// Switch used as an expression (returns a value)</span>
+            <div class="card">
+                <div class="card-title">Switch Expression</div>
+                <pre><span class="com">// Switch used as an expression (returns a value)</span>
 <span class="mac">println</span>(<span class="kw">switch</span> (<span class="num">100</span>) {
     <span class="num">0</span>  <span class="op">=></span> <span class="str_">"zero"</span>,
     <span class="num">1</span>  <span class="op">=></span> <span class="str_">"one"</span>,
@@ -728,21 +951,21 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
     _ <span class="op">=></span> <span class="str_">"Weekend"</span>
 };
 <span class="mac">println</span>(name);  <span class="com">// "Wed"</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║            LOOPS             ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="loops">
-  <h2><span class="ico">🔄</span> Loops</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║            LOOPS             ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="loops">
+        <h2><span class="ico">🔄</span> Loops</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">while loop</div>
-      <pre><span class="com">// Basic while</span>
+            <div class="card">
+                <div class="card-title">while loop</div>
+                <pre><span class="com">// Basic while</span>
 <span class="kw">var</span> g = <span class="num">0</span>;
 <span class="kw">while</span> (g <span class="op">&lt;</span> <span class="num">10</span>) {
     <span class="mac">println</span>(g);
@@ -756,11 +979,11 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
     A = A <span class="op">+</span> <span class="num">0.07</span>;
     B = B <span class="op">+</span> <span class="num">0.03</span>;
 }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">break &amp; continue</div>
-      <pre><span class="com">// break exits the loop</span>
+            <div class="card">
+                <div class="card-title">break &amp; continue</div>
+                <pre><span class="com">// break exits the loop</span>
 <span class="kw">local</span> x = <span class="num">2</span>;
 <span class="kw">while</span> (x <span class="op">&lt;</span> <span class="num">10</span>) {
     <span class="mac">println</span>(x);
@@ -772,32 +995,34 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 <span class="kw">var</span> ll = <span class="num">0</span>;
 <span class="kw">while</span> (ll <span class="op">&lt;</span> <span class="num">10</span>) {
     ll = ll <span class="op">+</span> <span class="num">1</span>;
-    <span class="kw">if</span> (ll <span class="op">==</span> <span class="num">5</span>) <span class="kw">continue</span>;
+    <span class="kw">if</span> (ll <span class="op">==</span> <span class="num">5</span>) <span
+                            class="kw">continue</span>;
     <span class="mac">println</span>(<span class="str_">"ll ->"</span>, ll);
 }  <span class="com">// skips 5</span>
 
 <span class="com">// break works through nested try/catch</span>
 <span class="kw">while</span> (x <span class="op">&lt;</span> <span class="num">10</span>) {
     <span class="kw">try</span> {
-        <span class="kw">if</span> (x <span class="op">==</span> <span class="num">5</span>) <span class="kw">break</span>;
+        <span class="kw">if</span> (x <span class="op">==</span> <span class="num">5</span>) <span
+                            class="kw">break</span>;
         x = x <span class="op">+</span> <span class="num">1</span>;
     } <span class="kw">catch</span> (err) { }
 }</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║          TRY / CATCH         ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="trycatch">
-  <h2><span class="ico">🛡️</span> Try / Catch</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          TRY / CATCH         ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="trycatch">
+        <h2><span class="ico">🛡️</span> Try / Catch</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Basic Error Handling</div>
-      <pre><span class="kw">try</span> {
+            <div class="card">
+                <div class="card-title">Basic Error Handling</div>
+                <pre><span class="kw">try</span> {
     <span class="com">// code that may throw</span>
     <span class="num">2</span> <span class="op">+</span> <span class="str_">"bad type"</span>;
 } <span class="kw">catch</span> (err) {
@@ -815,11 +1040,11 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
     <span class="mac">println</span>(<span class="str_">"FINALLY"</span>);
 }
 <span class="mac">println</span>(<span class="fn_">test</span>());   <span class="com">// "YEH!"</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Nested try / catch</div>
-      <pre><span class="kw">try</span> {
+            <div class="card">
+                <div class="card-title">Nested try / catch</div>
+                <pre><span class="kw">try</span> {
     <span class="kw">local</span> x = <span class="num">2</span>;
     <span class="kw">while</span> (x <span class="op">&lt;</span> <span class="num">10</span>) {
         <span class="kw">try</span> {
@@ -840,11 +1065,11 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 }
 
 <span class="com">// break correctly exits loop even through nested try blocks</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Catch with Destructuring</div>
-      <pre><span class="com">// Missing properties throw at runtime — catch them</span>
+            <div class="card">
+                <div class="card-title">Catch with Destructuring</div>
+                <pre><span class="com">// Missing properties throw at runtime — catch them</span>
 <span class="kw">try</span> {
     <span class="kw">local</span> { a: b, c: d, e: f } = {
         a: <span class="str_">"Dog"</span>,
@@ -855,77 +1080,85 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 } <span class="kw">catch</span> (err) {
     <span class="mac">print</span> <span class="str_">"CATCH EEEEE"</span>;   <span class="com">// prints this</span>
 }</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         ASYNC / AWAIT        ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="async">
-  <h2><span class="ico">⏳</span> Async / Await</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         ASYNC / AWAIT        ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="async">
+        <h2><span class="ico">⏳</span> Async / Await</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Error propagation across async calls</div>
-      <pre><span class="kw">fn</span> <span class="fn_">willThrow</span>() <span class="kw">async</span> {
+            <div class="card">
+                <div class="card-title">Error propagation across async calls</div>
+                <pre><span class="kw">fn</span> <span class="fn_">willThrow</span>() <span class="kw">async</span> {
     <span class="num">2</span> <span class="op">+</span> <span class="str_">"focc!"</span>;       <span class="com">// throws a runtime error</span>
     <span class="mac">println</span>(<span class="str_">"HEHE!"</span>);  <span class="com">// never reached</span>
 }
 
 <span class="kw">fn</span> <span class="fn_">wrapper</span>() <span class="kw">async</span> {
     <span class="kw">await</span> <span class="fn_">willThrow</span>();
-    <span class="mac">println</span>(<span class="str_">"continue wrapper!"</span>);  <span class="com">// skipped</span>
+    <span class="mac">println</span>(<span class="str_">"continue wrapper!"</span>);  <span
+                            class="com">// skipped</span>
 }
 
 <span class="kw">fn</span> <span class="fn_">caller</span>() <span class="kw">async</span> {
     <span class="kw">try</span> {
         <span class="kw">await</span> <span class="fn_">wrapper</span>();
-        <span class="mac">println</span>(<span class="str_">"continue try!"</span>);  <span class="com">// skipped</span>
+        <span class="mac">println</span>(<span class="str_">"continue try!"</span>);  <span
+                            class="com">// skipped</span>
     } <span class="kw">catch</span> (err) {
-        <span class="mac">print</span> <span class="str_">"FROM CATCH!!"</span>, err;  <span class="com">// caught here</span>
+        <span class="mac">print</span> <span class="str_">"FROM CATCH!!"</span>, err;  <span
+                            class="com">// caught here</span>
     }
-    <span class="mac">println</span>(<span class="str_">"Continue!!!"</span>);  <span class="com">// runs after catch</span>
+    <span class="mac">println</span>(<span class="str_">"Continue!!!"</span>);  <span
+                            class="com">// runs after catch</span>
 }
 
 <span class="fn_">caller</span>();
 <span class="mac">println</span>(<span class="str_">"Done!"</span>);   <span class="com">// may run before caller resolves</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Awaited return value</div>
-      <pre><span class="kw">fn</span> <span class="fn_">add</span>(a, b) <span class="kw">async</span> {
+            <div class="card">
+                <div class="card-title">Awaited return value</div>
+                <pre><span class="kw">fn</span> <span class="fn_">add</span>(a, b) <span class="kw">async</span> {
     <span class="kw">return</span> a <span class="op">+</span> b;
 }
 
 <span class="kw">fn</span> <span class="fn_">run</span>() <span class="kw">async</span> {
-    <span class="kw">var</span> sum = <span class="kw">await</span> <span class="fn_">add</span>(<span class="num">10</span>, <span class="num">20</span>);
+    <span class="kw">var</span> sum = <span class="kw">await</span> <span class="fn_">add</span>(<span
+                            class="num">10</span>, <span class="num">20</span>);
     <span class="mac">println</span>(sum);   <span class="com">// 30</span>
 
     <span class="com">// Chain multiple awaits</span>
-    <span class="kw">var</span> a = <span class="kw">await</span> <span class="fn_">add</span>(<span class="num">1</span>, <span class="num">2</span>);
-    <span class="kw">var</span> b = <span class="kw">await</span> <span class="fn_">add</span>(a, <span class="num">10</span>);
+    <span class="kw">var</span> a = <span class="kw">await</span> <span class="fn_">add</span>(<span
+                            class="num">1</span>, <span class="num">2</span>);
+    <span class="kw">var</span> b = <span class="kw">await</span> <span class="fn_">add</span>(a, <span
+                            class="num">10</span>);
     <span class="mac">println</span>(b);     <span class="com">// 13</span>
 }
 
 <span class="fn_">run</span>();</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║        ARRAYS                ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="arrays">
-  <h2><span class="ico">📋</span> Arrays</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        ARRAYS                ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="arrays">
+        <h2><span class="ico">📋</span> Arrays</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Array Literals &amp; Methods</div>
-      <pre><span class="com">// Create an array</span>
-<span class="kw">var</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+            <div class="card">
+                <div class="card-title">Array Literals &amp; Methods</div>
+                <pre><span class="com">// Create an array</span>
+<span class="kw">var</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span
+                            class="num">4</span>, <span class="num">5</span>];
 <span class="mac">println</span>(nums);   <span class="com">// [1, 2, 3, 4, 5]</span>
 
 <span class="com">// Index access</span>
@@ -934,7 +1167,8 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
 
 <span class="com">// Mutable array</span>
 <span class="kw">var</span> items = [];
-items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>);
+items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1</span>, <span
+                            class="num">2</span>, <span class="num">3</span>);
 <span class="mac">println</span>(items<span class="op">-></span><span class="fn_">length</span>());  <span class="com">// 3</span>
 <span class="mac">println</span>(items<span class="op">-></span><span class="fn_">peek</span>());   <span class="com">// 3 (last element)</span>
 
@@ -942,42 +1176,46 @@ items<span class="op">-></span><span class="fn_">push</span>(<span class="num">1
 items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw">fn</span>(val, idx) {
     <span class="mac">println</span>(<span class="str_">"FOREACH"</span>, val);
 });</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Arrays of Functions</div>
-      <pre><span class="com">// Store functions in arrays and call them by index</span>
+            <div class="card">
+                <div class="card-title">Arrays of Functions</div>
+                <pre><span class="com">// Store functions in arrays and call them by index</span>
 <span class="kw">var</span> ops = [
     <span class="kw">fn</span>(a, b) { <span class="kw">return</span> a <span class="op">+</span> b; },
     <span class="kw">fn</span>(a, b) { <span class="kw">return</span> a <span class="op">*</span> b; },
     <span class="kw">fn</span>(a, b) { <span class="kw">return</span> a <span class="op">-</span> b; }
 ];
 
-<span class="mac">println</span>(ops[<span class="num">0</span>](<span class="num">3</span>, <span class="num">4</span>));  <span class="com">// 7</span>
-<span class="mac">println</span>(ops[<span class="num">1</span>](<span class="num">3</span>, <span class="num">4</span>));  <span class="com">// 12</span>
-<span class="mac">println</span>(ops[<span class="num">2</span>](<span class="num">3</span>, <span class="num">4</span>));  <span class="com">// -1</span>
+<span class="mac">println</span>(ops[<span class="num">0</span>](<span class="num">3</span>, <span class="num">4</span>));  <span
+                            class="com">// 7</span>
+<span class="mac">println</span>(ops[<span class="num">1</span>](<span class="num">3</span>, <span class="num">4</span>));  <span
+                            class="com">// 12</span>
+<span class="mac">println</span>(ops[<span class="num">2</span>](<span class="num">3</span>, <span class="num">4</span>));  <span
+                            class="com">// -1</span>
 
 <span class="com">// Iterate and invoke</span>
 <span class="kw">var</span> i = <span class="num">0</span>;
-<span class="kw">while</span> (i <span class="op">&lt;</span> ops<span class="op">-></span><span class="fn_">length</span>()) {
+<span class="kw">while</span> (i <span class="op">&lt;</span> ops<span class="op">-></span><span
+                            class="fn_">length</span>()) {
     <span class="mac">println</span>(ops[i](<span class="num">10</span>, <span class="num">2</span>));
     i = i <span class="op">+</span> <span class="num">1</span>;
 }</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║          OBJECTS             ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="objects">
-  <h2><span class="ico">🗂️</span> Objects</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║          OBJECTS             ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="objects">
+        <h2><span class="ico">🗂️</span> Objects</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Object Literals</div>
-      <pre><span class="com">// Create an object</span>
+            <div class="card">
+                <div class="card-title">Object Literals</div>
+                <pre><span class="com">// Create an object</span>
 <span class="kw">var</span> person = {
     name: <span class="str_">"Alice"</span>,
     age:  <span class="num">30</span>
@@ -995,18 +1233,20 @@ items<span class="op">-></span><span class="fn_">foreach</span>(<span class="kw"
     }
 };
 <span class="mac">println</span>(calculator);          <span class="com">// {Hello: "World", ...}</span>
-<span class="mac">println</span>(calculator<span class="op">-></span><span class="fn_">add</span>(<span class="num">3</span>, <span class="num">4</span>));  <span class="com">// 7</span>
+<span class="mac">println</span>(calculator<span class="op">-></span><span class="fn_">add</span>(<span
+                            class="num">3</span>, <span class="num">4</span>));  <span class="com">// 7</span>
 
 <span class="com">// Property mutation</span>
 <span class="kw">var</span> pt = { prop: <span class="num">0</span> };
-<span class="kw">var</span> bpp = pt<span class="op">-></span>prop<span class="op">++</span> <span class="op">+</span> <span class="op">++</span>pt<span class="op">-></span>prop;
+<span class="kw">var</span> bpp = pt<span class="op">-></span>prop<span class="op">++</span> <span
+                            class="op">+</span> <span class="op">++</span>pt<span class="op">-></span>prop;
 pt<span class="op">-></span>prop = <span class="num">10</span>;
 <span class="mac">println</span>(pt, bpp);</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Dynamic Property Access</div>
-      <pre><span class="com">// Properties accessed with -> or []</span>
+            <div class="card">
+                <div class="card-title">Dynamic Property Access</div>
+                <pre><span class="com">// Properties accessed with -> or []</span>
 <span class="kw">var</span> config = {
     host:  <span class="str_">"localhost"</span>,
     port:  <span class="num">8080</span>,
@@ -1027,21 +1267,21 @@ pt<span class="op">-></span>prop = <span class="num">10</span>;
 
 <span class="mac">println</span>(app<span class="op">-></span>db<span class="op">-></span>host);   <span class="com">// "db.example.com"</span>
 <span class="mac">println</span>(app<span class="op">-></span>name);       <span class="com">// "MyApp"</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║        DESTRUCTURING         ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="destructuring">
-  <h2><span class="ico">🧩</span> Destructuring</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        DESTRUCTURING         ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="destructuring">
+        <h2><span class="ico">🧩</span> Destructuring</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Array Destructuring</div>
-      <pre><span class="com">// Unpack array into variables</span>
+            <div class="card">
+                <div class="card-title">Array Destructuring</div>
+                <pre><span class="com">// Unpack array into variables</span>
 <span class="kw">var</span> [a, b] = [<span class="num">1</span>, <span class="num">2</span>];
 <span class="mac">println</span>(a, b);    <span class="com">// 1 2</span>
 
@@ -1059,11 +1299,11 @@ xx = <span class="num">21</span>;
 <span class="com">// Mix with other var declarations</span>
 <span class="kw">var</span> x = <span class="num">2</span>, y = <span class="num">3</span>;
 <span class="mac">println</span>(x);     <span class="com">// 2</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Object Destructuring</div>
-      <pre><span class="com">// Unpack named properties (with renaming: a -> b)</span>
+            <div class="card">
+                <div class="card-title">Object Destructuring</div>
+                <pre><span class="com">// Unpack named properties (with renaming: a -> b)</span>
 <span class="kw">var</span> { name, age } = { name: <span class="str_">"Alice"</span>, age: <span class="num">30</span> };
 <span class="mac">println</span>(name, age);  <span class="com">// Alice 30</span>
 
@@ -1076,29 +1316,31 @@ xx = <span class="num">21</span>;
 
 <span class="com">// Const destructuring from import</span>
 <span class="kw">const</span> { Add: myAdd } = <span class="fn_">import</span>(<span class="str_">"./import.obi"</span>);
-<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span class="num">1000</span>));  <span class="com">// 1001</span>
+<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span
+                            class="num">1000</span>));  <span class="com">// 1001</span>
 
 <span class="com">// Throws if a required key is missing (use try/catch)</span>
 <span class="kw">try</span> {
-    <span class="kw">local</span> { e: f } = { a: <span class="str_">"Dog"</span> };  <span class="com">// 'e' missing</span>
+    <span class="kw">local</span> { e: f } = { a: <span class="str_">"Dog"</span> };  <span
+                            class="com">// 'e' missing</span>
 } <span class="kw">catch</span> (err) {
     <span class="mac">print</span> <span class="str_">"CATCH EEEEE"</span>;
 }</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║           CLOSURES           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="closures">
-  <h2><span class="ico">🔒</span> Closures</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║           CLOSURES           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="closures">
+        <h2><span class="ico">🔒</span> Closures</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Closure over local state</div>
-      <pre><span class="com">// counter() returns a closure that remembers 'i'</span>
+            <div class="card">
+                <div class="card-title">Closure over local state</div>
+                <pre><span class="com">// counter() returns a closure that remembers 'i'</span>
 <span class="kw">const</span> counter = <span class="kw">fn</span>() {
     <span class="kw">local</span> i = <span class="num">0</span>;
     <span class="kw">return</span> <span class="kw">fn</span>() {
@@ -1116,11 +1358,11 @@ xx = <span class="num">21</span>;
 <span class="kw">const</span> c2 = <span class="fn_">counter</span>();
 <span class="mac">println</span>(c2());  <span class="com">// 1 (fresh)</span>
 <span class="mac">println</span>(c());   <span class="com">// 4 (continues)</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Closures as Callbacks</div>
-      <pre><span class="com">// Closure captures outer variable</span>
+            <div class="card">
+                <div class="card-title">Closures as Callbacks</div>
+                <pre><span class="com">// Closure captures outer variable</span>
 <span class="kw">fn</span> <span class="fn_">makeAdder</span>(n) {
     <span class="kw">return</span> <span class="kw">fn</span>(x) {
         <span class="kw">return</span> x <span class="op">+</span> n;
@@ -1130,29 +1372,32 @@ xx = <span class="num">21</span>;
 <span class="kw">const</span> add5  = <span class="fn_">makeAdder</span>(<span class="num">5</span>);
 <span class="kw">const</span> add10 = <span class="fn_">makeAdder</span>(<span class="num">10</span>);
 
-<span class="mac">println</span>(<span class="fn_">add5</span>(<span class="num">3</span>));    <span class="com">// 8</span>
-<span class="mac">println</span>(<span class="fn_">add10</span>(<span class="num">7</span>));  <span class="com">// 17</span>
+<span class="mac">println</span>(<span class="fn_">add5</span>(<span class="num">3</span>));    <span
+                            class="com">// 8</span>
+<span class="mac">println</span>(<span class="fn_">add10</span>(<span class="num">7</span>));  <span
+                            class="com">// 17</span>
 
 <span class="com">// Inline callback</span>
 <span class="kw">fn</span> <span class="fn_">applyTwice</span>(f, x) {
     <span class="kw">return</span> <span class="fn_">f</span>(<span class="fn_">f</span>(x));
 }
-<span class="mac">println</span>(<span class="fn_">applyTwice</span>(<span class="fn_">add5</span>, <span class="num">0</span>));  <span class="com">// 10</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="fn_">applyTwice</span>(<span class="fn_">add5</span>, <span
+                            class="num">0</span>));  <span class="com">// 10</span></pre>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         PROMISE CHAINING     ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="promises">
-  <h2><span class="ico">⛓️</span> Promises &amp; Chaining</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         PROMISE CHAINING     ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="promises">
+        <h2><span class="ico">⛓️</span> Promises &amp; Chaining</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">then() chaining</div>
-      <pre><span class="com">// Async functions return promise-like values</span>
+            <div class="card">
+                <div class="card-title">then() chaining</div>
+                <pre><span class="com">// Async functions return promise-like values</span>
 <span class="kw">fn</span> <span class="fn_">add</span>(a, b) <span class="kw">async</span> {
     <span class="kw">return</span> a <span class="op">+</span> b;
 }
@@ -1171,11 +1416,11 @@ xx = <span class="num">21</span>;
     <span class="mac">print</span> <span class="str_">"CB"</span>, data;       <span class="com">// CB 4</span>
     <span class="kw">return</span> data <span class="op">+</span> <span class="num">1</span>;
 }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">error() chaining</div>
-      <pre><span class="com">// Handle promise rejection with ->error()</span>
+            <div class="card">
+                <div class="card-title">error() chaining</div>
+                <pre><span class="com">// Handle promise rejection with ->error()</span>
 <span class="kw">fn</span> <span class="fn_">cbError</span>(data) {
     <span class="mac">print</span> <span class="str_">"CB ERROR"</span>, data;
 }
@@ -1189,105 +1434,156 @@ xx = <span class="num">21</span>;
 
 <span class="com">// Mix then and error</span>
 <span class="fn_">add</span>(<span class="num">1</span>, <span class="num">2</span>)
-    <span class="op">-></span><span class="fn_">then</span>(<span class="kw">fn</span>(v) { <span class="kw">return</span> v <span class="op">*</span> <span class="num">10</span>; })
+    <span class="op">-></span><span class="fn_">then</span>(<span class="kw">fn</span>(v) { <span
+                            class="kw">return</span> v <span class="op">*</span> <span class="num">10</span>; })
     <span class="op">-></span><span class="fn_">error</span>(<span class="kw">fn</span>(e) {
         <span class="mac">println</span>(<span class="str_">"caught:"</span>, e);
     })
     <span class="op">-></span><span class="fn_">then</span>(<span class="kw">fn</span>(v) {
         <span class="mac">println</span>(<span class="str_">"result:"</span>, v);
     });</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         STDLIB MATH          ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="stdlib-math">
-  <h2><span class="ico">🔢</span> Math</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         STDLIB MATH          ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="stdlib-math">
+        <h2><span class="ico">🔢</span> Math</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Constants &amp; Common Functions</div>
-      <pre><span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">PI</span>);         <span class="com">// 3.14159265...</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">E</span>);          <span class="com">// 2.71828182...</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">Tau</span>);        <span class="com">// 6.28318530... (2π)</span>
+            <div class="card">
+                <div class="card-title">Constants &amp; Common Functions</div>
+                <pre><span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                        class="att">PI</span>);         <span class="com">// 3.14159265...</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">E</span>);          <span
+                            class="com">// 2.71828182...</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">Tau</span>);        <span
+                            class="com">// 6.28318530... (2π)</span>
 
 <span class="com">// Power, root</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">pow</span>(<span class="num">2</span>, <span class="num">8</span>));   <span class="com">// 256</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">sqrt</span>(<span class="num">144</span>));  <span class="com">// 12</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">cbrt</span>(<span class="num">27</span>));   <span class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">pow</span>(<span class="num">2</span>, <span class="num">8</span>));   <span
+                            class="com">// 256</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sqrt</span>(<span class="num">144</span>));  <span class="com">// 12</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cbrt</span>(<span class="num">27</span>));   <span class="com">// 3</span>
 
 <span class="com">// Rounding</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(<span class="num">3.7</span>));  <span class="com">// 3</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">ceil</span>(<span class="num">3.2</span>));   <span class="com">// 4</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">round</span>(<span class="num">3.5</span>));  <span class="com">// 4</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">trunc</span>(<span class="num">3.9</span>));  <span class="com">// 3</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">roundTo</span>(<span class="num">3.14159</span>, <span class="num">2</span>));  <span class="com">// 3.14</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">floor</span>(<span class="num">3.7</span>));  <span class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">ceil</span>(<span class="num">3.2</span>));   <span class="com">// 4</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">round</span>(<span class="num">3.5</span>));  <span class="com">// 4</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">trunc</span>(<span class="num">3.9</span>));  <span class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">roundTo</span>(<span
+                            class="num">3.14159</span>, <span class="num">2</span>));  <span class="com">// 3.14</span></pre>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Trigonometry &amp; Misc</div>
-      <pre><span class="com">// Trig (radians)</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">sin</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">PI</span> <span class="op">/</span> <span class="num">2</span>));  <span class="com">// 1</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">cos</span>(<span class="num">0</span>));             <span class="com">// 1</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">tan</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">PI</span> <span class="op">/</span> <span class="num">4</span>));  <span class="com">// 1</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">atan2</span>(<span class="num">1</span>, <span class="num">1</span>));        <span class="com">// π/4</span>
+            <div class="card">
+                <div class="card-title">Trigonometry &amp; Misc</div>
+                <pre><span class="com">// Trig (radians)</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sin</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="att">PI</span> <span class="op">/</span> <span class="num">2</span>));  <span
+                            class="com">// 1</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cos</span>(<span class="num">0</span>));             <span
+                            class="com">// 1</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">tan</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="att">PI</span> <span class="op">/</span> <span class="num">4</span>));  <span
+                            class="com">// 1</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">atan2</span>(<span class="num">1</span>, <span
+                            class="num">1</span>));        <span class="com">// π/4</span>
 
 <span class="com">// Log &amp; exp</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">log</span>(<span class="ty">Math</span><span class="op">-></span><span class="att">E</span>));       <span class="com">// 1 (natural log)</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">log10</span>(<span class="num">1000</span>));       <span class="com">// 3</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">log2</span>(<span class="num">8</span>));           <span class="com">// 3</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">exp</span>(<span class="num">1</span>));            <span class="com">// e</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">log</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="att">E</span>));       <span class="com">// 1 (natural log)</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">log10</span>(<span class="num">1000</span>));       <span
+                            class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">log2</span>(<span class="num">8</span>));           <span
+                            class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">exp</span>(<span class="num">1</span>));            <span
+                            class="com">// e</span>
 
 <span class="com">// Abs, min, max, clamp, sign</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">abs</span>(<span class="op">-</span><span class="num">5</span>));           <span class="com">// 5</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">min</span>(<span class="num">3</span>, <span class="num">7</span>));         <span class="com">// 3</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">max</span>(<span class="num">3</span>, <span class="num">7</span>));         <span class="com">// 7</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">clamp</span>(<span class="num">15</span>, <span class="num">0</span>, <span class="num">10</span>));  <span class="com">// 10</span>
-<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span class="fn_">sign</span>(<span class="op">-</span><span class="num">7</span>));          <span class="com">// -1</span></pre>
-    </div>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">abs</span>(<span class="op">-</span><span
+                            class="num">5</span>));           <span class="com">// 5</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">min</span>(<span class="num">3</span>, <span
+                            class="num">7</span>));         <span class="com">// 3</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">max</span>(<span class="num">3</span>, <span
+                            class="num">7</span>));         <span class="com">// 7</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">clamp</span>(<span class="num">15</span>, <span class="num">0</span>, <span
+                            class="num">10</span>));  <span class="com">// 10</span>
+<span class="mac">println</span>(<span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sign</span>(<span class="op">-</span><span
+                            class="num">7</span>));          <span class="com">// -1</span></pre>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         STDLIB PATH          ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="stdlib-path">
-  <h2><span class="ico">📁</span> Path</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         STDLIB PATH          ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="stdlib-path">
+        <h2><span class="ico">📁</span> Path</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Path Utilities</div>
-      <pre><span class="com">// Constants</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="att">DirectorySeparator</span>);   <span class="com">// / or \</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="att">PathSeparator</span>);        <span class="com">// : or ;</span>
+            <div class="card">
+                <div class="card-title">Path Utilities</div>
+                <pre><span class="com">// Constants</span>
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="att">DirectorySeparator</span>);   <span
+                            class="com">// / or \</span>
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="att">PathSeparator</span>);        <span class="com">// : or ;</span>
 
 <span class="com">// File name operations</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getFileName</span>(<span class="str_">"/a/b/foo.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">getFileName</span>(<span class="str_">"/a/b/foo.obi"</span>));
     <span class="com">// "foo.obi"</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getFileNameWithoutExtension</span>(<span class="str_">"/a/b/foo.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getFileNameWithoutExtension</span>(<span
+                            class="str_">"/a/b/foo.obi"</span>));
     <span class="com">// "foo"</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getExtension</span>(<span class="str_">"/a/b/foo.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">getExtension</span>(<span class="str_">"/a/b/foo.obi"</span>));
     <span class="com">// ".obi"</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getDirectoryName</span>(<span class="str_">"/a/b/foo.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getDirectoryName</span>(<span
+                            class="str_">"/a/b/foo.obi"</span>));
     <span class="com">// "/a/b"</span>
 
 <span class="com">// Combination &amp; checks</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">combine</span>(<span class="str_">"/usr"</span>, <span class="str_">"local"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">combine</span>(<span
+                            class="str_">"/usr"</span>, <span class="str_">"local"</span>));
     <span class="com">// "/usr/local"</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">hasExtension</span>(<span class="str_">"file.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">hasExtension</span>(<span class="str_">"file.obi"</span>));
     <span class="com">// true</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">changeExtension</span>(<span class="str_">"a.txt"</span>, <span class="str_">".md"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">changeExtension</span>(<span class="str_">"a.txt"</span>, <span class="str_">".md"</span>));
     <span class="com">// "a.md"</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Temp &amp; Qualified Paths</div>
-      <pre><span class="com">// Temp files</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getTempPath</span>());
+            <div class="card">
+                <div class="card-title">Temp &amp; Qualified Paths</div>
+                <pre><span class="com">// Temp files</span>
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">getTempPath</span>());
     <span class="com">// e.g. "/tmp/"</span>
 <span class="kw">var</span> tmp = <span class="ty">Path</span><span class="op">-></span><span class="fn_">getTempFileName</span>();
     <span class="com">// creates + returns a temp file path</span>
@@ -1295,88 +1591,105 @@ xx = <span class="num">21</span>;
     <span class="com">// e.g. "kzpmu4bk.kn0"</span>
 
 <span class="com">// Absolute / relative</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getFullPath</span>(<span class="str_">"./script.obi"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">getFullPath</span>(<span class="str_">"./script.obi"</span>));
     <span class="com">// absolute path</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">isPathRooted</span>(<span class="str_">"/etc/hosts"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">isPathRooted</span>(<span class="str_">"/etc/hosts"</span>));
     <span class="com">// true</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">isPathFullyQualified</span>(<span class="str_">"./rel"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">isPathFullyQualified</span>(<span
+                            class="str_">"./rel"</span>));
     <span class="com">// false</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">getRelativePath</span>(<span class="str_">"/a/b"</span>, <span class="str_">"/a/c/d"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">getRelativePath</span>(<span class="str_">"/a/b"</span>, <span class="str_">"/a/c/d"</span>));
     <span class="com">// "../c/d"</span>
 
 <span class="com">// Combine multiple path segments</span>
-<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span class="fn_">combineAll</span>(<span class="str_">"/usr"</span>, <span class="str_">"local"</span>, <span class="str_">"bin"</span>));
+<span class="mac">println</span>(<span class="ty">Path</span><span class="op">-></span><span
+                            class="fn_">combineAll</span>(<span class="str_">"/usr"</span>, <span
+                            class="str_">"local"</span>, <span class="str_">"bin"</span>));
     <span class="com">// "/usr/local/bin"</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║         STDLIB FILE          ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="stdlib-file">
-  <h2><span class="ico">💾</span> File</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║         STDLIB FILE          ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="stdlib-file">
+        <h2><span class="ico">💾</span> File</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Read &amp; Write</div>
-      <pre><span class="com">// Check existence</span>
-<span class="kw">if</span> (<span class="ty">File</span><span class="op">-></span><span class="fn_">exists</span>(<span class="str_">"data.txt"</span>)) {
-    <span class="kw">var</span> content = <span class="ty">File</span><span class="op">-></span><span class="fn_">readText</span>(<span class="str_">"data.txt"</span>);
+            <div class="card">
+                <div class="card-title">Read &amp; Write</div>
+                <pre><span class="com">// Check existence</span>
+<span class="kw">if</span> (<span class="ty">File</span><span class="op">-></span><span class="fn_">exists</span>(<span
+                            class="str_">"data.txt"</span>)) {
+    <span class="kw">var</span> content = <span class="ty">File</span><span class="op">-></span><span class="fn_">readText</span>(<span
+                            class="str_">"data.txt"</span>);
     <span class="mac">println</span>(content);
 }
 
 <span class="com">// Overwrite</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">writeText</span>(<span class="str_">"out.txt"</span>, <span class="str_">"Hello!\n"</span>);
+<span class="ty">File</span><span class="op">-></span><span class="fn_">writeText</span>(<span
+                            class="str_">"out.txt"</span>, <span class="str_">"Hello!\n"</span>);
 
 <span class="com">// Append</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">appendText</span>(<span class="str_">"log.txt"</span>, <span class="str_">"New entry\n"</span>);
+<span class="ty">File</span><span class="op">-></span><span class="fn_">appendText</span>(<span
+                            class="str_">"log.txt"</span>, <span class="str_">"New entry\n"</span>);
 
 <span class="com">// Read and process line by line (manual)</span>
-<span class="kw">var</span> src = <span class="ty">File</span><span class="op">-></span><span class="fn_">readText</span>(<span class="str_">"src.obi"</span>);
+<span class="kw">var</span> src = <span class="ty">File</span><span class="op">-></span><span
+                            class="fn_">readText</span>(<span class="str_">"src.obi"</span>);
 <span class="mac">println</span>(src<span class="op">-></span><span class="fn_">length</span>());   <span class="com">// character count</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Copy, Move, Delete</div>
-      <pre><span class="com">// Delete</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">delete</span>(<span class="str_">"temp.txt"</span>);
+            <div class="card">
+                <div class="card-title">Copy, Move, Delete</div>
+                <pre><span class="com">// Delete</span>
+<span class="ty">File</span><span class="op">-></span><span class="fn_">delete</span>(<span
+                            class="str_">"temp.txt"</span>);
 
 <span class="com">// Copy (fails if dest exists)</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">copy</span>(<span class="str_">"src.txt"</span>, <span class="str_">"dst.txt"</span>);
+<span class="ty">File</span><span class="op">-></span><span class="fn_">copy</span>(<span class="str_">"src.txt"</span>, <span
+                            class="str_">"dst.txt"</span>);
 
 <span class="com">// Copy with overwrite flag</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">copyWithOverwrite</span>(<span class="str_">"src.txt"</span>, <span class="str_">"dst.txt"</span>, <span class="bool_">true</span>);
+<span class="ty">File</span><span class="op">-></span><span class="fn_">copyWithOverwrite</span>(<span class="str_">"src.txt"</span>, <span
+                            class="str_">"dst.txt"</span>, <span class="bool_">true</span>);
 
 <span class="com">// Move / rename</span>
-<span class="ty">File</span><span class="op">-></span><span class="fn_">move</span>(<span class="str_">"old.txt"</span>, <span class="str_">"new.txt"</span>);
+<span class="ty">File</span><span class="op">-></span><span class="fn_">move</span>(<span class="str_">"old.txt"</span>, <span
+                            class="str_">"new.txt"</span>);
 
 <span class="com">// Safe file write pattern</span>
 <span class="kw">try</span> {
-    <span class="ty">File</span><span class="op">-></span><span class="fn_">writeText</span>(<span class="str_">"output.txt"</span>, <span class="str_">"data"</span>);
+    <span class="ty">File</span><span class="op">-></span><span class="fn_">writeText</span>(<span class="str_">"output.txt"</span>, <span
+                            class="str_">"data"</span>);
     <span class="mac">println</span>(<span class="str_">"Saved."</span>);
 } <span class="kw">catch</span> (err) {
     <span class="mac">println</span>(<span class="str_">"Write failed:"</span>, err);
 }</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║       GLOBAL FUNCTIONS       ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="stdlib-globals">
-  <h2><span class="ico">🌍</span> Global Functions</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║       GLOBAL FUNCTIONS       ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="stdlib-globals">
+        <h2><span class="ico">🌍</span> Global Functions</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">I/O &amp; OS</div>
-      <pre><span class="com">// Print</span>
+            <div class="card">
+                <div class="card-title">I/O &amp; OS</div>
+                <pre><span class="com">// Print</span>
 <span class="mac">print</span>(<span class="str_">"no newline"</span>);
 <span class="mac">println</span>(<span class="str_">"with newline"</span>);
-<span class="mac">print</span> <span class="str_">"multi"</span>, <span class="str_">"args"</span>, <span class="num">42</span>;   <span class="com">// space-separated</span>
+<span class="mac">print</span> <span class="str_">"multi"</span>, <span class="str_">"args"</span>, <span
+                            class="num">42</span>;   <span class="com">// space-separated</span>
 
 <span class="com">// Read from stdin</span>
 <span class="kw">var</span> input = <span class="fn_">scan</span>(<span class="str_">"Enter value: "</span>);
@@ -1390,11 +1703,11 @@ xx = <span class="num">21</span>;
 <span class="mac">println</span>(<span class="fn_">isMac</span>());       <span class="com">// true / false</span>
 <span class="mac">println</span>(<span class="fn_">isLinux</span>());     <span class="com">// true / false</span>
 <span class="mac">println</span>(<span class="fn_">getOsType</span>());   <span class="com">// "windows" | "macos" | "linux" | "unknown"</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">print vs println syntax forms</div>
-      <pre><span class="com">// Function call form</span>
+            <div class="card">
+                <div class="card-title">print vs println syntax forms</div>
+                <pre><span class="com">// Function call form</span>
 <span class="mac">print</span>(<span class="str_">"hello"</span>);
 <span class="mac">println</span>(<span class="str_">"hello"</span>);
 
@@ -1405,36 +1718,41 @@ xx = <span class="num">21</span>;
 <span class="com">// Multiple arguments print space-separated</span>
 <span class="mac">print</span> <span class="str_">"CB"</span>, data;          <span class="com">// "CB 42"</span>
 <span class="mac">print</span> <span class="str_">"FROM CATCH!!"</span>, err; <span class="com">// error message</span>
-<span class="mac">println</span>(<span class="ty">Math</span>, <span class="ty">Math</span><span class="op">-></span><span class="att">PI</span>, [<span class="num">1</span>,<span class="num">200</span>,<span class="num">3</span>][<span class="num">1</span>]);
+<span class="mac">println</span>(<span class="ty">Math</span>, <span class="ty">Math</span><span
+                            class="op">-></span><span class="att">PI</span>, [<span class="num">1</span>,<span
+                            class="num">200</span>,<span class="num">3</span>][<span class="num">1</span>]);
 <span class="com">// [Math object] 3.14159... 200</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║           MODULES            ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="modules">
-  <h2><span class="ico">📦</span> Modules</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║           MODULES            ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="modules">
+        <h2><span class="ico">📦</span> Modules</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">import()</div>
-      <pre><span class="com">// import() executes a module and returns its exports</span>
+            <div class="card">
+                <div class="card-title">import()</div>
+                <pre><span class="com">// import() executes a module and returns its exports</span>
 <span class="kw">const</span> myMod = <span class="fn_">import</span>(<span class="str_">"./mymodule.obi"</span>);
 
 <span class="com">// Destructure named exports</span>
 <span class="kw">const</span> { Add: myAdd } = <span class="fn_">import</span>(<span class="str_">"./import.obi"</span>);
-<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span class="num">1000</span>));   <span class="com">// 1001</span>
+<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span
+                            class="num">1000</span>));   <span class="com">// 1001</span>
 
 <span class="com">// Use Math module alongside imports</span>
-<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span class="num">1000</span>), <span class="ty">Math</span>, <span class="ty">Math</span><span class="op">-></span><span class="att">PI</span>);</pre>
-    </div>
+<span class="mac">println</span>(<span class="fn_">myAdd</span>(<span class="num">1</span>, <span
+                            class="num">1000</span>), <span class="ty">Math</span>, <span class="ty">Math</span><span
+                            class="op">-></span><span class="att">PI</span>);</pre>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Authoring a module (import.obi)</div>
-      <pre><span class="com">// import.obi — export functions via provide()</span>
+            <div class="card">
+                <div class="card-title">Authoring a module (import.obi)</div>
+                <pre><span class="com">// import.obi — export functions via provide()</span>
 <span class="kw">fn</span> <span class="fn_">Add</span>(a, b) {
     <span class="kw">return</span> a <span class="op">+</span> b;
 }
@@ -1451,21 +1769,21 @@ xx = <span class="num">21</span>;
 
 <span class="com">// In the importer:</span>
 <span class="com">// const { Add, Subtract } = import("./import.obi");</span></pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║       PROVIDE / INJECT       ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="provide-inject">
-  <h2><span class="ico">💉</span> Provide / Inject</h2>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║       PROVIDE / INJECT       ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="provide-inject">
+        <h2><span class="ico">💉</span> Provide / Inject</h2>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Dependency Injection Pattern</div>
-      <pre><span class="com">// provide() registers a value in the frame namespace</span>
+            <div class="card">
+                <div class="card-title">Dependency Injection Pattern</div>
+                <pre><span class="com">// provide() registers a value in the frame namespace</span>
 <span class="kw">fn</span> <span class="fn_">parent</span>() {
     <span class="fn_">provide</span>(<span class="str_">"name"</span>, {
         add: <span class="kw">fn</span>(a, b) {
@@ -1477,7 +1795,9 @@ xx = <span class="num">21</span>;
 
 <span class="com">// inject() retrieves the value by key (null if missing)</span>
 <span class="kw">fn</span> <span class="fn_">child</span>() {
-    <span class="mac">println</span>(<span class="str_">">>>>>"</span>, <span class="fn_">inject</span>(<span class="str_">"name"</span>)<span class="op">-></span><span class="fn_">add</span>(<span class="num">1</span>, <span class="num">5</span>));
+    <span class="mac">println</span>(<span class="str_">">>>>>"</span>, <span class="fn_">inject</span>(<span
+                            class="str_">"name"</span>)<span class="op">-></span><span class="fn_">add</span>(<span
+                            class="num">1</span>, <span class="num">5</span>));
     <span class="com">// >>>>> 6</span>
 }
 
@@ -1486,12 +1806,15 @@ xx = <span class="num">21</span>;
 <span class="com">// inject returns null if key not provided</span>
 <span class="kw">var</span> missing = <span class="fn_">inject</span>(<span class="str_">"nope"</span>);
 <span class="mac">println</span>(missing);  <span class="com">// null</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Use Cases for Provide/Inject</div>
-      <div class="prose">Provide/inject is Obiwan's lightweight dependency-injection mechanism. A parent frame registers a service (logger, config, database handle) by name; any descendant function can retrieve it without explicit parameter threading.</div>
-      <pre><span class="com">// Provide a logger</span>
+            <div class="card">
+                <div class="card-title">Use Cases for Provide/Inject</div>
+                <div class="prose">Provide/inject is Obiwan's lightweight dependency-injection mechanism. A parent frame
+                    registers a service (logger, config, database handle) by name; any descendant function can retrieve
+                    it without explicit parameter threading.
+                </div>
+                <pre><span class="com">// Provide a logger</span>
 <span class="kw">fn</span> <span class="fn_">appRoot</span>() {
     <span class="fn_">provide</span>(<span class="str_">"log"</span>, <span class="kw">fn</span>(msg) {
         <span class="mac">println</span>(<span class="str_">"[LOG]"</span>, msg);
@@ -1505,35 +1828,39 @@ xx = <span class="num">21</span>;
 }
 
 <span class="fn_">appRoot</span>();</pre>
-    </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║        FULL EXAMPLES         ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="examples">
-  <h2><span class="ico">📝</span> Full Examples</h2>
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        FULL EXAMPLES         ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="examples">
+        <h2><span class="ico">📝</span> Full Examples</h2>
 
-  <h3>Factorial &amp; Closures</h3>
-  <div class="grid">
+        <h3>Factorial &amp; Closures</h3>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">Factorial (recursive)</div>
-      <pre><span class="kw">fn</span> <span class="fn_">fact</span>(n) {
-    <span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span class="kw">return</span> <span class="num">1</span>;
-    <span class="kw">return</span> n <span class="op">*</span> <span class="fn_">fact</span>(n <span class="op">-</span> <span class="num">1</span>);
+            <div class="card">
+                <div class="card-title">Factorial (recursive)</div>
+                <pre><span class="kw">fn</span> <span class="fn_">fact</span>(n) {
+    <span class="kw">if</span> (n <span class="op">==</span> <span class="num">0</span>) <span class="kw">return</span> <span
+                            class="num">1</span>;
+    <span class="kw">return</span> n <span class="op">*</span> <span class="fn_">fact</span>(n <span class="op">-</span> <span
+                            class="num">1</span>);
 }
 
-<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">0</span>));   <span class="com">// 1</span>
-<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">5</span>));   <span class="com">// 120</span>
+<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">0</span>));   <span
+                            class="com">// 1</span>
+<span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">5</span>));   <span
+                            class="com">// 120</span>
 <span class="mac">println</span>(<span class="fn_">fact</span>(<span class="num">10</span>));  <span class="com">// 3628800</span></pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Counter closure</div>
-      <pre><span class="kw">const</span> counter = <span class="kw">fn</span>() {
+            <div class="card">
+                <div class="card-title">Counter closure</div>
+                <pre><span class="kw">const</span> counter = <span class="kw">fn</span>() {
     <span class="kw">local</span> i = <span class="num">0</span>;
     <span class="kw">return</span> <span class="kw">fn</span>() {
         i = i <span class="op">+</span> <span class="num">1</span>;
@@ -1545,15 +1872,15 @@ xx = <span class="num">21</span>;
 <span class="mac">println</span>(c());  <span class="com">// 1</span>
 <span class="mac">println</span>(c());  <span class="com">// 2</span>
 <span class="mac">println</span>(c());  <span class="com">// 3</span></pre>
-    </div>
+            </div>
 
-  </div>
+        </div>
 
-  <h3>Blocks &amp; Scope</h3>
-  <div class="grid-full">
-    <div class="card">
-      <div class="card-title">Blocks as expressions &amp; anonymous scopes</div>
-      <pre><span class="com">// A bare block executes and evaluates its last expression</span>
+        <h3>Blocks &amp; Scope</h3>
+        <div class="grid-full">
+            <div class="card">
+                <div class="card-title">Blocks as expressions &amp; anonymous scopes</div>
+                <pre><span class="com">// A bare block executes and evaluates its last expression</span>
 {
     <span class="num">2</span> <span class="op">+</span> <span class="num">2</span>;
     <span class="mac">println</span>(<span class="str_">"HEHEHE!!!!"</span>);   <span class="com">// "HEHEHE!!!!"</span>
@@ -1574,21 +1901,23 @@ xx = <span class="num">21</span>;
     }
     <span class="kw">default</span>: <span class="mac">println</span>(<span class="str_">"other"</span>);
 }</pre>
-    </div>
-  </div>
+            </div>
+        </div>
 
-  <h3>Donut Animation (doughnut.obi)</h3>
-  <div class="grid-full">
-    <div class="card">
-      <div class="card-title">Rotating ASCII Torus — full example</div>
-      <pre><span class="kw">var</span> A = <span class="num">0.0</span>;
+        <h3>Donut Animation (doughnut.obi)</h3>
+        <div class="grid-full">
+            <div class="card">
+                <div class="card-title">Rotating ASCII Torus — full example</div>
+                <pre><span class="kw">var</span> A = <span class="num">0.0</span>;
 <span class="kw">var</span> B = <span class="num">0.0</span>;
 <span class="kw">var</span> screenWidth  = <span class="num">80</span>;
 <span class="kw">var</span> screenHeight = <span class="num">40</span>;
 <span class="kw">var</span> R1 = <span class="num">1.0</span>;
 <span class="kw">var</span> R2 = <span class="num">2.0</span>;
 <span class="kw">var</span> K2 = <span class="num">5.0</span>;
-<span class="kw">var</span> K1 = screenWidth <span class="op">*</span> K2 <span class="op">*</span> <span class="num">3.0</span> <span class="op">/</span> (<span class="num">8.0</span> <span class="op">*</span> (R1 <span class="op">+</span> R2)) <span class="op">*</span> <span class="num">0.95</span>;
+<span class="kw">var</span> K1 = screenWidth <span class="op">*</span> K2 <span class="op">*</span> <span class="num">3.0</span> <span
+                            class="op">/</span> (<span class="num">8.0</span> <span class="op">*</span> (R1 <span
+                            class="op">+</span> R2)) <span class="op">*</span> <span class="num">0.95</span>;
 
 <span class="kw">fn</span> <span class="fn_">renderFrame</span>(A, B) {
     <span class="fn_">home</span>();
@@ -1605,40 +1934,66 @@ xx = <span class="num">21</span>;
 
     <span class="kw">local</span> theta = <span class="num">0.0</span>;
     <span class="kw">while</span> (theta <span class="op">&lt;</span> <span class="num">6.28318</span>) {
-        <span class="kw">local</span> cosTheta = <span class="ty">Math</span><span class="op">-></span><span class="fn_">cos</span>(theta);
-        <span class="kw">local</span> sinTheta = <span class="ty">Math</span><span class="op">-></span><span class="fn_">sin</span>(theta);
+        <span class="kw">local</span> cosTheta = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cos</span>(theta);
+        <span class="kw">local</span> sinTheta = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sin</span>(theta);
         <span class="kw">local</span> phi = <span class="num">0.0</span>;
         <span class="kw">while</span> (phi <span class="op">&lt;</span> <span class="num">6.28318</span>) {
-            <span class="kw">local</span> cosPhi = <span class="ty">Math</span><span class="op">-></span><span class="fn_">cos</span>(phi);
-            <span class="kw">local</span> sinPhi = <span class="ty">Math</span><span class="op">-></span><span class="fn_">sin</span>(phi);
-            <span class="kw">local</span> cosA = <span class="ty">Math</span><span class="op">-></span><span class="fn_">cos</span>(A);
-            <span class="kw">local</span> sinA = <span class="ty">Math</span><span class="op">-></span><span class="fn_">sin</span>(A);
-            <span class="kw">local</span> cosB = <span class="ty">Math</span><span class="op">-></span><span class="fn_">cos</span>(B);
-            <span class="kw">local</span> sinB = <span class="ty">Math</span><span class="op">-></span><span class="fn_">sin</span>(B);
+            <span class="kw">local</span> cosPhi = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cos</span>(phi);
+            <span class="kw">local</span> sinPhi = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sin</span>(phi);
+            <span class="kw">local</span> cosA = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cos</span>(A);
+            <span class="kw">local</span> sinA = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sin</span>(A);
+            <span class="kw">local</span> cosB = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">cos</span>(B);
+            <span class="kw">local</span> sinB = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">sin</span>(B);
             <span class="kw">local</span> circleX = R2 <span class="op">+</span> R1 <span class="op">*</span> cosTheta;
             <span class="kw">local</span> circleY = R1 <span class="op">*</span> sinTheta;
-            <span class="kw">local</span> x = circleX <span class="op">*</span> (cosB <span class="op">*</span> cosPhi <span class="op">+</span> sinA <span class="op">*</span> sinB <span class="op">*</span> sinPhi)
+            <span class="kw">local</span> x = circleX <span class="op">*</span> (cosB <span
+                            class="op">*</span> cosPhi <span class="op">+</span> sinA <span
+                            class="op">*</span> sinB <span class="op">*</span> sinPhi)
                      <span class="op">-</span> circleY <span class="op">*</span> cosA <span class="op">*</span> sinB;
-            <span class="kw">local</span> y = circleX <span class="op">*</span> (sinB <span class="op">*</span> cosPhi <span class="op">-</span> sinA <span class="op">*</span> cosB <span class="op">*</span> sinPhi)
+            <span class="kw">local</span> y = circleX <span class="op">*</span> (sinB <span
+                            class="op">*</span> cosPhi <span class="op">-</span> sinA <span
+                            class="op">*</span> cosB <span class="op">*</span> sinPhi)
                      <span class="op">+</span> circleY <span class="op">*</span> cosA <span class="op">*</span> cosB;
-            <span class="kw">local</span> z   = K2 <span class="op">+</span> cosA <span class="op">*</span> circleX <span class="op">*</span> sinPhi <span class="op">+</span> circleY <span class="op">*</span> sinA;
+            <span class="kw">local</span> z   = K2 <span class="op">+</span> cosA <span
+                            class="op">*</span> circleX <span class="op">*</span> sinPhi <span class="op">+</span> circleY <span
+                            class="op">*</span> sinA;
             <span class="kw">local</span> ooz = <span class="num">1.0</span> <span class="op">/</span> z;
-            <span class="kw">local</span> xp  = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(screenWidth  <span class="op">/</span> <span class="num">2.0</span> <span class="op">+</span> K1 <span class="op">*</span> ooz <span class="op">*</span> x);
-            <span class="kw">local</span> yp  = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(screenHeight <span class="op">/</span> <span class="num">2.0</span> <span class="op">-</span> K1 <span class="op">*</span> ooz <span class="op">*</span> y <span class="op">*</span> <span class="num">0.5</span>);
+            <span class="kw">local</span> xp  = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(screenWidth  <span
+                            class="op">/</span> <span class="num">2.0</span> <span class="op">+</span> K1 <span
+                            class="op">*</span> ooz <span class="op">*</span> x);
+            <span class="kw">local</span> yp  = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(screenHeight <span
+                            class="op">/</span> <span class="num">2.0</span> <span class="op">-</span> K1 <span
+                            class="op">*</span> ooz <span class="op">*</span> y <span class="op">*</span> <span
+                            class="num">0.5</span>);
             <span class="kw">local</span> luminance =
                 cosPhi <span class="op">*</span> cosTheta <span class="op">*</span> sinB
                 <span class="op">-</span> cosA <span class="op">*</span> cosTheta <span class="op">*</span> sinPhi
                 <span class="op">-</span> sinA <span class="op">*</span> sinTheta
-                <span class="op">+</span> cosB <span class="op">*</span> (cosA <span class="op">*</span> sinTheta <span class="op">-</span> cosTheta <span class="op">*</span> sinA <span class="op">*</span> sinPhi);
-            <span class="kw">local</span> L = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(luminance <span class="op">*</span> <span class="num">8.0</span>);
+                <span class="op">+</span> cosB <span class="op">*</span> (cosA <span class="op">*</span> sinTheta <span
+                            class="op">-</span> cosTheta <span class="op">*</span> sinA <span class="op">*</span> sinPhi);
+            <span class="kw">local</span> L = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(luminance <span
+                            class="op">*</span> <span class="num">8.0</span>);
             <span class="kw">if</span> (L <span class="op">></span> <span class="num">0</span>) {
-                <span class="kw">if</span> (xp <span class="op">>=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> xp <span class="op">&lt;</span> screenWidth <span class="op">&amp;&amp;</span> yp <span class="op">>=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> yp <span class="op">&lt;</span> screenHeight) {
-                    <span class="kw">local</span> pos = <span class="ty">Math</span><span class="op">-></span><span class="fn_">floor</span>(yp <span class="op">*</span> screenWidth <span class="op">+</span> xp);
+                <span class="kw">if</span> (xp <span class="op">>=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> xp <span
+                            class="op">&lt;</span> screenWidth <span class="op">&amp;&amp;</span> yp <span
+                            class="op">>=</span> <span class="num">0</span> <span class="op">&amp;&amp;</span> yp <span
+                            class="op">&lt;</span> screenHeight) {
+                    <span class="kw">local</span> pos = <span class="ty">Math</span><span class="op">-></span><span
+                            class="fn_">floor</span>(yp <span class="op">*</span> screenWidth <span class="op">+</span> xp);
                     <span class="kw">if</span> (ooz <span class="op">></span> zbuf[pos]) {
                         zbuf[pos] = ooz;
                         <span class="kw">local</span> chars   = <span class="str_">".,-~:;=!*#$@"</span>;
                         <span class="kw">local</span> charIdx = L;
-                        <span class="kw">if</span> (charIdx <span class="op">></span> <span class="num">11</span>) charIdx = <span class="num">11</span>;
+                        <span class="kw">if</span> (charIdx <span class="op">></span> <span class="num">11</span>) charIdx = <span
+                            class="num">11</span>;
                         output[pos] = chars[charIdx];
                     }
                 }
@@ -1654,7 +2009,8 @@ xx = <span class="num">21</span>;
         <span class="kw">local</span> line = <span class="str_">""</span>;
         <span class="kw">local</span> col = <span class="num">0</span>;
         <span class="kw">while</span> (col <span class="op">&lt;</span> screenWidth) {
-            line = line <span class="op">+</span> output[row <span class="op">*</span> screenWidth <span class="op">+</span> col];
+            line = line <span class="op">+</span> output[row <span class="op">*</span> screenWidth <span
+                            class="op">+</span> col];
             col = col <span class="op">+</span> <span class="num">1</span>;
         }
         frame = frame <span class="op">+</span> line <span class="op">+</span> <span class="str_">"\n"</span>;
@@ -1669,24 +2025,25 @@ xx = <span class="num">21</span>;
     A = A <span class="op">+</span> <span class="num">0.07</span>;
     B = B <span class="op">+</span> <span class="num">0.03</span>;
 }</pre>
-    </div>
-  </div>
+            </div>
+        </div>
 
-</section>
+    </section>
 
-<!-- ╔══════════════════════════════╗ -->
-<!-- ║        C# HOST API           ║ -->
-<!-- ╚══════════════════════════════╝ -->
-<section id="csharp-host">
-  <h2><span class="ico">⚙️</span> C# Host API</h2>
-  <div class="note">
-    <b>Note:</b> This section covers the .NET host used to run Obiwan scripts. Obiwan scripts are compiled and executed via the <code>Compiler</code> and <code>Vm</code> types in the <code>obiwan</code> namespace.
-  </div>
-  <div class="grid">
+    <!-- ╔══════════════════════════════╗ -->
+    <!-- ║        C# HOST API           ║ -->
+    <!-- ╚══════════════════════════════╝ -->
+    <section id="csharp-host">
+        <h2><span class="ico">⚙️</span> C# Host API</h2>
+        <div class="note">
+            <b>Note:</b> This section covers the .NET host used to run Obiwan scripts. Obiwan scripts are compiled and
+            executed via the <code>Compiler</code> and <code>Vm</code> types in the <code>obiwan</code> namespace.
+        </div>
+        <div class="grid">
 
-    <div class="card">
-      <div class="card-title">CLI Entry Point (Program.cs)</div>
-      <pre><span class="kw">namespace</span> <span class="ty">obiwan</span>;
+            <div class="card">
+                <div class="card-title">CLI Entry Point (Program.cs)</div>
+                <pre><span class="kw">namespace</span> <span class="ty">obiwan</span>;
 
 <span class="kw">public static class</span> <span class="ty">Program</span>
 {
@@ -1714,18 +2071,20 @@ xx = <span class="num">21</span>;
                     Console.<span class="fn_">WriteLine</span>(<span class="str_">"Error: Missing file path."</span>);
                     <span class="kw">return</span>;
                 }
-                <span class="fn_">ExecuteScript</span>(args[<span class="num">1</span>]);   <span class="kw">break</span>;
+                <span class="fn_">ExecuteScript</span>(args[<span class="num">1</span>]);   <span
+                            class="kw">break</span>;
 
             <span class="kw">default</span>:
                 Console.<span class="fn_">WriteLine</span>(<span class="str_">$"Unknown option: {args[0]}"</span>);
                 <span class="fn_">PrintHelp</span>();   <span class="kw">break</span>;
         }
     }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">ExecuteScript &amp; Test Suite</div>
-      <pre>    <span class="kw">private static void</span> <span class="fn_">ExecuteScript</span>(<span class="kw">string</span> path)
+            <div class="card">
+                <div class="card-title">ExecuteScript &amp; Test Suite</div>
+                <pre>    <span class="kw">private static void</span> <span class="fn_">ExecuteScript</span>(<span
+                        class="kw">string</span> path)
     {
         <span class="kw">if</span> (!File.<span class="fn_">Exists</span>(path))
         {
@@ -1764,11 +2123,11 @@ xx = <span class="num">21</span>;
         Console.<span class="fn_">WriteLine</span>(<span class="str_">"  -h, --help         This help text"</span>);
     }
 }</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">CLI Usage</div>
-      <pre><span class="com"># Run a script</span>
+            <div class="card">
+                <div class="card-title">CLI Usage</div>
+                <pre><span class="com"># Run a script</span>
 obiwan --run ./tests/lang.obi
 
 <span class="com"># Run the internal test suite</span>
@@ -1780,42 +2139,62 @@ obiwan -h
 
 <span class="com"># Short form</span>
 obiwan -r ./script.obi</pre>
-    </div>
+            </div>
 
-    <div class="card">
-      <div class="card-title">Host Architecture</div>
-      <div class="table-wrap">
-        <table>
-          <tr><th>Type</th><th>Role</th></tr>
-          <tr><td><code>State</code></td><td>Global interpreter state; manages directory stack</td></tr>
-          <tr><td><code>Compiler</code></td><td>Parses and compiles <code>.obi</code> source to bytecode</td></tr>
-          <tr><td><code>Vm</code></td><td>Bytecode virtual machine; runs <code>MainLoop</code></td></tr>
-          <tr><td><code>AutoLoader</code></td><td>Injects <code>Math</code>, <code>Path</code>, <code>File</code>, globals into every frame</td></tr>
-          <tr><td><code>ObValue</code></td><td>Runtime value type (Number, String, Object, Function…)</td></tr>
-        </table>
-      </div>
-    </div>
+            <div class="card">
+                <div class="card-title">Host Architecture</div>
+                <div class="table-wrap">
+                    <table>
+                        <tr>
+                            <th>Type</th>
+                            <th>Role</th>
+                        </tr>
+                        <tr>
+                            <td><code>State</code></td>
+                            <td>Global interpreter state; manages directory stack</td>
+                        </tr>
+                        <tr>
+                            <td><code>Compiler</code></td>
+                            <td>Parses and compiles <code>.obi</code> source to bytecode</td>
+                        </tr>
+                        <tr>
+                            <td><code>Vm</code></td>
+                            <td>Bytecode virtual machine; runs <code>MainLoop</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>AutoLoader</code></td>
+                            <td>Injects <code>Math</code>, <code>Path</code>, <code>File</code>, globals into every
+                                frame
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>ObValue</code></td>
+                            <td>Runtime value type (Number, String, Object, Function…)</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
 
-  </div>
-</section>
+        </div>
+    </section>
 
 </main>
 
 <script>
-  const sections = document.querySelectorAll('section[id]');
-  const links    = document.querySelectorAll('nav a');
+    const sections = document.querySelectorAll('section[id]');
+    const links = document.querySelectorAll('nav a');
 
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
-        if (link) link.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-10% 0px -85% 0px' });
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                links.forEach(l => l.classList.remove('active'));
+                const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+                if (link) link.classList.add('active');
+            }
+        });
+    }, {rootMargin: '-10% 0px -85% 0px'});
 
-  sections.forEach(s => obs.observe(s));
+    sections.forEach(s => obs.observe(s));
 </script>
 
 </body>
