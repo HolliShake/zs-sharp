@@ -292,7 +292,9 @@ var ggh = 0;
 println(++ggh * 2 + ggh++);
 println(ggh);
 
-from 0 to 4 foreach i, 1 do {
+from 0 to 40 foreach i, 1 do {
+    if (i == 2) continue;
+    if (i == 20) break;
     println(">>>>", i);
 }
 
