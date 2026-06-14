@@ -1129,7 +1129,7 @@ public class Compiler : Parser
     private void FromForeach(Code code, SymbolTable table, Ast node)
     {
         Debug.Assert(node is { A: not null, B: not null, C: not null, D: not null, E: not null },
-        "node.A or node.B or node.C or node.D or node.E is null");
+            "node.A or node.B or node.C or node.D or node.E is null");
         var start = node.A;
         var end = node.B;
         var step = node.C;
@@ -1160,8 +1160,7 @@ public class Compiler : Parser
 
         // Body
         Stmt(code, loopTable, body);
-
-        // ---> 1. CAPTURE CONTINUE TARGET HERE <---
+        
         // 'continue' must skip the rest of the body, but STILL execute the step mutation!
         var continueTarget = code.GetCurrent();
 
@@ -1177,19 +1176,12 @@ public class Compiler : Parser
         code.EmitAbsoluteJump(OpCode.AbsJump, begin);
 
         code.Label(jumpToEndForeach);
-
-        // ---> 2. RESOLVE SIGNALS HERE <---
-        // Map continues back up to the step phase
-        foreach (var continueSignal in loopTable.GetContinueSignals()) 
-        {
-            code.Label(continueSignal, continueTarget);
-        }
         
+        // Map continues back up to the step phase
+        foreach (var continueSignal in loopTable.GetContinueSignals()) code.Label(continueSignal, continueTarget);
+
         // Map breaks to right here (so they still hit the PopTop cleanup!)
-        foreach (var breakSignal in loopTable.GetBreakSignals()) 
-        {
-            code.Label(breakSignal); 
-        }
+        foreach (var breakSignal in loopTable.GetBreakSignals()) code.Label(breakSignal);
 
         // Clean range
         code.EmitLine(ModuleId, step.Position.Line);

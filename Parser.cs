@@ -716,6 +716,7 @@ public class Parser(string path, string source) : Lexer(path, source)
         if (Check(Keyword.Const)) return VariableDeclaration(Keyword.Const);
         if (Check(Keyword.Try)) return TryCatch();
         if (Check(Keyword.From)) return FromForeach();
+        if (Check(Keyword.Foreach)) return Foreach();
         if (Check(Keyword.While)) return While();
         if (Check(Keyword.If)) return If();
         if (Check(Keyword.Switch)) return Switch();
@@ -963,7 +964,6 @@ public class Parser(string path, string source) : Lexer(path, source)
         var hasDefault = false;
 
         // Process all cases
-        // Process all cases
         while (Check(Keyword.Case) || Check(Keyword.Default))
         {
             if (hasDefault)
@@ -1094,6 +1094,21 @@ public class Parser(string path, string source) : Lexer(path, source)
         );
     }
 
+    private Ast Foreach()
+    {
+        Debug.Assert(Lookahead != null, "Lookahead is null");
+        var position = Lookahead.Position;
+        Expect(Keyword.Foreach);
+        var iterable = Expression();
+        if (iterable == null)
+            ErrorHandler.CompileError(Path, Source, "Expected expression.", Lookahead.Position);
+        if (Check("{"))
+        {
+        }
+
+        return null!;
+    }
+
     private Ast While()
     {
         Debug.Assert(Lookahead != null, "Lookahead is null");
@@ -1114,10 +1129,8 @@ public class Parser(string path, string source) : Lexer(path, source)
         Debug.Assert(Lookahead != null, "Lookahead is null");
         var position = Lookahead.Position;
         Expect(Keyword.If);
-        Expect("(");
         var condition = Expression();
         if (condition == null) ErrorHandler.CompileError(Path, Source, "expects condition", Lookahead.Position);
-        Expect(")");
         var thenBranch = Statement();
         if (thenBranch == null) ErrorHandler.CompileError(Path, Source, "expects then branch", Lookahead.Position);
         Ast? elseBranch = null;
